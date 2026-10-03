@@ -11,11 +11,11 @@ export function renderEmail(opts: { title: string; body: string; ctaLabel: strin
   return `<!doctype html><html lang="ro"><body style="margin:0;background:#f4f5f9;font-family:Montserrat,Arial,sans-serif;color:#0f1535">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5f9;padding:32px 16px"><tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:20px;overflow:hidden">
-<tr><td style="background:#101c5c;padding:24px 32px;color:#ffffff;font-size:20px;font-weight:700">MentorMed</td></tr>
+<tr><td style="background:#0D1C5C;padding:24px 32px;color:#ffffff;font-size:20px;font-weight:700">MentorMed</td></tr>
 <tr><td style="padding:32px">
 <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3">${esc(opts.title)}</h1>
 <p style="margin:0 0 28px;font-size:15px;line-height:1.6;color:#3b4266">${esc(opts.body)}</p>
-<a href="${esc(opts.ctaUrl)}" style="display:inline-block;background:#1f6fb2;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:14px 28px;border-radius:12px">${esc(opts.ctaLabel)}</a>
+<a href="${esc(opts.ctaUrl)}" style="display:inline-block;background:#313885;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:14px 28px;border-radius:12px">${esc(opts.ctaLabel)}</a>
 <p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#6b7194">Dacă butonul nu funcționează, copiază acest link în browser:<br><span style="word-break:break-all">${esc(opts.ctaUrl)}</span></p>
 </td></tr>
 <tr><td style="padding:0 32px 28px;font-size:12px;color:#6b7194">${esc(t.email.footer)}</td></tr>
