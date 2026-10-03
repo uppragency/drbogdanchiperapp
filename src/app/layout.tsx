@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Montserrat } from "next/font/google";
 import "./globals.css";
 import { t } from "@/lib/texts";
+import { SiteFooter } from "@/components/site-footer";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -17,8 +18,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4f5f9" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0f2e" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#080c24" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -27,7 +28,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ro" className={`${montserrat.variable} h-full`}>
-      <body className="min-h-dvh flex flex-col">{children}</body>
+      <body className="min-h-dvh flex flex-col">
+        {children}
+        <SiteFooter />
+      </body>
     </html>
   );
 }

@@ -6,7 +6,8 @@ import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Badge, LinkButton } from "@/components/ui";
 import { formatDate } from "@/lib/format";
-import { toEmbedUrl } from "@/lib/video";
+import { embedUrl, parseVideo, videoCovers } from "@/lib/video";
+import { VideoPlayer } from "@/components/video-player";
 import { t } from "@/lib/texts";
 
 type Params = { id: string };
@@ -42,12 +43,14 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
   }
 
   const category = Array.isArray(r.categories) ? r.categories[0] : r.categories;
-  const embed = r.type === "video" && r.video_url ? toEmbedUrl(r.video_url) : null;
+  const video = r.type === "video" ? parseVideo(r.video_url) : null;
+  const embed = video ? embedUrl(video, true) : null;
+  const covers = video ? await videoCovers(r.video_url) : [];
   const attachments = [...(r.resource_attachments ?? [])].sort((a, b) => a.position - b.position);
   const paragraphs = r.body.split(/\n{2,}/).filter((p: string) => p.trim());
 
   return (
-    <article className="mx-auto flex w-full max-w-3xl flex-col gap-8">
+    <article className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-10">
       <Link href="/feed" className="inline-flex items-center gap-2 text-sm font-semibold text-muted hover:text-ink">
         <ArrowLeft size={16} /> {t.resource.back}
       </Link>
@@ -64,9 +67,7 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
 
       {embed && (
         <div className="flex flex-col gap-3">
-          <div className="aspect-video w-full overflow-hidden rounded-card border border-line bg-black">
-            <iframe src={embed} title={r.title} className="size-full" loading="lazy" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen />
-          </div>
+          <VideoPlayer title={r.title} embed={embed} covers={covers} />
           <p className="text-sm text-muted">{t.resource.videoHelp}</p>
         </div>
       )}

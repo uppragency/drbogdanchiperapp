@@ -7,12 +7,12 @@ export function cn(...parts: Array<string | false | null | undefined>) {
 
 // Shape system: controls 12px, cards 20px. Single accent colour.
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-control px-5 h-11 text-sm font-semibold whitespace-nowrap transition active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none";
+  "inline-flex items-center justify-center gap-2 rounded-control px-5 h-11 text-sm font-semibold whitespace-nowrap transition-colors active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none";
 export const btn = {
-  primary: cn(base, "bg-accent text-accent-ink hover:brightness-110"),
+  primary: cn(base, "bg-accent text-accent-ink hover:bg-accent-hover"),
   secondary: cn(base, "border border-line bg-surface text-ink hover:bg-surface2"),
   ghost: cn(base, "text-muted hover:text-ink hover:bg-surface2"),
-  danger: cn(base, "bg-danger-bg text-danger hover:brightness-95"),
+  danger: cn(base, "bg-danger-bg text-danger hover:bg-danger hover:text-bg"),
 };
 
 export function LinkButton({ variant = "primary", className, ...props }: ComponentProps<typeof Link> & { variant?: keyof typeof btn }) {

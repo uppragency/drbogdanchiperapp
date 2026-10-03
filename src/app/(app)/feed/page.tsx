@@ -1,110 +1,101 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { PushPin, MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { Badge, PageTitle, btn, cn } from "@/components/ui";
 import { formatDate } from "@/lib/format";
+import { videoCovers } from "@/lib/video";
 import { t } from "@/lib/texts";
+import { FeedView, TYPES, type Category, type Row } from "./feed-view";
 
 export const metadata: Metadata = { title: t.feed.title };
 
-const TYPES = ["video", "pdf", "text", "link"] as const;
+const PAGE = 12;
 
 export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
   const viewer = await requireUser();
   const sp = await searchParams;
-  const q = (typeof sp.q === "string" ? sp.q : "").trim().slice(0, 80).replace(/[%,()]/g, " ");
+  const q = (typeof sp.q === "string" ? sp.q : "").trim().slice(0, 80);
   const categorie = typeof sp.categorie === "string" ? sp.categorie : "";
   const tip = TYPES.find((x) => x === sp.tip);
+  const pages = Math.min(Math.max(Number(sp.pagina) || 1, 1), 20);
+  const isAdmin = viewer.role === "admin";
 
   const supabase = await createClient();
-  const { data: categories } = await supabase.from("categories").select("id,name,slug").order("position");
-  const activeCategory = categories?.find((c) => c.slug === categorie);
+  const nowIso = new Date().toISOString();
+  const [{ data: cats }, { data: rowsRaw }, { data: views }, { data: myTags }] = await Promise.all([
+    supabase.from("categories").select("id,name,slug").order("position"),
+    supabase
+      .from("resources")
+      .select("id,title,description,type,video_url,is_pinned,publish_at,created_at,category_id,resource_attachments(id)")
+      .eq("status", "published")
+      .is("deleted_at", null)
+      .or(`publish_at.is.null,publish_at.lte.${nowIso}`)
+      .order("is_pinned", { ascending: false })
+      .order("publish_at", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false })
+      .limit(200),
+    supabase.from("resource_views").select("resource_id,last_viewed_at").eq("user_id", viewer.id).order("last_viewed_at", { ascending: false }),
+    supabase.from("user_tags").select("tags(name,position)").eq("user_id", viewer.id),
+  ]);
 
-  let query = supabase
-    .from("resources")
-    .select("id,title,description,type,is_pinned,publish_at,created_at,categories(name,slug)")
-    .eq("status", "published")
-    .is("deleted_at", null)
-    .or(`publish_at.is.null,publish_at.lte.${new Date().toISOString()}`)
-    .order("is_pinned", { ascending: false })
-    .order("publish_at", { ascending: false, nullsFirst: false })
-    .order("created_at", { ascending: false })
-    .limit(60);
-  if (activeCategory) query = query.eq("category_id", activeCategory.id);
-  if (tip) query = query.eq("type", tip);
-  if (q) query = query.ilike("title", `%${q}%`);
-  const { data: resources } = await query;
+  const categories = (cats ?? []) as Category[];
+  const all = (rowsRaw ?? []) as unknown as Row[];
+  const catById = new Map(categories.map((c) => [c.id, c]));
+  const seen = new Set((views ?? []).map((v: { resource_id: string }) => v.resource_id));
+  const weekAgo = new Date(nowIso).getTime() - 7 * 86400000;
+  const isNew = (r: Row) => (isAdmin ? new Date(r.publish_at ?? r.created_at).getTime() > weekAgo : !seen.has(r.id));
+  const dateOf = (r: Row) => formatDate(r.publish_at ?? r.created_at);
+  const chronological = [...all].sort((a, b) => +new Date(b.publish_at ?? b.created_at) - +new Date(a.publish_at ?? a.created_at));
 
-  const ids = (resources ?? []).map((r) => r.id);
-  const { data: views } = ids.length ? await supabase.from("resource_views").select("resource_id").eq("user_id", viewer.id).in("resource_id", ids) : { data: [] };
-  const seen = new Set((views ?? []).map((v) => v.resource_id));
-
-  const href = (patch: Record<string, string | undefined>) => {
-    const p = new URLSearchParams();
-    const merged = { q: q || undefined, categorie: categorie || undefined, tip: tip, ...patch };
-    Object.entries(merged).forEach(([k, v]) => v && p.set(k, v));
-    const s = p.toString();
-    return s ? `/feed?${s}` : "/feed";
-  };
-  const chip = (active: boolean) => cn("rounded-full border px-4 py-2 text-sm font-semibold transition", active ? "border-accent bg-accent text-accent-ink" : "border-line bg-surface text-muted hover:text-ink");
+  const activeCategory = categories.find((c) => c.slug === categorie);
   const filtered = Boolean(q || activeCategory || tip);
+  const list = all.filter(
+    (r) =>
+      (!activeCategory || r.category_id === activeCategory.id) &&
+      (!tip || r.type === tip) &&
+      (!q || `${r.title} ${r.description}`.toLowerCase().includes(q.toLowerCase())),
+  );
+  const shown = list.slice(0, PAGE * pages);
+
+  const newByCategory = new Map<string, number>();
+  all.filter(isNew).forEach((r) => newByCategory.set(r.category_id, (newByCategory.get(r.category_id) ?? 0) + 1));
+  const newTotal = all.filter(isNew).length;
+
+  // Hero data (home only).
+  const heroRows = filtered ? [] : [...chronological.filter(isNew), ...chronological.filter((r) => !isNew(r))].slice(0, 5);
+  const lastView = (views ?? [])[0] as { resource_id: string } | undefined;
+  const resumeRow = !filtered && lastView ? all.find((r) => r.id === lastView.resource_id) : undefined;
+  const announceCat = categories.find((c) => c.slug === "anunturi");
+  const announcements = announceCat ? chronological.filter((r) => r.category_id === announceCat.id).sort((a, b) => Number(b.is_pinned) - Number(a.is_pinned)).slice(0, 4) : [];
+  const groups = ((myTags ?? []) as unknown as { tags: { name: string; position: number } | null }[])
+    .map((x) => x.tags)
+    .filter((x): x is { name: string; position: number } => Boolean(x))
+    .sort((a, b) => a.position - b.position)
+    .map((x) => x.name);
+
+  const coverIds = new Set([...heroRows, ...shown].map((r) => r.id));
+  const coverEntries = await Promise.all(all.filter((r) => coverIds.has(r.id) && r.type === "video").map(async (r) => [r.id, await videoCovers(r.video_url)] as const));
+  const covers = new Map(coverEntries);
 
   return (
-    <div className="flex flex-col gap-8">
-      <PageTitle title={t.feed.title} />
-
-      <form action="/feed" className="flex flex-col gap-3 sm:flex-row">
-        {activeCategory && <input type="hidden" name="categorie" value={activeCategory.slug} />}
-        {tip && <input type="hidden" name="tip" value={tip} />}
-        <div className="relative flex-1">
-          <MagnifyingGlass size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
-          <input name="q" defaultValue={q} placeholder={t.feed.search} aria-label={t.feed.search} className="h-11 w-full rounded-control border border-line bg-surface pl-11 pr-4 text-base placeholder:text-muted focus:border-accent focus:outline-none" />
-        </div>
-        <button type="submit" className={btn.secondary}>{t.common.search}</button>
-      </form>
-
-      <div className="flex flex-col gap-3">
-        <div className="flex gap-2 overflow-x-auto pb-1" role="list" aria-label="Categorii">
-          <Link role="listitem" href={href({ categorie: undefined })} className={chip(!activeCategory)}>{t.feed.all}</Link>
-          {categories?.map((c) => (
-            <Link role="listitem" key={c.id} href={href({ categorie: c.slug })} className={cn(chip(activeCategory?.id === c.id), "whitespace-nowrap")}>{c.name}</Link>
-          ))}
-        </div>
-        <div className="flex gap-2 overflow-x-auto pb-1" role="list" aria-label="Tip resursă">
-          <Link role="listitem" href={href({ tip: undefined })} className={chip(!tip)}>{t.feed.all}</Link>
-          {TYPES.map((x) => (
-            <Link role="listitem" key={x} href={href({ tip: x })} className={chip(tip === x)}>{t.feed.types[x]}</Link>
-          ))}
-        </div>
-      </div>
-
-      {resources && resources.length > 0 ? (
-        <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {resources.map((r) => {
-            const category = Array.isArray(r.categories) ? r.categories[0] : r.categories;
-            const isNew = !seen.has(r.id);
-            return (
-              <li key={r.id}>
-                <Link href={`/resurse/${r.id}`} className="flex h-full flex-col gap-3 rounded-card border border-line bg-surface p-6 transition hover:border-accent">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {isNew && <Badge tone="accent">{t.feed.new}</Badge>}
-                    <Badge>{t.feed.types[r.type as keyof typeof t.feed.types]}</Badge>
-                    {category && <span className="text-sm text-muted">{category.name}</span>}
-                    {r.is_pinned && <PushPin size={16} weight="fill" className="ml-auto text-accent" aria-label="Fixată" />}
-                  </div>
-                  <h2 className="text-lg font-bold leading-snug">{r.title}</h2>
-                  {r.description && <p className="line-clamp-2 text-sm text-muted">{r.description}</p>}
-                  <p className="mt-auto pt-2 text-sm text-muted">{formatDate(r.publish_at ?? r.created_at)}</p>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      ) : (
-        <div className="rounded-card border border-dashed border-line p-10 text-center text-muted">{filtered ? t.feed.emptyFiltered : t.feed.empty}</div>
-      )}
-    </div>
+    <FeedView
+      firstName={viewer.firstName}
+      groups={groups}
+      categories={categories}
+      activeCategory={activeCategory}
+      q={q}
+      tip={tip}
+      pages={pages}
+      filtered={filtered}
+      newTotal={newTotal}
+      newByCategory={Object.fromEntries(newByCategory)}
+      shown={shown}
+      totalMatching={list.length}
+      newIds={all.filter(isNew).map((r) => r.id)}
+      dates={Object.fromEntries(all.map((r) => [r.id, dateOf(r)]))}
+      covers={Object.fromEntries(covers)}
+      heroRows={heroRows}
+      resume={resumeRow ? { id: resumeRow.id, title: resumeRow.title, category: catById.get(resumeRow.category_id)?.name ?? "" } : null}
+      announcements={announcements}
+    />
   );
 }

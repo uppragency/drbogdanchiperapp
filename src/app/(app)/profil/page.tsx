@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: t.profile.title };
 export default async function ProfilePage() {
   const viewer = await requireUser();
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8">
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-10">
       <PageTitle title={t.profile.title} />
       <Card>
         <ProfileForm firstName={viewer.firstName} lastName={viewer.lastName} email={viewer.email} />
