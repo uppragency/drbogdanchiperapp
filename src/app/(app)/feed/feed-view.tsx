@@ -49,6 +49,7 @@ export type FeedViewProps = {
   heroRows: Row[];
   resume: { id: string; title: string; category: string } | null;
   announcements: Row[];
+  continueRows: Row[];
 };
 
 export function FeedView(p: FeedViewProps) {
@@ -81,14 +82,13 @@ export function FeedView(p: FeedViewProps) {
   return (
     <>
       {!filtered && (
-        <div>
+        <div className="mx-auto w-full max-w-[1120px] px-4 pb-10 pt-6 lg:px-8 lg:pt-8">
           <Hero
             name={firstName}
             groups={groups}
             newCount={newTotal}
             cards={heroCards}
             resume={p.resume}
-            announcements={announcements.map((a) => ({ id: a.id, title: a.title }))}
           />
         </div>
       )}
@@ -100,10 +100,29 @@ export function FeedView(p: FeedViewProps) {
         newTotal={newTotal}
         announcements={announcements.map((a) => ({ id: a.id, title: a.title, date: dateOf(a) }))}
         categoryHref={(slug) => href({ categorie: slug, pagina: undefined })}
-        className={filtered ? "" : "pt-10"}
+        className={filtered ? "pt-8" : ""}
       >
         <>
-          <h2 className="text-2xl font-bold tracking-tight md:text-3xl">{activeCategory ? activeCategory.name : t.feed.title}</h2>
+          {!filtered && p.continueRows.length > 0 && (
+            <section aria-labelledby="continua" className="flex flex-col gap-4">
+              <h2 id="continua" className="text-2xl font-bold tracking-tight">{t.home.continue}</h2>
+              <ul className="grid gap-4 sm:grid-cols-3">
+                {p.continueRows.map((r) => (
+                  <li key={r.id}>
+                    <Link href={`/resurse/${r.id}`} className="group flex h-full flex-col overflow-hidden rounded-card border border-line bg-surface shadow-card transition-transform hover:-translate-y-0.5">
+                      {r.type !== "text" ? <Cover covers={covers.get(r.id) ?? []} type={r.type} label={catById.get(r.category_id)?.name} play={r.type === "video"} ratio="aspect-[16/10]" /> : <div className="aspect-[16/10] bg-surface2" />}
+                      <span className="flex flex-1 flex-col gap-1 p-4">
+                        <span className="text-xs font-semibold text-muted">{catById.get(r.category_id)?.name}</span>
+                        <span className="line-clamp-2 text-base font-bold leading-snug">{r.title}</span>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          <h2 className="text-2xl font-bold tracking-tight">{activeCategory ? activeCategory.name : t.feed.title}</h2>
 
           <form action="/feed" className="flex gap-2">
             {activeCategory && <input type="hidden" name="categorie" value={activeCategory.slug} />}
