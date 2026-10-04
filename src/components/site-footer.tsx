@@ -1,6 +1,14 @@
 import Link from "next/link";
 import { t } from "@/lib/texts";
 import { Wordmark } from "@/components/brand";
+import { FacebookLogo, InstagramLogo, WhatsappLogo, YoutubeLogo } from "@phosphor-icons/react/dist/ssr";
+
+const SOCIAL = [
+  { href: "https://www.facebook.com/medicideelita", label: "Facebook", Icon: FacebookLogo },
+  { href: "https://www.instagram.com/medici.de.elita/", label: "Instagram", Icon: InstagramLogo },
+  { href: "https://www.youtube.com/@medicideelita5080", label: "YouTube", Icon: YoutubeLogo },
+  { href: "https://api.whatsapp.com/send?phone=0746020724", label: "WhatsApp", Icon: WhatsappLogo },
+];
 
 const PROGRAM_URL = "https://drbogdanchiper.ro/produs/mentormed/";
 
@@ -18,9 +26,7 @@ export function SiteFooter() {
           <Link href="/feed" className={link}>{t.nav.feed}</Link>
           <Link href="/colectii" className={link}>Colecții</Link>
           <Link href="/recente" className={link}>Văzute recent</Link>
-          <Link href="/faq" className={link}>Întrebări frecvente</Link>
           <Link href="/contact" className={link}>Contact</Link>
-          <Link href="/profil" className={link}>{t.nav.profile}</Link>
         </nav>
         <nav aria-label={t.footer.legal} className="flex flex-col gap-3">
           <p className="text-xs font-semibold uppercase tracking-wider text-white/70">{t.footer.legal}</p>
@@ -29,9 +35,19 @@ export function SiteFooter() {
         </nav>
         <div className="flex flex-col gap-3">
           <p className="text-xs font-semibold uppercase tracking-wider text-white/70">{t.footer.contact}</p>
-          <a href="mailto:platforma@drbogdanchiper.ro" className={link}>platforma@drbogdanchiper.ro</a>
+          <a href="mailto:contact@drbogdanchiper.ro" className={link}>contact@drbogdanchiper.ro</a>
+          <a href="tel:+40746020724" className={link}>0746 020 724</a>
           <a href="https://drbogdanchiper.ro" target="_blank" rel="noopener noreferrer" className={link}>{t.footer.site}</a>
           <a href={PROGRAM_URL} target="_blank" rel="noopener noreferrer" className={link}>{t.footer.program}</a>
+          <ul className="-ml-2 mt-1 flex gap-1" aria-label="Rețele sociale">
+            {SOCIAL.map(({ href, label, Icon }) => (
+              <li key={label}>
+                <a href={href} target="_blank" rel="noopener noreferrer" aria-label={label} title={label} className="flex size-11 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/10 hover:text-white">
+                  <Icon size={22} aria-hidden />
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
       <div className="border-t border-white/10">
