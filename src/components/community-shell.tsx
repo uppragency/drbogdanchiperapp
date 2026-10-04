@@ -75,10 +75,7 @@ export async function CommunityShell({ categories, activeSlug, newByCategory, ne
           <a href={LIVE_OP_URL} target="_blank" rel="noopener noreferrer" className="mt-3 flex items-start justify-between gap-3 text-lg font-bold leading-snug hover:text-accent">
             MentorMed Live OP Mentorship <ArrowUpRight size={18} weight="bold" className="mt-1 shrink-0" />
           </a>
-          <p className="mt-2 text-sm leading-relaxed text-muted">
-            {tx("„Treci de la incertitudine la precizie chirurgicală. Stăpânește tehnicile și protocoale inovatoare alături de dr Bogdan Chiper, pas cu pas.”", "“Move from uncertainty to surgical precision. Master innovative techniques and protocols with Dr. Bogdan Chiper, step by step.”")}
-          </p>
-          <ul className="mt-4 flex flex-col divide-y divide-line">
+          <ul className="mt-3 flex flex-col divide-y divide-line">
             {LIVE_OP_COURSES.map((c) => (
               <li key={c.url} className="py-3 first:pt-0 last:pb-0">
                 <a href={c.url} target="_blank" rel="noopener noreferrer" className="flex items-start justify-between gap-3 text-sm font-semibold leading-snug hover:text-accent">
