@@ -49,9 +49,9 @@ export function Hero({ name, greeting, groups, newCount, cards, resume, announce
       <motion.div aria-hidden className="absolute inset-0 -z-10" style={{ background: glow }} />
       <div aria-hidden className="absolute inset-0 -z-10 opacity-[0.06] [background-image:linear-gradient(#0d1c5c_1px,transparent_1px),linear-gradient(90deg,#0d1c5c_1px,transparent_1px)] dark:opacity-[0.07] dark:[background-image:linear-gradient(white_1px,transparent_1px),linear-gradient(90deg,white_1px,transparent_1px)] [background-size:56px_56px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]" />
 
-      <div className="mx-auto grid min-h-[520px] w-full max-w-6xl items-center gap-8 px-4 pb-[88px] pt-10 md:grid-cols-[1.1fr_1fr] md:gap-10">
+      <div className="mx-auto grid min-h-[520px] w-full max-w-6xl items-center gap-8 px-4 pb-[88px] pt-10 md:grid-cols-[1.6fr_1fr] md:gap-10">
         <div className="flex min-w-0 flex-col gap-5">
-          <h1 className="text-4xl font-bold leading-[1.1] tracking-tight md:text-6xl">
+          <h1 className="text-[26px] font-bold leading-[1.1] tracking-tight sm:text-4xl md:whitespace-nowrap md:text-[clamp(32px,4.4vw,50px)]">
             {name ? `${greeting}, ${name}` : "Bine ai venit"}
           </h1>
           <p className="text-lg text-[#0d1c5c]/75 dark:text-white/75">
