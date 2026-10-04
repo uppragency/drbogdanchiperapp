@@ -6,7 +6,8 @@ import { Alert, Badge, Card, PageTitle, btn } from "@/components/ui";
 import { isoToLocalInput } from "@/lib/format";
 import { ResourceForm } from "../resource-form";
 import { FileUploader, LinkAttachmentForm } from "../attachments";
-import { deleteAttachment, purgeResource, restoreResource, trashResource } from "../actions";
+import { deleteAttachment, duplicateResource, purgeResource, restoreResource, trashResource } from "../actions";
+import { CoverUpload } from "../cover-upload";
 
 export const metadata: Metadata = { title: "Editează resursa" };
 
@@ -49,10 +50,16 @@ export default async function EditResource({ params, searchParams }: PageProps<"
             videoUrl: r.video_url ?? "",
             status: r.status,
             publishAt: isoToLocalInput(r.publish_at),
+            eventAt: isoToLocalInput(r.event_at),
             isPinned: r.is_pinned,
             tagIds: (rt ?? []).map((x) => x.tag_id),
           }}
         />
+      </Card>
+
+      <Card className="flex flex-col gap-4">
+        <h2 className="text-lg font-bold">Copertă</h2>
+        <CoverUpload resourceId={r.id} current={r.cover_path} />
       </Card>
 
       <Card className="flex flex-col gap-5">
@@ -76,6 +83,7 @@ export default async function EditResource({ params, searchParams }: PageProps<"
       <Card className="flex flex-wrap items-center justify-between gap-4">
         <p className="text-sm text-muted">{trashed ? "Resursa este în coș și nu o vede nimeni." : "Resursa se mută în coș și poate fi restaurată."}</p>
         <div className="flex gap-2">
+          {!trashed && <form action={duplicateResource}><input type="hidden" name="id" value={r.id} /><button className={btn.secondary}>Duplică</button></form>}
           {trashed ? (
             <>
               <form action={restoreResource}><input type="hidden" name="id" value={r.id} /><button className={btn.secondary}>Restaurează</button></form>

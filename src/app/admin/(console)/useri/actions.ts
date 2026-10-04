@@ -228,3 +228,20 @@ export async function sendResetLink(formData: FormData) {
   if (hash) await sendEmails([resetEmail(p.email, confirmLink(hash, "/setare-parola"))]);
   revalidatePath(`/admin/useri/${id}`);
 }
+
+// Adds or removes one MentorMed group for many users at once.
+export async function bulkTags(formData: FormData) {
+  await requireAdmin();
+  const tagId = uuid.safeParse(formData.get("tagId"));
+  const mode = formData.get("mode") === "remove" ? "remove" : "add";
+  const ids = formData.getAll("userIds").map(String).filter((x) => uuid.safeParse(x).success).slice(0, 500);
+  if (!tagId.success || ids.length === 0) redirect("/admin/useri/tag-uri?err=1");
+  const admin = createAdminClient();
+  if (mode === "add") {
+    await admin.from("user_tags").upsert(ids.map((user_id) => ({ user_id, tag_id: tagId.data })), { onConflict: "user_id,tag_id", ignoreDuplicates: true });
+  } else {
+    await admin.from("user_tags").delete().eq("tag_id", tagId.data).in("user_id", ids);
+  }
+  revalidatePath("/admin/useri");
+  redirect(`/admin/useri/tag-uri?ok=${ids.length}`);
+}

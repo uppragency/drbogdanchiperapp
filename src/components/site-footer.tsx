@@ -16,6 +16,10 @@ export function SiteFooter() {
         <nav aria-label={t.footer.platform} className="flex flex-col gap-3">
           <p className="text-xs font-semibold uppercase tracking-wider text-white/70">{t.footer.platform}</p>
           <Link href="/feed" className={link}>{t.nav.feed}</Link>
+          <Link href="/colectii" className={link}>Colecții</Link>
+          <Link href="/calendar" className={link}>Calendar</Link>
+          <Link href="/faq" className={link}>Întrebări frecvente</Link>
+          <Link href="/contact" className={link}>Contact</Link>
           <Link href="/profil" className={link}>{t.nav.profile}</Link>
         </nav>
         <nav aria-label={t.footer.legal} className="flex flex-col gap-3">

@@ -10,8 +10,10 @@ import { Cover } from "@/components/cover";
 import { LinkButton } from "@/components/ui";
 import { VideoPlayer } from "@/components/video-player";
 import { CategoryIcon } from "@/lib/category-icons";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatDateTime } from "@/lib/format";
 import { embedUrl, parseVideo, videoCovers } from "@/lib/video";
+import { coverUrl } from "@/lib/cover-url";
+import { FavoriteButton } from "../favorite-button";
 import { t } from "@/lib/texts";
 
 type Params = { id: string };
@@ -22,7 +24,7 @@ async function load(id: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("resources")
-    .select("id,title,description,type,body,video_url,status,publish_at,created_at,category_id,categories(name,slug),resource_attachments(id,kind,label,url,file_path,position)")
+    .select("id,title,description,type,body,video_url,status,publish_at,created_at,category_id,cover_path,event_at,categories(name,slug),resource_attachments(id,kind,label,url,file_path,position)")
     .eq("id", id)
     .is("deleted_at", null)
     .maybeSingle();
@@ -50,7 +52,9 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
   const category = Array.isArray(r.categories) ? r.categories[0] : r.categories;
   const video = r.type === "video" ? parseVideo(r.video_url) : null;
   const embed = video ? embedUrl(video, true) : null;
-  const covers = r.type === "video" ? await videoCovers(r.video_url) : [];
+  const covers = [...(r.cover_path ? [coverUrl(r.cover_path)] : []), ...(r.type === "video" ? await videoCovers(r.video_url) : [])];
+  const supabaseFav = await createClient();
+  const { data: favRow } = await supabaseFav.from("favorites").select("resource_id").eq("user_id", viewer.id).eq("resource_id", r.id).maybeSingle();
   const attachments = [...(r.resource_attachments ?? [])].sort((a: { position: number }, b: { position: number }) => a.position - b.position);
   const paragraphs = r.body.split(/\n{2,}/).filter((p: string) => p.trim());
   const externalUrl = r.type === "link" || (r.type === "video" && !embed) ? r.video_url : null;
@@ -91,9 +95,14 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
           </div>
         )}
 
-        {!embed && r.type !== "text" && (
+        {!embed && (r.type !== "text" || covers.length > 0) && (
           <Cover covers={covers} type={r.type} label={category?.name} play={r.type === "video"} ratio="aspect-[5/2]" />
         )}
+
+        <div className="flex flex-wrap items-center gap-3 px-5 pt-2 md:px-8">
+          <FavoriteButton resourceId={r.id} initial={Boolean(favRow)} />
+          {r.event_at && <span className="text-sm font-semibold text-muted">Eveniment: {formatDateTime(r.event_at)}</span>}
+        </div>
 
         {externalUrl && (
           <div className="px-5 pt-6 md:px-8">

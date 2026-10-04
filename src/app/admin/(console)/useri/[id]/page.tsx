@@ -32,7 +32,8 @@ export default async function EditUser({ params }: PageProps<"/admin/useri/[id]"
     <div className="flex flex-col gap-6">
       <Link href="/admin/useri" className="text-sm font-semibold text-muted hover:text-ink">Înapoi la useri</Link>
       <PageTitle title={`${p.first_name} ${p.last_name}`.trim() || p.email}>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Link href={`/admin/useri/${id}/previzualizare`} className={btn.secondary}>Ce vede userul</Link>
           {isAdminAccount && <Badge tone="accent">Administrator</Badge>}
           {trashed && <Badge tone="danger">Șters</Badge>}
         </div>

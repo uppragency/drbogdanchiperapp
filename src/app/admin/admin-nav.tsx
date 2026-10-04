@@ -8,6 +8,13 @@ const items = [
   { href: "/admin/resurse", label: "Resurse" },
   { href: "/admin/useri", label: "Useri" },
   { href: "/admin/invitatii", label: "Invitații" },
+  { href: "/admin/cereri", label: "Cereri acces" },
+  { href: "/admin/colectii", label: "Colecții" },
+  { href: "/admin/grupuri", label: "Grupuri" },
+  { href: "/admin/bannere", label: "Bannere" },
+  { href: "/admin/faq", label: "FAQ" },
+  { href: "/admin/mesaje", label: "Mesaje" },
+  { href: "/admin/cos", label: "Coș" },
   { href: "/admin/securitate", label: "Securitate" },
 ];
 

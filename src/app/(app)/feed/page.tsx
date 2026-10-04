@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
 import { videoCovers } from "@/lib/video";
+import { coverUrl } from "@/lib/cover-url";
 import { t } from "@/lib/texts";
 import { FeedView, TYPES, type Category, type Row } from "./feed-view";
 
@@ -16,16 +17,17 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
   const q = (typeof sp.q === "string" ? sp.q : "").trim().slice(0, 80);
   const categorie = typeof sp.categorie === "string" ? sp.categorie : "";
   const tip = TYPES.find((x) => x === sp.tip);
+  const fav = sp.fav === "1";
   const pages = Math.min(Math.max(Number(sp.pagina) || 1, 1), 20);
   const isAdmin = viewer.role === "admin";
 
   const supabase = await createClient();
   const nowIso = new Date().toISOString();
-  const [{ data: cats }, { data: rowsRaw }, { data: views }, { data: myTags }] = await Promise.all([
+  const [{ data: cats }, { data: rowsRaw }, { data: views }, { data: myTags }, { data: favRows }] = await Promise.all([
     supabase.from("categories").select("id,name,slug").order("position"),
     supabase
       .from("resources")
-      .select("id,title,description,type,video_url,is_pinned,publish_at,created_at,category_id,resource_attachments(id)")
+      .select("id,title,description,type,video_url,is_pinned,publish_at,created_at,category_id,cover_path,resource_attachments(id)")
       .eq("status", "published")
       .is("deleted_at", null)
       .or(`publish_at.is.null,publish_at.lte.${nowIso}`)
@@ -34,7 +36,8 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
       .order("created_at", { ascending: false })
       .limit(200),
     supabase.from("resource_views").select("resource_id,last_viewed_at").eq("user_id", viewer.id).order("last_viewed_at", { ascending: false }),
-    supabase.from("user_tags").select("tags(name,position)").eq("user_id", viewer.id),
+    supabase.from("user_tags").select("tags(name,position,welcome_message)").eq("user_id", viewer.id),
+    supabase.from("favorites").select("resource_id").eq("user_id", viewer.id),
   ]);
 
   const categories = (cats ?? []) as Category[];
@@ -47,11 +50,13 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
   const chronological = [...all].sort((a, b) => +new Date(b.publish_at ?? b.created_at) - +new Date(a.publish_at ?? a.created_at));
 
   const activeCategory = categories.find((c) => c.slug === categorie);
-  const filtered = Boolean(q || activeCategory || tip);
+  const favSet = new Set((favRows ?? []).map((f: { resource_id: string }) => f.resource_id));
+  const filtered = Boolean(q || activeCategory || tip || fav);
   const list = all.filter(
     (r) =>
       (!activeCategory || r.category_id === activeCategory.id) &&
       (!tip || r.type === tip) &&
+      (!fav || favSet.has(r.id)) &&
       (!q || `${r.title} ${r.description}`.toLowerCase().includes(q.toLowerCase())),
   );
   const shown = list.slice(0, PAGE * pages);
@@ -66,14 +71,15 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
   const resumeRow = !filtered && lastView ? all.find((r) => r.id === lastView.resource_id) : undefined;
   const announceCat = categories.find((c) => c.slug === "anunturi");
   const announcements = announceCat ? chronological.filter((r) => r.category_id === announceCat.id).sort((a, b) => Number(b.is_pinned) - Number(a.is_pinned)).slice(0, 4) : [];
-  const groups = ((myTags ?? []) as unknown as { tags: { name: string; position: number } | null }[])
+  const myGroups = ((myTags ?? []) as unknown as { tags: { name: string; position: number; welcome_message: string } | null }[])
     .map((x) => x.tags)
-    .filter((x): x is { name: string; position: number } => Boolean(x))
-    .sort((a, b) => a.position - b.position)
-    .map((x) => x.name);
+    .filter((x): x is { name: string; position: number; welcome_message: string } => Boolean(x))
+    .sort((a, b) => a.position - b.position);
+  const groups = myGroups.map((x) => x.name);
+  const welcomes = filtered ? [] : myGroups.filter((x) => x.welcome_message.trim()).map((x) => ({ name: x.name, message: x.welcome_message }));
 
   const coverIds = new Set([...heroRows, ...shown].map((r) => r.id));
-  const coverEntries = await Promise.all(all.filter((r) => coverIds.has(r.id) && r.type === "video").map(async (r) => [r.id, await videoCovers(r.video_url)] as const));
+  const coverEntries = await Promise.all(all.filter((r) => coverIds.has(r.id) && (r.type === "video" || r.cover_path)).map(async (r) => [r.id, [...(r.cover_path ? [coverUrl(r.cover_path)] : []), ...(r.type === "video" ? await videoCovers(r.video_url) : [])]] as [string, string[]]));
   const covers = new Map(coverEntries);
 
   return (
@@ -84,6 +90,8 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
       activeCategory={activeCategory}
       q={q}
       tip={tip}
+      fav={fav}
+      welcomes={welcomes}
       pages={pages}
       filtered={filtered}
       newTotal={newTotal}

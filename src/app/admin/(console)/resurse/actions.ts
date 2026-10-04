@@ -18,6 +18,7 @@ const schema = z.object({
   videoUrl: z.string().trim().default(""),
   status: z.enum(["draft", "published"]),
   publishAt: z.string().default(""),
+  eventAt: z.string().default(""),
   isPinned: z.boolean(),
   tagIds: z.array(z.string().uuid()),
 });
@@ -34,6 +35,7 @@ export async function saveResource(_: FormState, formData: FormData): Promise<Fo
     videoUrl: formData.get("videoUrl") ?? "",
     status: formData.get("status"),
     publishAt: formData.get("publishAt") ?? "",
+    eventAt: formData.get("eventAt") ?? "",
     isPinned: formData.get("isPinned") === "on",
     tagIds: formData.getAll("tagIds").map(String),
   });
@@ -54,6 +56,7 @@ export async function saveResource(_: FormState, formData: FormData): Promise<Fo
     video_url: d.type === "video" || d.type === "link" ? d.videoUrl : null,
     status: d.status,
     publish_at: localInputToIso(d.publishAt),
+    event_at: localInputToIso(d.eventAt),
     is_pinned: d.isPinned,
   };
 
@@ -150,4 +153,40 @@ export async function deleteAttachment(formData: FormData) {
   if (data.file_path) await supabase.storage.from("resources").remove([data.file_path]);
   await supabase.from("resource_attachments").delete().eq("id", id);
   revalidatePath(`/admin/resurse/${data.resource_id}`);
+}
+
+const COVER_OK = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp)$/;
+
+// Called after the browser uploaded the image to the public covers bucket.
+export async function setCover(resourceId: string, path: string | null): Promise<FormState> {
+  await requireAdmin();
+  const id = z.string().uuid().safeParse(resourceId);
+  if (!id.success || (path !== null && (!COVER_OK.test(path) || !path.startsWith(`${id.data}/`)))) return { error: "Date invalide." };
+  const supabase = await createClient();
+  const { data: old } = await supabase.from("resources").select("cover_path").eq("id", id.data).maybeSingle();
+  const { error } = await supabase.from("resources").update({ cover_path: path }).eq("id", id.data);
+  if (error) return { error: "Nu am putut salva coperta." };
+  if (old?.cover_path && old.cover_path !== path) await supabase.storage.from("covers").remove([old.cover_path]);
+  revalidatePath(`/admin/resurse/${id.data}`);
+  revalidatePath("/feed");
+  return { ok: path ? "Coperta a fost salvată." : "Coperta a fost ștearsă." };
+}
+
+// Copies the resource as a draft: same text, group and link attachments. Uploaded files are not copied.
+export async function duplicateResource(formData: FormData) {
+  const admin = await requireAdmin();
+  const id = z.string().uuid().parse(formData.get("id"));
+  const supabase = await createClient();
+  const { data: r } = await supabase.from("resources").select("title,description,type,category_id,body,video_url,is_pinned").eq("id", id).maybeSingle();
+  if (!r) redirect("/admin/resurse");
+  const { data: copy } = await supabase.from("resources").insert({ ...r, title: `${r.title} (copie)`.slice(0, 200), is_pinned: false, status: "draft", created_by: admin.id }).select("id").single();
+  if (!copy) redirect("/admin/resurse");
+  const [{ data: tags }, { data: links }] = await Promise.all([
+    supabase.from("resource_tags").select("tag_id").eq("resource_id", id),
+    supabase.from("resource_attachments").select("label,url,position").eq("resource_id", id).eq("kind", "link"),
+  ]);
+  if (tags?.length) await supabase.from("resource_tags").insert(tags.map((t: { tag_id: string }) => ({ resource_id: copy.id, tag_id: t.tag_id })));
+  if (links?.length) await supabase.from("resource_attachments").insert(links.map((l: { label: string; url: string; position: number }) => ({ resource_id: copy.id, kind: "link", label: l.label, url: l.url, position: l.position })));
+  revalidatePath("/admin/resurse");
+  redirect(`/admin/resurse/${copy.id}?nou=1`);
 }

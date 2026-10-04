@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, FilePdf, Link as LinkIcon, MagnifyingGlass, PushPin, TextAlignLeft, VideoCamera, Paperclip } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight, FilePdf, Heart, Link as LinkIcon, MagnifyingGlass, PushPin, TextAlignLeft, VideoCamera, Paperclip } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "@/components/ui";
 import { Cover, type ResourceType } from "@/components/cover";
 import { CategoryIcon } from "@/lib/category-icons";
@@ -27,6 +27,7 @@ export type Row = {
   publish_at: string | null;
   created_at: string;
   category_id: string;
+  cover_path: string | null;
   resource_attachments: { id: string }[];
 };
 
@@ -37,6 +38,8 @@ export type FeedViewProps = {
   activeCategory?: Category;
   q: string;
   tip?: (typeof TYPES)[number];
+  fav: boolean;
+  welcomes: { name: string; message: string }[];
   pages: number;
   filtered: boolean;
   newTotal: number;
@@ -62,10 +65,10 @@ export function FeedView(p: FeedViewProps) {
   const list = { length: p.totalMatching };
 
   const href = (patch: Record<string, string | undefined>) => {
-    const p = new URLSearchParams();
-    const merged: Record<string, string | undefined> = { q: q || undefined, categorie: categorie || undefined, tip, ...patch };
-    Object.entries(merged).forEach(([k, v]) => v && p.set(k, v));
-    const s = p.toString();
+    const usp = new URLSearchParams();
+    const merged: Record<string, string | undefined> = { q: q || undefined, categorie: categorie || undefined, tip, fav: p.fav ? "1" : undefined, ...patch };
+    Object.entries(merged).forEach(([k, v]) => v && usp.set(k, v));
+    const s = usp.toString();
     return s ? `/feed?${s}` : "/feed";
   };
 
@@ -108,6 +111,7 @@ export function FeedView(p: FeedViewProps) {
           <form action="/feed" className="flex gap-2">
             {activeCategory && <input type="hidden" name="categorie" value={activeCategory.slug} />}
             {tip && <input type="hidden" name="tip" value={tip} />}
+            {p.fav && <input type="hidden" name="fav" value="1" />}
             <div className="relative flex-1">
               <MagnifyingGlass size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
               <input name="q" defaultValue={q} placeholder={t.feed.search} aria-label={t.feed.search} className="h-12 w-full rounded-full border border-line bg-surface pl-11 pr-4 text-base placeholder:text-muted focus:border-accent focus:outline-none" />
@@ -116,12 +120,28 @@ export function FeedView(p: FeedViewProps) {
           </form>
 
 
+          {p.welcomes.length > 0 && (
+            <section className="flex flex-col gap-3 rounded-card border border-line bg-violet-soft p-6">
+              {p.welcomes.map((w) => (
+                <div key={w.name} className="flex flex-col gap-1">
+                  <h2 className="text-sm font-bold uppercase tracking-wider text-muted">{w.name}</h2>
+                  <p className="max-w-[65ch] whitespace-pre-line leading-relaxed">{w.message}</p>
+                </div>
+              ))}
+            </section>
+          )}
+
+          <div className="flex flex-wrap items-center gap-3">
           <div className="inline-flex w-fit max-w-full flex-wrap gap-1 rounded-full bg-surface2 p-1" role="group" aria-label="Tip resursă">
             {[undefined, ...TYPES].map((x) => (
               <Link key={x ?? "all"} href={href({ tip: x, pagina: undefined })} aria-current={tip === x ? "true" : undefined} className={cn("rounded-full px-4 py-2 text-sm font-semibold transition", tip === x ? "bg-surface text-ink shadow-sm" : "text-muted hover:text-ink")}>
                 {x ? t.feed.types[x] : t.feed.all}
               </Link>
             ))}
+          </div>
+          <Link href={href({ fav: p.fav ? undefined : "1", pagina: undefined })} aria-pressed={p.fav} className={cn("inline-flex h-11 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition-colors", p.fav ? "border-accent bg-accent text-accent-ink" : "border-line bg-surface text-muted hover:text-ink")}>
+            <Heart size={18} weight={p.fav ? "fill" : "regular"} /> Favorite
+          </Link>
           </div>
 
           {shown.length > 0 ? (
@@ -165,7 +185,7 @@ function PostCard({ r, category, isNew, date, covers }: { r: Row; category?: Cat
         <h3 className="text-xl font-bold leading-snug tracking-tight">{r.title}</h3>
         {r.description && <p className="line-clamp-3 text-sm leading-relaxed text-muted">{r.description}</p>}
       </div>
-      {r.type !== "text" && <Cover covers={covers} type={r.type} label={category?.name} play={r.type === "video"} />}
+      {(r.type !== "text" || covers.length > 0) && <Cover covers={covers} type={r.type} label={category?.name} play={r.type === "video"} />}
       <div className={cn("flex items-center gap-4 px-5 py-4 text-sm font-semibold text-muted", r.type === "text" && "border-t border-line")}>
         <span className="inline-flex items-center gap-2"><TypeIcon type={r.type} /> {t.feed.types[r.type]}</span>
         {files > 0 && <span className="inline-flex items-center gap-2"><Paperclip size={18} /> {files}</span>}

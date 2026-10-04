@@ -18,7 +18,7 @@ export default async function NewResource() {
         <ResourceForm
           categories={categories ?? []}
           tags={tags ?? []}
-          values={{ title: "", description: "", type: "video", categoryId: "", body: "", videoUrl: "", status: "draft", publishAt: "", isPinned: false, tagIds: [] }}
+          values={{ title: "", description: "", type: "video", categoryId: "", body: "", videoUrl: "", status: "draft", publishAt: "", eventAt: "", isPinned: false, tagIds: [] }}
         />
       </Card>
     </div>

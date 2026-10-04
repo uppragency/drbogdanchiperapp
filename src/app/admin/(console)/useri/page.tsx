@@ -55,6 +55,7 @@ export default async function UsersAdmin({ searchParams }: PageProps<"/admin/use
     <div className="flex flex-col gap-6">
       <PageTitle title="Useri">
         <div className="flex gap-2">
+          <LinkButton href="/admin/useri/tag-uri" variant="secondary">Grupuri în masă</LinkButton>
           <LinkButton href="/admin/useri/import" variant="secondary">Import CSV</LinkButton>
           <LinkButton href="/admin/useri/nou">User nou</LinkButton>
         </div>
