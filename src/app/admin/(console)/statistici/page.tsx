@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Statistici" };
 
 export default async function StatsPage() {
   const supabase = await createClient();
-  const now = Date.now();
+  const now = new Date().getTime();
   const d7 = new Date(now - 7 * 86400000).toISOString();
   const d30 = new Date(now - 30 * 86400000).toISOString();
   const count = (q: PromiseLike<{ count: number | null }>) => q.then((r) => r.count ?? 0);
