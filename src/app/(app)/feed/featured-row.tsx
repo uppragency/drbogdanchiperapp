@@ -28,7 +28,7 @@ export function FeaturedRow({ cards }: { cards: FeaturedCard[] }) {
       <ul ref={scroller} className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {cards.map((c) => (
           <li key={c.id} className="w-[78%] shrink-0 snap-start sm:w-[calc((100%-2rem)/3)]">
-            <Link href={`/resurse/${c.id}`} className="group relative flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-card text-white shadow-card transition-transform hover:-translate-y-1 sm:aspect-[5/6]">
+            <Link href={`/resurse/${c.id}`} className="group relative flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-card text-white shadow-card card-lift sm:aspect-[5/6]">
               <Cover covers={c.covers} type={c.type} label={c.category} ratio="h-full" className="absolute inset-0" />
               <span aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/5" />
               <span className="relative flex flex-col gap-2 p-5">

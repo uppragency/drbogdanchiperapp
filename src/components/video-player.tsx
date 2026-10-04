@@ -19,7 +19,7 @@ export function VideoPlayer({ title, embed, covers }: { title: string; embed: st
         />
       ) : (
         <button type="button" onClick={() => setPlaying(true)} className="group relative block size-full" aria-label={`Redă: ${title}`}>
-          <Cover covers={covers} type="video" ratio="aspect-auto" className="size-full" />
+          <Cover covers={covers} type="video" badge={false} ratio="aspect-auto" className="size-full" />
           <span className="absolute inset-0 flex items-center justify-center">
             <span className="flex size-20 items-center justify-center rounded-full bg-white text-[#0d1c5c] shadow-xl transition group-hover:scale-110">
               <Play size={32} weight="fill" />

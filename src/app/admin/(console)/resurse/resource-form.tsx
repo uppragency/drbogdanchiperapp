@@ -18,6 +18,7 @@ export type ResourceValues = {
   publishAt: string;
   eventAt: string;
   isPinned: boolean;
+  commentsEnabled: boolean;
   tagIds: string[];
 };
 
@@ -79,7 +80,11 @@ export function ResourceForm({ values, categories, tags }: { values: ResourceVal
       <Field label="Data evenimentului (webinar, opțional)" name="eventAt" type="datetime-local" defaultValue={values.eventAt} help="Dacă o completezi, resursa apare în Calendar. Ora României." />
       <label className="flex min-h-11 items-center gap-3 text-sm font-semibold">
         <input type="checkbox" name="isPinned" defaultChecked={values.isPinned} className="size-5 accent-[var(--accent)]" />
-        Fixează în capul listei
+        Fixează în capul listei (apare și la „Începe de aici” în feed)
+      </label>
+      <label className="flex min-h-11 items-center gap-3 text-sm font-semibold">
+        <input type="checkbox" name="commentsEnabled" defaultChecked={values.commentsEnabled} className="size-5 accent-[var(--accent)]" />
+        Permite comentarii
       </label>
 
       {state.error && <Alert>{state.error}</Alert>}

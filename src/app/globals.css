@@ -10,14 +10,19 @@
   --navy: #0d1c5c;
   --accent: #313885;
   --accent-ink: #ffffff;
-  --violet: #9155f6;
-  --violet-hover: #7e3fe6;
+  --violet: #8040ec;
+  --violet-hover: #6d2fd6;
   --accent-hover: #262c6b;
   --violet-soft: #f1eafe;
+  --on-violet: #ffffff;
   --danger: #b42318;
   --danger-bg: #fdecea;
   --ok: #176b43;
   --ok-bg: #e6f4ec;
+  --warn: #8a5300;
+  --warn-bg: #fff4e0;
+  --info: #313885;
+  --info-bg: #eceefb;
   --shadow: 0 1px 2px rgba(13, 28, 92, 0.04), 0 12px 32px -12px rgba(13, 28, 92, 0.16);
   --radius-control: 12px;
   --radius-card: 24px;
@@ -37,10 +42,15 @@
   --violet-hover: #bb96fc;
   --accent-hover: #c4bbfa;
   --violet-soft: #231a4d;
+  --on-violet: #0d1c5c;
   --danger: #ff9b90;
   --danger-bg: #3a1a22;
   --ok: #7fd6a4;
   --ok-bg: #0f2f26;
+  --warn: #f5c76b;
+  --warn-bg: #3a2c0f;
+  --info: #b9b0f8;
+  --info-bg: #1b2358;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -12px rgba(0, 0, 0, 0.6);
 }
 
@@ -60,10 +70,15 @@
     --violet-hover: #bb96fc;
     --accent-hover: #c4bbfa;
     --violet-soft: #231a4d;
+    --on-violet: #0d1c5c;
     --danger: #ff9b90;
     --danger-bg: #3a1a22;
     --ok: #7fd6a4;
     --ok-bg: #0f2f26;
+    --warn: #f5c76b;
+    --warn-bg: #3a2c0f;
+    --info: #b9b0f8;
+    --info-bg: #1b2358;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -12px rgba(0, 0, 0, 0.6);
   }
 }
@@ -84,11 +99,16 @@
   --color-violet-hover: var(--violet-hover);
   --color-accent-hover: var(--accent-hover);
   --color-violet-soft: var(--violet-soft);
+  --color-on-violet: var(--on-violet);
   --shadow-card: var(--shadow);
   --color-danger: var(--danger);
   --color-danger-bg: var(--danger-bg);
   --color-ok: var(--ok);
   --color-ok-bg: var(--ok-bg);
+  --color-warn: var(--warn);
+  --color-warn-bg: var(--warn-bg);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
   --radius-control: var(--radius-control);
   --radius-card: var(--radius-card);
   --font-sans: var(--font-montserrat), system-ui, sans-serif;
@@ -117,10 +137,58 @@ body {
   outline-offset: 2px;
 }
 
+/* Short fade between pages and a subtle lift on cards. */
+@keyframes page-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.page-fade {
+  animation: page-in 150ms ease-out both;
+}
+.card-lift {
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+}
+@media (hover: hover) {
+  .card-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+}
+
+/* Header: glass effect, hairline appears on scroll, slides away when scrolling down. */
+.site-header {
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  backdrop-filter: saturate(180%) blur(16px);
+  border-bottom: 1px solid transparent;
+  transition: transform 220ms ease, border-color 220ms ease;
+}
+.site-header[data-scrolled="true"] {
+  border-bottom-color: var(--line);
+}
+.site-header[data-hidden="true"] {
+  transform: translateY(-100%);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Keyboard focus must stay visible on form controls too (utilities remove the default outline). */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 2px;
 }

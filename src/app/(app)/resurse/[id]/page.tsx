@@ -15,6 +15,8 @@ import { formatDate, formatDateTime } from "@/lib/format";
 import { embedUrl, parseVideo, videoCovers } from "@/lib/video";
 import { coverUrl } from "@/lib/cover-url";
 import { FavoriteButton } from "../favorite-button";
+import { CompleteButton } from "../complete-button";
+import { CinemaFrame } from "@/components/cinema-frame";
 import { t } from "@/lib/texts";
 
 type Params = { id: string };
@@ -25,7 +27,7 @@ async function load(id: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("resources")
-    .select("id,title,description,type,body,video_url,status,publish_at,created_at,category_id,cover_path,event_at,categories(name,slug),resource_attachments(id,kind,label,url,file_path,position)")
+    .select("id,title,description,type,body,video_url,status,publish_at,created_at,category_id,cover_path,event_at,comments_enabled,categories(name,slug),resource_attachments(id,kind,label,url,file_path,position)")
     .eq("id", id)
     .is("deleted_at", null)
     .maybeSingle();
@@ -62,7 +64,10 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
   const older = at >= 0 && at < siblings.length - 1 ? siblings[at + 1] : null;
   const covers = [...(r.cover_path ? [coverUrl(r.cover_path)] : []), ...(r.type === "video" ? await videoCovers(r.video_url) : [])];
   const supabaseFav = await createClient();
-  const { data: favRow } = await supabaseFav.from("favorites").select("resource_id").eq("user_id", viewer.id).eq("resource_id", r.id).maybeSingle();
+  const [{ data: favRow }, { data: viewRow }] = await Promise.all([
+    supabaseFav.from("favorites").select("resource_id").eq("user_id", viewer.id).eq("resource_id", r.id).maybeSingle(),
+    supabaseFav.from("resource_views").select("completed").eq("user_id", viewer.id).eq("resource_id", r.id).maybeSingle(),
+  ]);
   const attachments = [...(r.resource_attachments ?? [])].sort((a: { position: number }, b: { position: number }) => a.position - b.position);
   const paragraphs = r.body.split(/\n{2,}/).filter((p: string) => p.trim());
   const externalUrl = r.type === "link" || (r.type === "video" && !embed) ? r.video_url : null;
@@ -83,7 +88,7 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
 
       <article className="overflow-hidden rounded-card border border-line bg-surface shadow-card">
         <header className="flex items-center gap-3 px-5 pt-5 md:px-8 md:pt-8">
-          <span className="flex size-11 items-center justify-center rounded-full bg-violet-soft text-violet"><CategoryIcon slug={category?.slug} size={22} weight="fill" /></span>
+          <span className="flex size-11 items-center justify-center rounded-full bg-violet-soft text-violet"><CategoryIcon slug={category?.slug} size={22} /></span>
           <span className="flex min-w-0 flex-1 flex-col">
             <span className="truncate text-sm font-bold">{category?.name}</span>
             <span className="text-xs text-muted">{formatDate(r.publish_at ?? r.created_at)} · {t.feed.types[r.type as keyof typeof t.feed.types]}</span>
@@ -93,22 +98,23 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
 
         <div className="flex flex-col gap-3 px-5 pb-6 pt-5 md:px-8">
           <h1 className="text-3xl font-bold leading-tight tracking-tight md:text-4xl">{r.title}</h1>
-          {r.description && <p className="text-lg leading-relaxed text-muted">{r.description}</p>}
+          {r.description && <p className="max-w-[65ch] text-lg font-normal leading-[1.6] text-muted">{r.description}</p>}
         </div>
 
         {embed && (
           <div className="flex flex-col gap-3 px-5 pb-6 md:px-8">
-            <VideoPlayer title={r.title} embed={embed} covers={covers} />
+            <CinemaFrame><VideoPlayer title={r.title} embed={embed} covers={covers} /></CinemaFrame>
             <p className="text-sm text-muted">{t.resource.videoHelp}</p>
           </div>
         )}
 
         {!embed && (r.type !== "text" || covers.length > 0) && (
-          <Cover covers={covers} type={r.type} label={category?.name} play={r.type === "video"} ratio="aspect-[5/2]" />
+          <Cover covers={covers} type={r.type} label={category?.name} title={r.title} slug={category?.slug} play={r.type === "video"} ratio="aspect-[5/2]" />
         )}
 
         <div className="flex flex-wrap items-center gap-3 px-5 pt-2 md:px-8">
           <FavoriteButton resourceId={r.id} initial={Boolean(favRow)} />
+          <CompleteButton resourceId={r.id} initial={Boolean(viewRow?.completed)} />
           {r.event_at && (
             <>
               <span className="text-sm font-semibold text-muted">Eveniment: {formatDateTime(r.event_at)}</span>
@@ -126,7 +132,7 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
         )}
 
         {paragraphs.length > 0 && (
-          <div className="flex max-w-[65ch] flex-col gap-4 px-5 py-6 text-base leading-relaxed md:px-8">
+          <div className="flex max-w-[65ch] flex-col gap-5 px-5 py-6 text-[17px] font-normal leading-[1.6] md:px-8">
             {paragraphs.map((p: string, i: number) => (
               <p key={i} className="whitespace-pre-line">{p}</p>
             ))}
@@ -138,9 +144,9 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
             <h2 className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-muted"><Paperclip size={18} /> {t.resource.attachments}</h2>
             <ul className="flex flex-col gap-3">
               {attachments.map((a: { id: string; kind: string; label: string; url: string | null; file_path: string | null }) => (
-                <li key={a.id} className="flex items-center gap-4 rounded-2xl border border-line p-4">
+                <li key={a.id} className="flex items-center gap-4 rounded-control border border-line p-4">
                   <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-violet-soft text-violet">
-                    {a.kind === "pdf" ? <FilePdf size={20} weight="fill" /> : <LinkIcon size={20} />}
+                    {a.kind === "pdf" ? <FilePdf size={20} /> : <LinkIcon size={20} />}
                   </span>
                   <span className="min-w-0 flex-1 truncate font-semibold">{a.label}</span>
                   {a.file_path ? (
@@ -174,7 +180,7 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
           )}
         </nav>
       )}
-      <Comments resourceId={r.id} viewerId={viewer.id} isAdmin={viewer.role === "admin"} />
+      <Comments resourceId={r.id} viewerId={viewer.id} isAdmin={viewer.role === "admin"} enabled={r.comments_enabled} />
     </CommunityShell>
   );
 }

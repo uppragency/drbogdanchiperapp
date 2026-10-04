@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { Card, PageTitle } from "@/components/ui";
+import { Card, EmptyState, PageTitle } from "@/components/ui";
+import { formatDate } from "@/lib/format";
+import { DownloadSimple, UsersThree } from "@phosphor-icons/react/dist/ssr";
 
 export const metadata: Metadata = { title: "Statistici" };
 
@@ -13,7 +15,7 @@ export default async function StatsPage() {
   const count = (q: PromiseLike<{ count: number | null }>) => q.then((r) => r.count ?? 0);
   const members = () => supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "user").is("deleted_at", null);
 
-  const [total, active, loggedIn, active7, active30, invSent, invAccepted, comments30, pendingReq, { data: viewRows }, { data: resources }, { data: cats }] = await Promise.all([
+  const [total, active, loggedIn, active7, active30, invSent, invAccepted, comments30, pendingReq, { data: viewRows }, { data: resources }, { data: cats }, { data: inactive, count: inactiveCount }] = await Promise.all([
     count(members()),
     count(members().eq("is_active", true)),
     count(members().not("last_login_at", "is", null)),
@@ -26,6 +28,7 @@ export default async function StatsPage() {
     supabase.rpc("resource_view_counts"),
     supabase.from("resources").select("id,title,category_id,type").eq("status", "published").is("deleted_at", null).limit(1000),
     supabase.from("categories").select("id,name").order("position"),
+    supabase.from("profiles").select("id,email,first_name,last_name,last_login_at", { count: "exact" }).eq("role", "user").eq("is_active", true).is("deleted_at", null).or(`last_login_at.is.null,last_login_at.lt.${d30}`).order("last_login_at", { ascending: true, nullsFirst: true }).limit(15),
   ]);
 
   const views = new Map(((viewRows ?? []) as { resource_id: string; views: number }[]).map((v) => [v.resource_id, Number(v.views)]));
@@ -86,6 +89,30 @@ export default async function StatsPage() {
           </ul>
         </Card>
       </div>
+
+      <Card className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-bold">Membri inactivi de peste 30 de zile ({inactiveCount ?? 0})</h2>
+          {(inactiveCount ?? 0) > 0 && (
+            <a href="/admin/statistici/inactivi" className="inline-flex h-11 items-center gap-2 rounded-control border border-line bg-surface px-4 text-sm font-semibold hover:bg-surface2">
+              <DownloadSimple size={18} /> Descarcă CSV
+            </a>
+          )}
+        </div>
+        {(inactive ?? []).length === 0 ? (
+          <EmptyState icon={UsersThree} title="Toți membrii activi s-au logat în ultimele 30 de zile" />
+        ) : (
+          <ul className="divide-y divide-line">
+            {(inactive ?? []).map((m: { id: string; email: string; first_name: string; last_name: string; last_login_at: string | null }) => (
+              <li key={m.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-3">
+                <Link href={`/admin/useri/${m.id}`} className="min-w-0 flex-1 truncate font-semibold hover:text-accent">{`${m.first_name} ${m.last_name}`.trim() || m.email}</Link>
+                <span className="text-sm text-muted">{m.last_login_at ? `Ultima autentificare ${formatDate(m.last_login_at)}` : "Nu s-a autentificat niciodată"}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {(inactiveCount ?? 0) > 15 && <p className="text-sm text-muted">Se afișează primii 15. CSV-ul conține lista completă.</p>}
+      </Card>
 
       <Card className="flex flex-col gap-4">
         <h2 className="text-lg font-bold">Resurse publicate pe care nu le-a deschis niciun membru ({unseen.length})</h2>

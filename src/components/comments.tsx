@@ -1,11 +1,13 @@
+import { ChatsCircle } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/lib/supabase/server";
+import { Alert, EmptyState } from "@/components/ui";
 import { formatDateTime } from "@/lib/format";
 import { CommentForm } from "@/app/(app)/resurse/comment-form";
 import { deleteComment } from "@/app/(app)/resurse/comments-actions";
 
 type Row = { id: string; parent_id: string | null; user_id: string; author_name: string; body: string; created_at: string };
 
-export async function Comments({ resourceId, viewerId, isAdmin }: { resourceId: string; viewerId: string; isAdmin: boolean }) {
+export async function Comments({ resourceId, viewerId, isAdmin, enabled = true }: { resourceId: string; viewerId: string; isAdmin: boolean; enabled?: boolean }) {
   const supabase = await createClient();
   const { data } = await supabase.from("comments").select("id,parent_id,user_id,author_name,body,created_at").eq("resource_id", resourceId).order("created_at").limit(400);
   const rows = (data ?? []) as Row[];
@@ -40,7 +42,11 @@ export async function Comments({ resourceId, viewerId, isAdmin }: { resourceId: 
   return (
     <section aria-labelledby="comentarii" className="flex flex-col gap-6 rounded-card border border-line bg-surface p-5 shadow-card md:p-8">
       <h2 id="comentarii" className="text-xl font-bold tracking-tight">Comentarii ({rows.length})</h2>
-      <CommentForm resourceId={resourceId} label="Scrie un comentariu sau o întrebare" />
+      {enabled ? (
+        <CommentForm resourceId={resourceId} label="Scrie un comentariu sau o întrebare" />
+      ) : (
+        <Alert kind="info">Comentariile sunt dezactivate pentru această resursă.</Alert>
+      )}
       <ul className="flex flex-col divide-y divide-line">
         {top.map((c) => (
           <li key={c.id} className="flex flex-col gap-4 py-5 first:pt-0">
@@ -48,7 +54,11 @@ export async function Comments({ resourceId, viewerId, isAdmin }: { resourceId: 
             {replies(c.id).length > 0 && <div className="ml-6 flex flex-col gap-4 border-l border-line pl-5 md:ml-12">{replies(c.id).map((r) => item(r, true))}</div>}
           </li>
         ))}
-        {top.length === 0 && <li className="py-2 text-sm text-muted">Nu există comentarii încă. Fii primul care scrie.</li>}
+        {top.length === 0 && (
+          <li className="pt-2">
+            <EmptyState icon={ChatsCircle} title="Nu există comentarii încă" text={enabled ? "Pune prima întrebare sau scrie ce ai reținut din această resursă." : undefined} />
+          </li>
+        )}
       </ul>
     </section>
   );

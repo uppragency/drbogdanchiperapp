@@ -131,6 +131,14 @@ export default async function ProfilePage() {
 
       <Card className="flex flex-wrap items-center justify-between gap-4">
         <div>
+          <h2 className="text-lg font-bold">Văzute recent</h2>
+          <p className="mt-1 text-sm text-muted">Ultimele 20 de resurse deschise.</p>
+        </div>
+        <LinkButton href="/recente" variant="secondary">Deschide lista</LinkButton>
+      </Card>
+
+      <Card className="flex flex-wrap items-center justify-between gap-4">
+        <div>
           <h2 className="text-lg font-bold">Securitate</h2>
           <p className="mt-1 text-sm text-muted">Alege o parolă nouă de cel puțin 10 caractere.</p>
         </div>

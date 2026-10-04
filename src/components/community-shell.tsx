@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowUpRight, List } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "@/components/ui";
 import { CategoryIcon } from "@/lib/category-icons";
+import { categoryColor } from "@/lib/category-color";
 import { t } from "@/lib/texts";
 
 export const PROGRAM_URL = "https://drbogdanchiper.ro/produs/mentormed/";
@@ -58,7 +59,7 @@ export function CommunityShell({ categories, activeSlug, newByCategory, newTotal
           <div aria-hidden className="absolute -right-12 -top-12 size-44 rounded-full bg-[#9155f6]/20 blur-3xl" />
           <p className="relative text-xs font-semibold uppercase tracking-wider text-muted">{t.home.nextProgram}</p>
           <p className="relative mt-3 text-lg font-bold leading-snug">{t.home.nextProgramText}</p>
-          <a href={PROGRAM_URL} target="_blank" rel="noopener noreferrer" className="relative mt-5 inline-flex h-11 items-center gap-2 rounded-full bg-violet px-5 text-sm font-semibold text-white transition-colors hover:bg-violet-hover active:scale-[0.98]">
+          <a href={PROGRAM_URL} target="_blank" rel="noopener noreferrer" className="relative mt-5 inline-flex h-11 items-center gap-2 rounded-full bg-violet px-5 text-sm font-semibold text-on-violet transition-colors hover:bg-violet-hover active:scale-[0.98]">
             {t.home.nextProgramCta} <ArrowUpRight size={16} weight="bold" />
           </a>
         </div>
@@ -88,10 +89,11 @@ function LinkList({ title, items }: { title: string; items: ShellLink[] }) {
 
 function RailLink({ href, active, slug, label, count }: { href: string; active: boolean; slug?: string; label: string; count: number }) {
   return (
-    <Link href={href} aria-current={active ? "page" : undefined} className={cn("flex min-h-11 items-center gap-3 rounded-2xl px-3 text-sm font-semibold transition-colors", active ? "bg-surface2 text-ink" : "text-muted hover:bg-surface2 hover:text-ink")}>
-      <CategoryIcon slug={slug} size={20} weight={active ? "fill" : "regular"} className={active ? "text-accent" : ""} />
+    <Link href={href} aria-current={active ? "page" : undefined} className={cn("flex min-h-11 items-center gap-3 rounded-control px-3 text-sm font-semibold transition-colors", active ? "bg-surface2 text-ink" : "text-muted hover:bg-surface2 hover:text-ink")}>
+      <CategoryIcon slug={slug} size={20} className={active ? "text-accent" : ""} />
       <span className="flex-1">{label}</span>
-      {count > 0 && <span className="rounded-full bg-violet px-2 py-0.5 text-xs font-bold text-white">{count}</span>}
+      {slug && <span aria-hidden className="size-2 rounded-full" style={{ backgroundColor: categoryColor(slug, label) }} />}
+      {count > 0 && <span className="rounded-full bg-violet px-2 py-0.5 text-xs font-bold text-on-violet">{count}</span>}
     </Link>
   );
 }

@@ -9,7 +9,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   if (viewer.role !== "admin") redirect("/feed");
   return (
     <>
-      <AppHeader isAdmin active="admin" />
+      <AppHeader isAdmin />
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-10">
         <AdminNav />
         {children}

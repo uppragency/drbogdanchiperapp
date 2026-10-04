@@ -70,7 +70,7 @@ export function Hero({ name, groups, newCount, cards, resume, announcements }: P
             </ul>
           )}
           {resume && (
-            <Link href={`/resurse/${resume.id}`} className="group flex w-full max-w-md items-center gap-4 rounded-2xl border border-line bg-white p-4 shadow-card transition-colors hover:bg-[#f6f7fd] dark:border-white/20 dark:bg-[#0f1a52] dark:shadow-none dark:hover:bg-[#16226a]">
+            <Link href={`/resurse/${resume.id}`} className="group flex w-full max-w-md items-center gap-4 rounded-control border border-line bg-white p-4 shadow-card transition-colors hover:bg-[#f6f7fd] dark:border-white/20 dark:bg-[#0f1a52] dark:shadow-none dark:hover:bg-[#16226a]">
               <PlayCircle size={36} weight="fill" className="shrink-0 text-[#9155f6] dark:text-[#b896ff]" />
               <span className="min-w-0 flex-1">
                 <span className="block text-xs font-semibold uppercase tracking-wider text-[#0d1c5c]/70 dark:text-white/75">{t.home.continue}</span>
@@ -167,7 +167,7 @@ function Ticker({ items }: { items: { id: string; title: string }[] }) {
   return (
     <div className="absolute inset-x-0 bottom-0 border-t border-line bg-white dark:border-white/10 dark:bg-[#050818]">
       <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-3 px-4">
-        <Megaphone size={20} weight="fill" className="shrink-0 text-[#9155f6] dark:text-[#b896ff]" />
+        <Megaphone size={20} className="shrink-0 text-[#9155f6] dark:text-[#b896ff]" />
         <span className="shrink-0 text-xs font-semibold uppercase tracking-wider text-[#0d1c5c]/70 dark:text-white/75">{t.home.announcements}</span>
         <div className="relative h-6 min-w-0 flex-1 overflow-hidden">
           <AnimatePresence mode="wait" initial={false}>

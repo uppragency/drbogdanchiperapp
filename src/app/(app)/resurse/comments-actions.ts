@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { fullName, requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { allow } from "@/lib/throttle";
 import type { FormState } from "@/app/login/actions";
 
@@ -20,12 +21,17 @@ export async function addComment(_: FormState, formData: FormData): Promise<Form
   if (!(await allow(`comment:${viewer.id}`, 12, 3600))) return { error: "Ai trimis prea multe comentarii. Încearcă din nou peste puțin timp." };
 
   const supabase = await createClient();
+  const { data: res } = await supabase.from("resources").select("title,comments_enabled").eq("id", p.data.resourceId).maybeSingle();
+  if (!res) return { error: "Resursa nu mai există." };
+  if (!res.comments_enabled && viewer.role !== "admin") return { error: "Comentariile sunt dezactivate pentru această resursă." };
   let parentId = p.data.parentId;
+  let notifyUser: string | null = null;
   if (parentId) {
     // Replies are one level deep: a reply to a reply attaches to the top comment.
-    const { data: par } = await supabase.from("comments").select("id,parent_id,resource_id").eq("id", parentId).maybeSingle();
+    const { data: par } = await supabase.from("comments").select("id,parent_id,resource_id,user_id").eq("id", parentId).maybeSingle();
     if (!par || par.resource_id !== p.data.resourceId) return { error: "Comentariul nu mai există." };
     parentId = par.parent_id ?? par.id;
+    notifyUser = par.user_id;
   }
   const { error } = await supabase.from("comments").insert({
     resource_id: p.data.resourceId,
@@ -35,6 +41,15 @@ export async function addComment(_: FormState, formData: FormData): Promise<Form
     body: p.data.body,
   });
   if (error) return { error: "Nu am putut trimite comentariul." };
+  if (notifyUser && notifyUser !== viewer.id) {
+    // Written with the service role: members cannot insert notifications for others.
+    await createAdminClient().from("notifications").insert({
+      user_id: notifyUser,
+      kind: "reply",
+      resource_id: p.data.resourceId,
+      message: `${fullName(viewer)} ți-a răspuns la comentariu la „${String(res.title).slice(0, 80)}”.`,
+    });
+  }
   revalidatePath(`/resurse/${p.data.resourceId}`);
   return { ok: "Comentariul a fost publicat." };
 }

@@ -31,7 +31,7 @@ export default async function CalendarPage() {
             {list.map((r) => (
               <li key={r.id}>
                 <Link href={`/resurse/${r.id}`} className="flex items-center gap-4 p-5 hover:bg-surface2">
-                  <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-violet-soft text-violet"><CalendarBlank size={22} weight="fill" /></span>
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-violet-soft text-violet"><CalendarBlank size={22} /></span>
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="font-bold">{r.title}</span>
                     <span className="text-sm text-muted">{formatDateTime(r.event_at)} · {(Array.isArray(r.categories) ? r.categories[0] : r.categories)?.name}</span>

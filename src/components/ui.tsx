@@ -1,11 +1,13 @@
 import Link from "next/link";
-import type { ComponentProps, ReactNode } from "react";
+import type { ComponentProps, ComponentType, ReactNode } from "react";
+import type { IconProps } from "@phosphor-icons/react";
+import { CheckCircle, Info, Warning, WarningCircle } from "@phosphor-icons/react/dist/ssr";
 
 export function cn(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(" ");
 }
 
-// Shape system: controls 12px, cards 20px. Single accent colour.
+// Shape system: controls 12px, cards 24px, pills full. Spacing in multiples of 8px (4px for tight gaps).
 const base =
   "inline-flex items-center justify-center gap-2 rounded-control px-5 h-11 text-sm font-semibold whitespace-nowrap transition-colors active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none";
 export const btn = {
@@ -117,22 +119,49 @@ export function Select({ label, name, defaultValue, children, required }: { labe
   );
 }
 
-export function Alert({ kind = "error", children }: { kind?: "error" | "ok"; children: ReactNode }) {
+const ALERT_ICON = { error: WarningCircle, ok: CheckCircle, warn: Warning, info: Info } as const;
+const ALERT_TONE = {
+  error: "bg-danger-bg text-danger",
+  ok: "bg-ok-bg text-ok",
+  warn: "bg-warn-bg text-warn",
+  info: "bg-info-bg text-info",
+} as const;
+
+// One component for every message: icon + colour from the same semantic set.
+export function Alert({ kind = "error", children }: { kind?: keyof typeof ALERT_TONE; children: ReactNode }) {
+  const Icon = ALERT_ICON[kind];
   return (
-    <div role={kind === "error" ? "alert" : "status"} className={cn("rounded-control px-4 py-3 text-sm", kind === "error" ? "bg-danger-bg text-danger" : "bg-ok-bg text-ok")}>
-      {children}
+    <div role={kind === "error" || kind === "warn" ? "alert" : "status"} className={cn("flex items-start gap-3 rounded-control px-4 py-3 text-sm", ALERT_TONE[kind])}>
+      <Icon size={20} className="mt-px shrink-0" aria-hidden />
+      <div className="min-w-0 flex-1">{children}</div>
     </div>
   );
 }
 
-export function Badge({ children, tone = "neutral" }: { children: ReactNode; tone?: "neutral" | "accent" | "ok" | "danger" }) {
+export function Badge({ children, tone = "neutral" }: { children: ReactNode; tone?: "neutral" | "accent" | "ok" | "danger" | "warn" | "info" }) {
   const tones = {
     neutral: "bg-surface2 text-muted",
     accent: "bg-accent text-accent-ink",
     ok: "bg-ok-bg text-ok",
     danger: "bg-danger-bg text-danger",
+    warn: "bg-warn-bg text-warn",
+    info: "bg-info-bg text-info",
   };
   return <span className={cn("inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold", tones[tone])}>{children}</span>;
+}
+
+// Empty state: icon, short message and one action.
+export function EmptyState({ icon: Icon, title, text, action }: { icon: ComponentType<IconProps>; title: string; text?: string; action?: ReactNode }) {
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-card border border-dashed border-line px-6 py-12 text-center">
+      <span className="flex size-14 items-center justify-center rounded-full bg-violet-soft text-violet">
+        <Icon size={28} aria-hidden />
+      </span>
+      <p className="text-lg font-bold">{title}</p>
+      {text && <p className="max-w-[48ch] text-sm leading-relaxed text-muted">{text}</p>}
+      {action && <div className="pt-2">{action}</div>}
+    </div>
+  );
 }
 
 export function PageTitle({ title, children }: { title: string; children?: ReactNode }) {

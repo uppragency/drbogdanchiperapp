@@ -15,3 +15,16 @@ export async function setFavorite(resourceId: string, on: boolean): Promise<bool
   revalidatePath("/feed");
   return error ? !on : on;
 }
+
+export async function setCompleted(resourceId: string, on: boolean): Promise<boolean> {
+  const viewer = await requireUser();
+  const id = z.string().uuid().safeParse(resourceId);
+  if (!id.success) return !on;
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("resource_views")
+    .upsert({ user_id: viewer.id, resource_id: id.data, completed: on, last_viewed_at: new Date().toISOString() }, { onConflict: "user_id,resource_id" });
+  revalidatePath("/feed");
+  revalidatePath("/colectii");
+  return error ? !on : on;
+}

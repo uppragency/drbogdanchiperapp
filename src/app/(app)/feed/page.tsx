@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
 import { videoCovers } from "@/lib/video";
 import { coverUrl } from "@/lib/cover-url";
 import { t } from "@/lib/texts";
-import { FeedView, TYPES, type Category, type Row } from "./feed-view";
+import { FeedView, TYPES, SORTS, type Category, type Row } from "./feed-view";
 
 export const metadata: Metadata = { title: t.feed.title };
 
@@ -18,6 +19,9 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
   const categorie = typeof sp.categorie === "string" ? sp.categorie : "";
   const tip = TYPES.find((x) => x === sp.tip);
   const fav = sp.fav === "1";
+  const sort = SORTS.find((x) => x === sp.sortare) ?? "noi";
+  const cookieView = (await cookies()).get("vedere")?.value;
+  const view: "lista" | "grila" = sp.vedere === "grila" || sp.vedere === "lista" ? sp.vedere : cookieView === "grila" ? "grila" : "lista";
   const pages = Math.min(Math.max(Number(sp.pagina) || 1, 1), 20);
   const isAdmin = viewer.role === "admin";
 
@@ -35,7 +39,7 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
       .order("publish_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false })
       .limit(200),
-    supabase.from("resource_views").select("resource_id,last_viewed_at").eq("user_id", viewer.id).order("last_viewed_at", { ascending: false }),
+    supabase.from("resource_views").select("resource_id,last_viewed_at,completed").eq("user_id", viewer.id).order("last_viewed_at", { ascending: false }),
     supabase.from("user_tags").select("tags(name,position,welcome_message)").eq("user_id", viewer.id),
     supabase.from("favorites").select("resource_id").eq("user_id", viewer.id),
   ]);
@@ -61,6 +65,9 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
       : { data: [] };
     matchIds = new Set((hits ?? []).map((h: { id: string }) => h.id));
   }
+  // View counts feed both the popular videos row and the "most viewed" sort.
+  const { data: counts } = await supabase.rpc("resource_view_counts");
+  const viewCount = new Map(((counts ?? []) as { resource_id: string; views: number }[]).map((c) => [c.resource_id, Number(c.views)]));
   const list = all.filter(
     (r) =>
       (!activeCategory || r.category_id === activeCategory.id) &&
@@ -68,6 +75,8 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
       (!fav || favSet.has(r.id)) &&
       (!matchIds || matchIds.has(r.id)),
   );
+  if (sort === "vizionate") list.sort((a, b) => (viewCount.get(b.id) ?? 0) - (viewCount.get(a.id) ?? 0));
+  else if (sort === "alfabetic") list.sort((a, b) => a.title.localeCompare(b.title, "ro"));
   const shown = list.slice(0, PAGE * pages);
 
   const newByCategory = new Map<string, number>();
@@ -87,16 +96,15 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
   const groups = myGroups.map((x) => x.name);
   const welcomes = filtered ? [] : myGroups.filter((x) => x.welcome_message.trim()).map((x) => ({ name: x.name, message: x.welcome_message }));
 
-  // Popular videos: most opened by members, filled automatically. Newest first when views are equal or missing.
-  const { data: counts } = filtered ? { data: [] } : await supabase.rpc("resource_view_counts");
-  const viewCount = new Map(((counts ?? []) as { resource_id: string; views: number }[]).map((c) => [c.resource_id, Number(c.views)]));
   const featuredRows = filtered
     ? []
     : chronological
         .filter((r) => r.type === "video")
         .sort((a, b) => (viewCount.get(b.id) ?? 0) - (viewCount.get(a.id) ?? 0))
         .slice(0, 6);
-  const coverIds = new Set([...heroRows, ...shown, ...featuredRows].map((r) => r.id));
+  const completedIds = (views ?? []).filter((v: { completed: boolean }) => v.completed).map((v: { resource_id: string }) => v.resource_id);
+  const startHere = filtered ? [] : chronological.filter((r) => r.is_pinned && r.category_id !== announceCat?.id).slice(0, 4);
+  const coverIds = new Set([...heroRows, ...shown, ...featuredRows, ...startHere].map((r) => r.id));
   const coverEntries = await Promise.all(all.filter((r) => coverIds.has(r.id) && (r.type === "video" || r.cover_path)).map(async (r) => [r.id, [...(r.cover_path ? [coverUrl(r.cover_path)] : []), ...(r.type === "video" ? await videoCovers(r.video_url) : [])]] as [string, string[]]));
   const covers = new Map(coverEntries);
 
@@ -109,6 +117,10 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
       q={q}
       tip={tip}
       fav={fav}
+      sort={sort}
+      view={view}
+      completedIds={completedIds}
+      startHere={startHere}
       welcomes={welcomes}
       featured={featuredRows}
       pages={pages}

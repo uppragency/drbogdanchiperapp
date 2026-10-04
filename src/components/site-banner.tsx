@@ -18,7 +18,7 @@ export function SiteBanner({ banner }: { banner: BannerData }) {
   return (
     <div role="status" className="border-b border-line bg-violet-soft">
       <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-2">
-        <Megaphone size={20} weight="fill" className="shrink-0 text-violet" />
+        <Megaphone size={20} className="shrink-0 text-violet" />
         <p className="min-w-0 flex-1 text-sm font-semibold">
           {banner.message}
           {banner.linkUrl && (

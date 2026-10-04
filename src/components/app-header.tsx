@@ -1,35 +1,56 @@
 import Link from "next/link";
-import { SignOut } from "@phosphor-icons/react/dist/ssr";
+import { Bell, MagnifyingGlass, SignOut } from "@phosphor-icons/react/dist/ssr";
 import { logout } from "@/app/actions";
-import { cn } from "@/components/ui";
 import { t } from "@/lib/texts";
 import { Wordmark } from "@/components/brand";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { HeaderShell } from "@/components/header-shell";
+import { NavLinks, type NavItem } from "@/components/nav-links";
 
-export function AppHeader({ isAdmin, active }: { isAdmin: boolean; active: "feed" | "profile" | "admin" }) {
-  const link = (key: typeof active, href: string, label: React.ReactNode) => (
-    <Link href={href} aria-current={active === key ? "page" : undefined} className={cn("rounded-control px-2.5 py-2 text-sm sm:px-3 font-semibold transition", active === key ? "bg-surface2 text-ink" : "text-muted hover:text-ink")}>
-      {label}
-    </Link>
-  );
+const iconBtn = "relative flex size-11 items-center justify-center rounded-control text-muted transition-colors hover:bg-surface2 hover:text-ink";
+
+export function AppHeader({ isAdmin, unread = 0 }: { isAdmin: boolean; unread?: number }) {
+  const items: NavItem[] = [
+    { href: "/feed", label: t.nav.feed, match: ["/feed", "/resurse", "/cauta", "/recente"] },
+    { href: "/colectii", label: "Colecții", match: ["/colectii"] },
+    { href: "/calendar", label: "Calendar", match: ["/calendar"] },
+    { href: "/profil", label: t.nav.profile, match: ["/profil"] },
+    ...(isAdmin ? [{ href: "/admin", label: t.nav.admin, match: ["/admin"] }] : []),
+  ];
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-surface">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-2 px-4">
-        <Link href="/feed" aria-label={t.brand}>
-          <Wordmark />
-        </Link>
-        <nav className="flex items-center gap-1" aria-label="Navigare principală">
-          {link("feed", "/feed", t.nav.feed)}
-          {link("profile", "/profil", t.nav.profile)}
-          {isAdmin && link("admin", "/admin", <><span className="sm:hidden">Admin</span><span className="hidden sm:inline">{t.nav.admin}</span></>)}
-          <ThemeToggle />
-          <form action={logout}>
-            <button type="submit" aria-label={t.nav.logout} title={t.nav.logout} className="flex size-11 items-center justify-center rounded-control text-muted transition hover:bg-surface2 hover:text-ink">
-              <SignOut size={20} weight="regular" />
-            </button>
-          </form>
-        </nav>
+    <HeaderShell>
+      <div className="mx-auto w-full max-w-6xl px-4">
+        <div className="flex h-16 items-center justify-between gap-2">
+          <Link href="/feed" aria-label={t.brand} className="shrink-0">
+            <Wordmark />
+          </Link>
+          <div className="hidden md:block">
+            <NavLinks items={items} />
+          </div>
+          <div className="flex items-center">
+            <Link href="/cauta" aria-label="Caută în toate categoriile" title="Caută" className={iconBtn}>
+              <MagnifyingGlass size={20} />
+            </Link>
+            <Link href="/notificari" aria-label={unread > 0 ? `Notificări, ${unread} necitite` : "Notificări"} title="Notificări" className={iconBtn}>
+              <Bell size={20} />
+              {unread > 0 && (
+                <span aria-hidden className="absolute right-1.5 top-1.5 flex min-w-4 items-center justify-center rounded-full bg-violet px-1 text-[10px] font-bold leading-4 text-on-violet">
+                  {unread > 9 ? "9+" : unread}
+                </span>
+              )}
+            </Link>
+            <ThemeToggle />
+            <form action={logout}>
+              <button type="submit" aria-label={t.nav.logout} title={t.nav.logout} className={iconBtn}>
+                <SignOut size={20} />
+              </button>
+            </form>
+          </div>
+        </div>
+        <div className="md:hidden">
+          <NavLinks items={items} />
+        </div>
       </div>
-    </header>
+    </HeaderShell>
   );
 }

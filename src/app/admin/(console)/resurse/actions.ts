@@ -20,6 +20,7 @@ const schema = z.object({
   publishAt: z.string().default(""),
   eventAt: z.string().default(""),
   isPinned: z.boolean(),
+  commentsEnabled: z.boolean(),
   tagIds: z.array(z.string().uuid()),
 });
 
@@ -37,6 +38,7 @@ export async function saveResource(_: FormState, formData: FormData): Promise<Fo
     publishAt: formData.get("publishAt") ?? "",
     eventAt: formData.get("eventAt") ?? "",
     isPinned: formData.get("isPinned") === "on",
+    commentsEnabled: formData.get("commentsEnabled") === "on",
     tagIds: formData.getAll("tagIds").map(String),
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Date invalide." };
@@ -58,6 +60,7 @@ export async function saveResource(_: FormState, formData: FormData): Promise<Fo
     publish_at: localInputToIso(d.publishAt),
     event_at: localInputToIso(d.eventAt),
     is_pinned: d.isPinned,
+    comments_enabled: d.commentsEnabled,
   };
 
   const supabase = await createClient();
