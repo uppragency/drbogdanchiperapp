@@ -16,7 +16,7 @@ export function AppHeader({ isAdmin, unread = 0, initials = "?", name = "", emai
   return (
     <HeaderShell>
       <div className="mx-auto w-full max-w-6xl px-4">
-        <div className="relative flex h-16 items-center justify-between gap-2">
+        <div className="relative flex h-12 items-center justify-between gap-2">
           <Link href="/feed" aria-label={t.brand} className="shrink-0">
             <Wordmark />
           </Link>
