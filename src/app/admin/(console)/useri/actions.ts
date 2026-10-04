@@ -6,6 +6,8 @@ import { requireAdmin } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createMember, ensureTags, sendInvitations, setUserTags, splitTags } from "@/lib/users";
 import { localInputToIso } from "@/lib/format";
+import { MIN_PASSWORD_LENGTH, isPasswordCompromised } from "@/lib/password";
+import { confirmLink, resetEmail, sendEmails } from "@/lib/email";
 import type { FormState } from "@/app/login/actions";
 
 const uuid = z.string().uuid();
@@ -42,8 +44,14 @@ export async function createUser(_: FormState, formData: FormData): Promise<Form
   const parsed = base.safeParse(raw);
   if (!email.success) return { error: "Emailul nu este valid." };
   if (!parsed.success) return { error: "Date invalide." };
+  const password = String(formData.get("password") ?? "");
+  if (password) {
+    if (password.length < MIN_PASSWORD_LENGTH || password.length > 72) return { error: `Parola trebuie să aibă între ${MIN_PASSWORD_LENGTH} și 72 de caractere.` };
+    if (await isPasswordCompromised(password)) return { error: "Această parolă apare în breșe de securitate cunoscute. Alege alta." };
+  }
   const admin = createAdminClient();
   const res = await createMember(admin, {
+    password: password || undefined,
     email: email.data,
     firstName: parsed.data.firstName,
     lastName: parsed.data.lastName,
@@ -178,4 +186,45 @@ export async function sendNextInvitations(formData: FormData) {
   const res = await sendInvitations(admin, ids);
   revalidatePath("/admin/invitatii");
   redirect(`/admin/invitatii?trimise=${res.sent}&esuate=${res.failed.length}`);
+}
+
+// Confirms the email in Auth, activates the profile and lifts any ban from a previous deletion.
+export async function validateAccount(formData: FormData) {
+  await requireAdmin();
+  const id = uuid.parse(formData.get("id"));
+  const admin = createAdminClient();
+  await admin.auth.admin.updateUserById(id, { email_confirm: true, ban_duration: "none" });
+  await admin.from("profiles").update({ is_active: true, deleted_at: null }).eq("id", id);
+  revalidatePath(`/admin/useri/${id}`);
+  revalidatePath("/admin/useri");
+}
+
+export async function setUserPassword(_: FormState, formData: FormData): Promise<FormState> {
+  await requireAdmin();
+  const parsed = z
+    .object({ id: uuid, password: z.string().min(MIN_PASSWORD_LENGTH, `Parola trebuie să aibă cel puțin ${MIN_PASSWORD_LENGTH} caractere.`).max(72, "Parola poate avea cel mult 72 de caractere.") })
+    .safeParse({ id: formData.get("id"), password: formData.get("password") });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Date invalide." };
+  if (await isPasswordCompromised(parsed.data.password)) return { error: "Această parolă apare în breșe de securitate cunoscute. Alege alta." };
+
+  const admin = createAdminClient();
+  const { data: profile } = await admin.from("profiles").select("id").eq("id", parsed.data.id).maybeSingle();
+  if (!profile) return { error: "Userul nu există." };
+  const { error } = await admin.auth.admin.updateUserById(parsed.data.id, { password: parsed.data.password, email_confirm: true });
+  if (error) return { error: "Nu am putut seta parola." };
+  if (formData.get("logout") === "on") await admin.rpc("reset_user_sessions", { p_user: parsed.data.id });
+  revalidatePath(`/admin/useri/${parsed.data.id}`);
+  return { ok: "Parola a fost setată. Comunic-o userului pe un canal sigur." };
+}
+
+export async function sendResetLink(formData: FormData) {
+  await requireAdmin();
+  const id = uuid.parse(formData.get("id"));
+  const admin = createAdminClient();
+  const { data: p } = await admin.from("profiles").select("email").eq("id", id).maybeSingle();
+  if (!p) return;
+  const { data } = await admin.auth.admin.generateLink({ type: "recovery", email: p.email });
+  const hash = data?.properties?.hashed_token;
+  if (hash) await sendEmails([resetEmail(p.email, confirmLink(hash, "/setare-parola"))]);
+  revalidatePath(`/admin/useri/${id}`);
 }

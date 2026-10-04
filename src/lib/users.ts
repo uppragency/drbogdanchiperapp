@@ -41,14 +41,14 @@ export async function setUserTags(admin: Admin, userId: string, tagIds: string[]
   if (tagIds.length) await admin.from("user_tags").insert(tagIds.map((tag_id) => ({ user_id: userId, tag_id })));
 }
 
-export type CreateUserInput = { email: string; firstName: string; lastName: string; tagIds: string[]; accessExpiresAt?: string | null; paidAt?: string | null };
+export type CreateUserInput = { email: string; firstName: string; lastName: string; tagIds: string[]; accessExpiresAt?: string | null; paidAt?: string | null; password?: string };
 
 export async function createMember(admin: Admin, input: CreateUserInput): Promise<{ id?: string; error?: string }> {
   const email = input.email.trim().toLowerCase();
   const { data, error } = await admin.auth.admin.createUser({
     email,
     email_confirm: true,
-    password: randomBytes(24).toString("base64url"),
+    password: input.password || randomBytes(24).toString("base64url"),
     user_metadata: { first_name: input.firstName, last_name: input.lastName },
   });
   if (error || !data.user) return { error: /already|registered|exists/i.test(error?.message ?? "") ? "Există deja un cont cu acest email." : "Nu am putut crea contul." };

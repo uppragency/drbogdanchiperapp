@@ -32,6 +32,7 @@ export function UserForm({ values, tags, action: serverAction }: { values: UserV
         <Field label="Prenume" name="firstName" defaultValue={values.firstName} />
         <Field label="Nume" name="lastName" defaultValue={values.lastName} />
       </div>
+      {!editing && <Field label="Parolă inițială (opțional)" name="password" autoComplete="off" minLength={10} help="Dacă o lași goală, userul își setează parola din invitație. Altfel, comunic-o tu userului." />}
       <fieldset className="flex flex-col gap-3">
         <legend className="text-sm font-semibold">Grupuri MentorMed</legend>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">

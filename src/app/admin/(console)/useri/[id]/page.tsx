@@ -5,7 +5,9 @@ import { createClient } from "@/lib/supabase/server";
 import { Badge, Card, PageTitle, btn } from "@/components/ui";
 import { formatDateTime, isoToLocalInput } from "@/lib/format";
 import { UserForm } from "../user-form";
-import { purgeUser, resendInvite, resetSessions, restoreUser, trashUser, updateUser } from "../actions";
+import { purgeUser, resendInvite, resetSessions, restoreUser, sendResetLink, trashUser, updateUser, validateAccount } from "../actions";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { PasswordForm } from "../password-form";
 
 export const metadata: Metadata = { title: "Editează userul" };
 
@@ -21,6 +23,9 @@ export default async function EditUser({ params }: PageProps<"/admin/useri/[id]"
   ]);
   if (!p) notFound();
   const trashed = Boolean(p.deleted_at);
+  const { data: authUser } = await createAdminClient().auth.admin.getUserById(id);
+  const emailConfirmed = Boolean(authUser?.user?.email_confirmed_at);
+  const validated = emailConfirmed && p.is_active && !trashed;
   const isAdminAccount = p.role === "admin";
 
   return (
@@ -50,6 +55,35 @@ export default async function EditUser({ params }: PageProps<"/admin/useri/[id]"
             isActive: p.is_active,
           }}
         />
+      </Card>
+
+      <Card className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-bold">Validare cont</h2>
+          <Badge tone={validated ? "ok" : "danger"}>{validated ? "Validat" : "Nevalidat"}</Badge>
+        </div>
+        <ul className="flex flex-wrap gap-2 text-sm">
+          <li><Badge tone={emailConfirmed ? "ok" : "danger"}>{emailConfirmed ? "Email confirmat" : "Email neconfirmat"}</Badge></li>
+          <li><Badge tone={p.is_active ? "ok" : "danger"}>{p.is_active ? "Cont activ" : "Cont inactiv"}</Badge></li>
+          <li><Badge tone={p.terms_accepted_at ? "ok" : "neutral"}>{p.terms_accepted_at ? "Termeni acceptați" : "Termeni neacceptați"}</Badge></li>
+        </ul>
+        {!validated && (
+          <form action={validateAccount} className="flex flex-col gap-2">
+            <input type="hidden" name="id" value={p.id} />
+            <p className="text-sm text-muted">Validarea confirmă emailul și activează contul, ca userul să se poată autentifica imediat.</p>
+            <div><button className={btn.primary}>Validează contul</button></div>
+          </form>
+        )}
+      </Card>
+
+      <Card className="flex flex-col gap-4">
+        <h2 className="text-lg font-bold">Parolă</h2>
+        <PasswordForm userId={p.id} />
+        <form action={sendResetLink} className="flex flex-col gap-2 border-t border-line pt-4">
+          <input type="hidden" name="id" value={p.id} />
+          <p className="text-sm text-muted">Sau trimite userului un link de resetare, ca să-și aleagă singur parola.</p>
+          <div><button className={btn.secondary}>Trimite link de resetare</button></div>
+        </form>
       </Card>
 
       <Card className="flex flex-col gap-4">
