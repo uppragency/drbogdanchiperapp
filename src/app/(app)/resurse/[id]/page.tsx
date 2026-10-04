@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, DownloadSimple, ArrowSquareOut } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, ArrowSquareOut, DownloadSimple, FilePdf, Link as LinkIcon, Paperclip } from "@phosphor-icons/react/dist/ssr";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { Badge, LinkButton } from "@/components/ui";
+import { loadCommunity } from "@/lib/community";
+import { CommunityShell } from "@/components/community-shell";
+import { Cover } from "@/components/cover";
+import { LinkButton } from "@/components/ui";
+import { VideoPlayer } from "@/components/video-player";
+import { CategoryIcon } from "@/lib/category-icons";
 import { formatDate } from "@/lib/format";
 import { embedUrl, parseVideo, videoCovers } from "@/lib/video";
-import { VideoPlayer } from "@/components/video-player";
 import { t } from "@/lib/texts";
 
 type Params = { id: string };
@@ -18,7 +22,7 @@ async function load(id: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("resources")
-    .select("id,title,description,type,body,video_url,status,publish_at,created_at,categories(name),resource_attachments(id,kind,label,url,file_path,position)")
+    .select("id,title,description,type,body,video_url,status,publish_at,created_at,category_id,categories(name,slug),resource_attachments(id,kind,label,url,file_path,position)")
     .eq("id", id)
     .is("deleted_at", null)
     .maybeSingle();
@@ -42,76 +46,96 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
     await supabase.from("resource_views").upsert({ user_id: viewer.id, resource_id: r.id, last_viewed_at: new Date().toISOString() }, { onConflict: "user_id,resource_id" });
   }
 
+  const community = await loadCommunity(viewer.id, viewer.role === "admin", { id: r.id, categoryId: r.category_id });
   const category = Array.isArray(r.categories) ? r.categories[0] : r.categories;
   const video = r.type === "video" ? parseVideo(r.video_url) : null;
   const embed = video ? embedUrl(video, true) : null;
-  const covers = video ? await videoCovers(r.video_url) : [];
-  const attachments = [...(r.resource_attachments ?? [])].sort((a, b) => a.position - b.position);
+  const covers = r.type === "video" ? await videoCovers(r.video_url) : [];
+  const attachments = [...(r.resource_attachments ?? [])].sort((a: { position: number }, b: { position: number }) => a.position - b.position);
   const paragraphs = r.body.split(/\n{2,}/).filter((p: string) => p.trim());
+  const externalUrl = r.type === "link" || (r.type === "video" && !embed) ? r.video_url : null;
 
   return (
-    <article className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-10">
-      <Link href="/feed" className="inline-flex items-center gap-2 text-sm font-semibold text-muted hover:text-ink">
+    <CommunityShell
+      categories={community.categories}
+      activeSlug={category?.slug}
+      newByCategory={community.newByCategory}
+      newTotal={community.newTotal}
+      announcements={community.announcements}
+      related={community.related}
+      className="pt-10"
+    >
+      <Link href="/feed" className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-muted transition-colors hover:text-ink">
         <ArrowLeft size={16} /> {t.resource.back}
       </Link>
 
-      <header className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge>{t.feed.types[r.type as keyof typeof t.feed.types]}</Badge>
-          {category && <span className="text-sm text-muted">{category.name}</span>}
-          {r.status === "draft" && <Badge tone="danger">Ciornă</Badge>}
-        </div>
-        <h1 className="text-3xl font-bold leading-tight tracking-tight md:text-4xl">{r.title}</h1>
-        <p className="text-sm text-muted">{formatDate(r.publish_at ?? r.created_at)}</p>
-      </header>
+      <article className="overflow-hidden rounded-card border border-line bg-surface shadow-card">
+        <header className="flex items-center gap-3 px-5 pt-5 md:px-8 md:pt-8">
+          <span className="flex size-11 items-center justify-center rounded-full bg-violet-soft text-violet"><CategoryIcon slug={category?.slug} size={22} weight="fill" /></span>
+          <span className="flex min-w-0 flex-1 flex-col">
+            <span className="truncate text-sm font-bold">{category?.name}</span>
+            <span className="text-xs text-muted">{formatDate(r.publish_at ?? r.created_at)} · {t.feed.types[r.type as keyof typeof t.feed.types]}</span>
+          </span>
+          {r.status === "draft" && <span className="rounded-full bg-danger-bg px-3 py-1 text-xs font-bold text-danger">Ciornă</span>}
+        </header>
 
-      {embed && (
-        <div className="flex flex-col gap-3">
-          <VideoPlayer title={r.title} embed={embed} covers={covers} />
-          <p className="text-sm text-muted">{t.resource.videoHelp}</p>
+        <div className="flex flex-col gap-3 px-5 pb-6 pt-5 md:px-8">
+          <h1 className="text-3xl font-bold leading-tight tracking-tight md:text-4xl">{r.title}</h1>
+          {r.description && <p className="text-lg leading-relaxed text-muted">{r.description}</p>}
         </div>
-      )}
-      {r.type === "video" && r.video_url && !embed && (
-        <LinkButton href={r.video_url} target="_blank" rel="noopener noreferrer" className="self-start">
-          {t.resource.open} <ArrowSquareOut size={18} />
-        </LinkButton>
-      )}
-      {r.type === "link" && r.video_url && (
-        <LinkButton href={r.video_url} target="_blank" rel="noopener noreferrer" className="self-start">
-          {t.resource.open} <ArrowSquareOut size={18} />
-        </LinkButton>
-      )}
 
-      {r.description && <p className="text-lg leading-relaxed text-muted">{r.description}</p>}
-      {paragraphs.length > 0 && (
-        <div className="flex max-w-[65ch] flex-col gap-4 text-base leading-relaxed">
-          {paragraphs.map((p: string, i: number) => (
-            <p key={i} className="whitespace-pre-line">{p}</p>
-          ))}
-        </div>
-      )}
+        {embed && (
+          <div className="flex flex-col gap-3 px-5 pb-6 md:px-8">
+            <VideoPlayer title={r.title} embed={embed} covers={covers} />
+            <p className="text-sm text-muted">{t.resource.videoHelp}</p>
+          </div>
+        )}
 
-      {attachments.length > 0 && (
-        <section className="flex flex-col gap-3">
-          <h2 className="text-xl font-bold">{t.resource.attachments}</h2>
-          <ul className="flex flex-col gap-3">
-            {attachments.map((a) => (
-              <li key={a.id} className="flex items-center justify-between gap-4 rounded-card border border-line bg-surface p-4">
-                <span className="font-semibold">{a.label}</span>
-                {a.file_path ? (
-                  <LinkButton href={`/fisiere/${a.id}`} variant="secondary" prefetch={false}>
-                    <DownloadSimple size={18} /> {t.resource.download}
-                  </LinkButton>
-                ) : (
-                  <LinkButton href={a.url ?? "#"} variant="secondary" target="_blank" rel="noopener noreferrer">
-                    <ArrowSquareOut size={18} /> {t.resource.open}
-                  </LinkButton>
-                )}
-              </li>
+        {!embed && r.type !== "text" && (
+          <Cover covers={covers} type={r.type} label={category?.name} play={r.type === "video"} ratio="aspect-[5/2]" />
+        )}
+
+        {externalUrl && (
+          <div className="px-5 pt-6 md:px-8">
+            <LinkButton href={externalUrl} target="_blank" rel="noopener noreferrer" className="rounded-full">
+              {t.resource.open} <ArrowSquareOut size={18} />
+            </LinkButton>
+          </div>
+        )}
+
+        {paragraphs.length > 0 && (
+          <div className="flex max-w-[65ch] flex-col gap-4 px-5 py-6 text-base leading-relaxed md:px-8">
+            {paragraphs.map((p: string, i: number) => (
+              <p key={i} className="whitespace-pre-line">{p}</p>
             ))}
-          </ul>
-        </section>
-      )}
-    </article>
+          </div>
+        )}
+
+        {attachments.length > 0 && (
+          <section className="flex flex-col gap-3 border-t border-line px-5 py-6 md:px-8">
+            <h2 className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-muted"><Paperclip size={18} /> {t.resource.attachments}</h2>
+            <ul className="flex flex-col gap-3">
+              {attachments.map((a: { id: string; kind: string; label: string; url: string | null; file_path: string | null }) => (
+                <li key={a.id} className="flex items-center gap-4 rounded-2xl border border-line p-4">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-violet-soft text-violet">
+                    {a.kind === "pdf" ? <FilePdf size={20} weight="fill" /> : <LinkIcon size={20} />}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate font-semibold">{a.label}</span>
+                  {a.file_path ? (
+                    <LinkButton href={`/fisiere/${a.id}`} variant="secondary" prefetch={false} className="rounded-full">
+                      <DownloadSimple size={18} /> {t.resource.download}
+                    </LinkButton>
+                  ) : (
+                    <LinkButton href={a.url ?? "#"} variant="secondary" target="_blank" rel="noopener noreferrer" className="rounded-full">
+                      <ArrowSquareOut size={18} /> {t.resource.open}
+                    </LinkButton>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </article>
+    </CommunityShell>
   );
 }

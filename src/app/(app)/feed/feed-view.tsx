@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { ArrowUpRight, FilePdf, Link as LinkIcon, MagnifyingGlass, PushPin, TextAlignLeft, VideoCamera, Paperclip, List } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight, FilePdf, Link as LinkIcon, MagnifyingGlass, PushPin, TextAlignLeft, VideoCamera, Paperclip } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "@/components/ui";
 import { Cover, type ResourceType } from "@/components/cover";
 import { CategoryIcon } from "@/lib/category-icons";
 import { t } from "@/lib/texts";
 import { Hero, type HeroCard } from "./hero";
+import { CommunityShell } from "@/components/community-shell";
 
 export const TYPES = ["video", "pdf", "text", "link"] as const;
 function TypeIcon({ type }: { type: ResourceType }) {
@@ -14,7 +15,6 @@ function TypeIcon({ type }: { type: ResourceType }) {
   if (type === "text") return <TextAlignLeft {...props} />;
   return <LinkIcon {...props} />;
 }
-const PROGRAM_URL = "https://drbogdanchiper.ro/produs/mentormed/";
 
 export type Category = { id: string; name: string; slug: string };
 export type Row = {
@@ -58,7 +58,6 @@ export function FeedView(p: FeedViewProps) {
   const newSet = new Set(p.newIds);
   const isNew = (r: Row) => newSet.has(r.id);
   const dateOf = (r: Row) => p.dates[r.id] ?? "";
-  const newByCategory = new Map(Object.entries(p.newByCategory));
   const covers = new Map(Object.entries(p.covers));
   const list = { length: p.totalMatching };
 
@@ -69,15 +68,6 @@ export function FeedView(p: FeedViewProps) {
     const s = p.toString();
     return s ? `/feed?${s}` : "/feed";
   };
-
-  const rail = (
-    <nav aria-label={t.home.categories} className="flex flex-col gap-1">
-      <RailLink href={href({ categorie: undefined, pagina: undefined })} active={!activeCategory} label={t.feed.all} count={newTotal} />
-      {categories.map((c) => (
-        <RailLink key={c.id} href={href({ categorie: c.slug, pagina: undefined })} active={activeCategory?.id === c.id} slug={c.slug} label={c.name} count={newByCategory.get(c.id) ?? 0} />
-      ))}
-    </nav>
-  );
 
   const heroCards: HeroCard[] = heroRows.map((r) => ({
     id: r.id,
@@ -103,12 +93,16 @@ export function FeedView(p: FeedViewProps) {
         </div>
       )}
 
-      <div className={cn("mx-auto grid w-full max-w-6xl gap-8 px-4 lg:grid-cols-[220px_minmax(0,1fr)_300px]", filtered ? "" : "pt-10")}>
-        <aside className="hidden lg:block">
-          <div className="sticky top-24">{rail}</div>
-        </aside>
-
-        <section className="flex min-w-0 flex-col gap-5">
+      <CommunityShell
+        categories={categories}
+        activeSlug={activeCategory?.slug}
+        newByCategory={p.newByCategory}
+        newTotal={newTotal}
+        announcements={announcements.map((a) => ({ id: a.id, title: a.title, date: dateOf(a) }))}
+        categoryHref={(slug) => href({ categorie: slug, pagina: undefined })}
+        className={filtered ? "" : "pt-10"}
+      >
+        <>
           <h2 className="text-2xl font-bold tracking-tight md:text-3xl">{activeCategory ? activeCategory.name : t.feed.title}</h2>
 
           <form action="/feed" className="flex gap-2">
@@ -121,13 +115,6 @@ export function FeedView(p: FeedViewProps) {
             <button type="submit" className="h-12 rounded-full bg-accent px-6 text-sm font-semibold text-accent-ink transition-colors hover:bg-accent-hover active:scale-[0.98]">{t.common.search}</button>
           </form>
 
-          <details className="group lg:hidden">
-            <summary className="flex h-12 cursor-pointer list-none items-center justify-between rounded-full border border-line bg-surface px-5 text-sm font-semibold">
-              <span className="flex items-center gap-2"><List size={18} /> {activeCategory?.name ?? t.home.categories}</span>
-              <span className="text-muted group-open:rotate-180">⌄</span>
-            </summary>
-            <div className="mt-2 rounded-card border border-line bg-surface p-2 shadow-card">{rail}</div>
-          </details>
 
           <div className="inline-flex w-fit max-w-full flex-wrap gap-1 rounded-full bg-surface2 p-1" role="group" aria-label="Tip resursă">
             {[undefined, ...TYPES].map((x) => (
@@ -155,45 +142,9 @@ export function FeedView(p: FeedViewProps) {
           ) : (
             <div className="rounded-card border border-dashed border-line p-10 text-center text-muted">{filtered ? t.feed.emptyFiltered : t.feed.empty}</div>
           )}
-        </section>
-
-        <aside className="flex flex-col gap-6 lg:sticky lg:top-24 lg:self-start">
-          {announcements.length > 0 && (
-            <div className="rounded-card border border-line bg-surface p-6 shadow-card">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-muted">{t.home.announcements}</h3>
-              <ul className="mt-4 flex flex-col divide-y divide-line">
-                {announcements.map((a) => (
-                  <li key={a.id}>
-                    <Link href={`/resurse/${a.id}`} className="flex flex-col gap-1 py-3 first:pt-0 last:pb-0 hover:text-accent">
-                      <span className="text-sm font-semibold leading-snug">{a.title}</span>
-                      <span className="text-xs text-muted">{dateOf(a)}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          <div className="relative overflow-hidden rounded-card bg-[#0d1c5c] p-6 text-white dark:bg-surface2">
-            <div aria-hidden className="absolute -right-12 -top-12 size-44 rounded-full bg-[#9155f6]/45 blur-3xl" />
-            <p className="relative text-xs font-semibold uppercase tracking-wider text-white/75">{t.home.nextProgram}</p>
-            <p className="relative mt-3 text-lg font-bold leading-snug">{t.home.nextProgramText}</p>
-            <a href={PROGRAM_URL} target="_blank" rel="noopener noreferrer" className="relative mt-5 inline-flex h-11 items-center gap-2 rounded-full bg-violet px-5 text-sm font-semibold text-white transition-colors hover:bg-violet-hover active:scale-[0.98]">
-              {t.home.nextProgramCta} <ArrowUpRight size={16} weight="bold" />
-            </a>
-          </div>
-        </aside>
-      </div>
+        </>
+      </CommunityShell>
     </>
-  );
-}
-
-function RailLink({ href, active, slug, label, count }: { href: string; active: boolean; slug?: string; label: string; count: number }) {
-  return (
-    <Link href={href} aria-current={active ? "page" : undefined} className={cn("flex min-h-11 items-center gap-3 rounded-2xl px-3 text-sm font-semibold transition", active ? "bg-surface2 text-ink" : "text-muted hover:bg-surface2 hover:text-ink")}>
-      <CategoryIcon slug={slug} size={20} weight={active ? "fill" : "regular"} className={active ? "text-accent" : ""} />
-      <span className="flex-1">{label}</span>
-      {count > 0 && <span className="rounded-full bg-violet px-2 py-0.5 text-xs font-bold text-white">{count}</span>}
-    </Link>
   );
 }
 
