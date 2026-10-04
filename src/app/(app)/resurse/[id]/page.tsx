@@ -94,6 +94,7 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
             <span className="text-xs text-muted">{formatDate(r.publish_at ?? r.created_at)} · {t.feed.types[r.type as keyof typeof t.feed.types]}</span>
           </span>
           {r.status === "draft" && <span className="rounded-full bg-danger-bg px-3 py-1 text-xs font-bold text-danger">Ciornă</span>}
+          <FavoriteButton resourceId={r.id} initial={Boolean(favRow)} compact />
         </header>
 
         <div className="flex flex-col gap-3 px-5 pb-6 pt-5 md:px-8">
@@ -112,16 +113,12 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
           <Cover covers={covers} type={r.type} label={category?.name} title={r.title} slug={category?.slug} play={r.type === "video"} ratio="aspect-[5/2]" />
         )}
 
-        <div className="flex flex-wrap items-center gap-3 px-5 pt-2 md:px-8">
-          <FavoriteButton resourceId={r.id} initial={Boolean(favRow)} />
-          <CompleteButton resourceId={r.id} initial={Boolean(viewRow?.completed)} />
-          {r.event_at && (
-            <>
-              <span className="text-sm font-semibold text-muted">Eveniment: {formatDateTime(r.event_at)}</span>
-              <a href={`/api/evenimente/${r.id}`} className="inline-flex h-11 items-center rounded-full border border-line bg-surface px-4 text-sm font-semibold hover:bg-surface2">Adaugă în calendar</a>
-            </>
-          )}
-        </div>
+        {r.event_at && (
+          <div className="flex flex-wrap items-center gap-3 px-5 pt-2 md:px-8">
+            <span className="text-sm font-semibold text-muted">Eveniment: {formatDateTime(r.event_at)}</span>
+            <a href={`/api/evenimente/${r.id}`} className="inline-flex h-11 items-center rounded-full border border-line bg-surface px-4 text-sm font-semibold hover:bg-surface2">Adaugă în calendar</a>
+          </div>
+        )}
 
         {externalUrl && (
           <div className="px-5 pt-6 md:px-8">
@@ -164,6 +161,7 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
           </section>
         )}
       </article>
+      <CompleteButton resourceId={r.id} initial={Boolean(viewRow?.completed)} />
       {(newer || older) && (
         <nav aria-label="Alte resurse din categorie" className="grid gap-3 sm:grid-cols-2">
           {older ? (

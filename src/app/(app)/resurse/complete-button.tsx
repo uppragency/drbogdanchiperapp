@@ -24,11 +24,11 @@ export function CompleteButton({ resourceId, initial }: { resourceId: string; in
         });
       }}
       className={cn(
-        "inline-flex h-11 items-center justify-center gap-2 rounded-full border px-4 text-sm font-semibold transition-colors disabled:opacity-60",
-        done ? "border-ok bg-ok-bg text-ok" : "border-line bg-surface text-muted hover:text-ink",
+        "flex h-14 w-full items-center justify-center gap-2 rounded-card border px-6 text-base font-semibold transition-colors disabled:opacity-60",
+        done ? "border-ok bg-ok-bg text-ok" : "border-line bg-surface text-ink hover:bg-surface2",
       )}
     >
-      <CheckCircle size={18} weight={done ? "fill" : "regular"} /> {done ? "Terminat" : "Am terminat"}
+      <CheckCircle size={22} weight={done ? "fill" : "regular"} /> {done ? "Lecție terminată" : "Am terminat lecția"}
     </button>
   );
 }
