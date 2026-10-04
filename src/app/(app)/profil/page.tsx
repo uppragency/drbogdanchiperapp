@@ -55,7 +55,7 @@ export default async function ProfilePage() {
   ];
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-10">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
         <header className="flex min-w-0 items-center gap-4">
           <div
@@ -77,35 +77,24 @@ export default async function ProfilePage() {
           </div>
         </header>
 
-        <dl className="grid grid-cols-3 gap-3 lg:w-[28rem]">
+        <dl className="grid grid-cols-3 gap-3 lg:w-[26rem]">
           {stats.map((s) => (
-            <div key={s.label} className="rounded-card border border-line bg-surface p-4 text-center">
-              <dd className="text-2xl font-bold"><CountUp value={s.value} /></dd>
-              <dt className="mt-1 text-xs text-muted">{s.label}</dt>
+            <div key={s.label} className="flex min-w-0 flex-col items-center justify-center gap-1 rounded-2xl border border-line bg-surface px-2 py-4 text-center">
+              <dd className="text-2xl font-bold leading-none"><CountUp value={s.value} /></dd>
+              <dt className="text-xs leading-tight text-muted">{s.label}</dt>
             </div>
           ))}
         </dl>
       </div>
 
-      <div className="grid items-start gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid items-start gap-6 md:grid-cols-2">
         <div className="flex flex-col gap-6">
           <Card className="md:p-6">
             <h2 className="mb-5 text-lg font-bold">Date personale</h2>
             <ProfileForm firstName={viewer.firstName} lastName={viewer.lastName} email={viewer.email} />
           </Card>
 
-          <Card className="flex flex-col gap-4 md:p-6">
-            <div>
-              <h2 className="text-lg font-bold">Securitate</h2>
-              <p className="mt-1 text-sm text-muted">Alege o parolă nouă de cel puțin 10 caractere.</p>
-            </div>
-            <LinkButton href="/setare-parola" variant="secondary" className="self-start">
-              {t.profile.changePassword}
-            </LinkButton>
-          </Card>
-        </div>
 
-        <div className="flex flex-col gap-6">
           <Card className="md:p-6">
             <h2 className="mb-4 text-lg font-bold">Acces</h2>
             <ul className="divide-y divide-line text-sm">
@@ -123,10 +112,18 @@ export default async function ProfilePage() {
             </ul>
           </Card>
 
-          <Devices userId={viewer.id} currentSession={viewer.sessionId} />
+          <Card className="flex flex-col gap-4 md:p-6">
+            <div>
+              <h2 className="text-lg font-bold">Securitate</h2>
+              <p className="mt-1 text-sm text-muted">Alege o parolă nouă de cel puțin 10 caractere.</p>
+            </div>
+            <LinkButton href="/setare-parola" variant="secondary" className="self-start">
+              {t.profile.changePassword}
+            </LinkButton>
+          </Card>
         </div>
 
-        <div className="flex flex-col gap-6 md:col-span-2 lg:col-span-1">
+        <div className="flex flex-col gap-6">
           <Card className="md:p-6">
             <div className="mb-4 flex items-center justify-between gap-4">
               <h2 className="text-lg font-bold">Favorite recente</h2>
@@ -158,6 +155,9 @@ export default async function ProfilePage() {
             </div>
             <LinkButton href="/recente" variant="secondary">Deschide lista</LinkButton>
           </Card>
+
+
+          <Devices userId={viewer.id} currentSession={viewer.sessionId} />
 
           <form action={logout} className="self-start">
             <button type="submit" className="min-h-11 text-sm font-semibold text-muted underline-offset-4 hover:text-ink hover:underline">
