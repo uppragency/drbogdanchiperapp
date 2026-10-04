@@ -36,13 +36,13 @@ export function CommunityShell({ categories, activeSlug, newByCategory, newTotal
   );
 
   return (
-    <div className={cn("mx-auto grid w-full max-w-6xl gap-8 px-4 lg:grid-cols-[220px_minmax(0,1fr)_300px]", className)}>
-      <aside className="hidden lg:block">
+    <div className={cn("shell-grid mx-auto grid w-full max-w-6xl gap-8 px-4 md:grid-cols-[200px_minmax(0,1fr)] lg:grid-cols-[220px_minmax(0,1fr)_300px]", className)}>
+      <aside className="shell-side hidden md:row-span-2 md:block lg:row-span-1">
         <div className="sticky top-24">{rail}</div>
       </aside>
 
       <div className="flex min-w-0 flex-col gap-5">
-        <details className="group lg:hidden">
+        <details className="group md:hidden">
           <summary className="flex h-12 cursor-pointer list-none items-center justify-between rounded-full border border-line bg-surface px-5 text-sm font-semibold">
             <span className="flex items-center gap-2"><List size={18} /> {active?.name ?? t.home.categories}</span>
             <span className="text-muted group-open:rotate-180">⌄</span>
@@ -52,7 +52,7 @@ export function CommunityShell({ categories, activeSlug, newByCategory, newTotal
         {children}
       </div>
 
-      <aside className="flex flex-col gap-6 lg:sticky lg:top-24 lg:self-start">
+      <aside className="shell-side flex flex-col gap-6 md:col-start-2 lg:col-start-3 lg:row-start-1 lg:sticky lg:top-24 lg:self-start">
         <LinkList title={t.home.announcements} items={announcements} />
         <LinkList title="Din aceeași categorie" items={related} />
         <div className="relative overflow-hidden rounded-card border border-line bg-violet-soft p-6 text-ink dark:bg-surface2">

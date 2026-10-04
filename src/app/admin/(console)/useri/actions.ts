@@ -123,6 +123,26 @@ export async function trashUser(formData: FormData) {
   redirect("/admin/useri");
 }
 
+// Pause keeps the account and its data, only blocks access and signs out every device.
+export async function pauseUser(formData: FormData) {
+  await requireAdmin();
+  const id = uuid.parse(formData.get("id"));
+  const admin = await guardNotAdmin(id);
+  await admin.from("profiles").update({ is_active: false }).eq("id", id);
+  await admin.rpc("reset_user_sessions", { p_user: id });
+  revalidatePath(`/admin/useri/${id}`);
+  revalidatePath("/admin/useri");
+}
+
+export async function resumeUser(formData: FormData) {
+  await requireAdmin();
+  const id = uuid.parse(formData.get("id"));
+  const admin = await guardNotAdmin(id);
+  await admin.from("profiles").update({ is_active: true }).eq("id", id);
+  revalidatePath(`/admin/useri/${id}`);
+  revalidatePath("/admin/useri");
+}
+
 export async function restoreUser(formData: FormData) {
   await requireAdmin();
   const id = uuid.parse(formData.get("id"));

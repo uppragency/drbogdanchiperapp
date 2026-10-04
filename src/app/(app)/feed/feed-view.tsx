@@ -3,10 +3,12 @@ import { ArrowUpRight, CheckCircle, FilePdf, Heart, Link as LinkIcon, Magnifying
 import { cn, EmptyState } from "@/components/ui";
 import { categoryColor } from "@/lib/category-color";
 import { FeedToolbar } from "./feed-toolbar";
+import { Highlight } from "@/components/highlight";
 import { Cover, type ResourceType } from "@/components/cover";
 import { CategoryIcon } from "@/lib/category-icons";
 import { t } from "@/lib/texts";
 import { Hero, type HeroCard } from "./hero";
+import { greetingNow } from "@/lib/greeting";
 import { FeaturedRow } from "./featured-row";
 import { CommunityShell } from "@/components/community-shell";
 
@@ -26,6 +28,7 @@ export type Row = {
   id: string;
   title: string;
   description: string;
+  presenter: string;
   type: ResourceType;
   video_url: string | null;
   is_pinned: boolean;
@@ -98,6 +101,7 @@ export function FeedView(p: FeedViewProps) {
         <div>
           <Hero
             name={firstName}
+            greeting={greetingNow()}
             groups={groups}
             newCount={newTotal}
             cards={heroCards}
@@ -178,7 +182,7 @@ export function FeedView(p: FeedViewProps) {
               <ul className={cn("gap-6", p.view === "grila" ? "grid sm:grid-cols-2" : "flex flex-col")}>
                 {shown.map((r) => (
                   <li key={r.id}>
-                    <PostCard r={r} category={catById.get(r.category_id)} isNew={isNew(r)} done={doneSet.has(r.id)} date={dateOf(r)} covers={covers.get(r.id) ?? []} compact={p.view === "grila"} />
+                    <PostCard r={r} category={catById.get(r.category_id)} isNew={isNew(r)} done={doneSet.has(r.id)} date={dateOf(r)} covers={covers.get(r.id) ?? []} compact={p.view === "grila"} q={q} />
                   </li>
                 ))}
               </ul>
@@ -202,7 +206,7 @@ export function FeedView(p: FeedViewProps) {
   );
 }
 
-function PostCard({ r, category, isNew, done, date, covers, compact }: { r: Row; category?: Category; isNew: boolean; done: boolean; date: string; covers: string[]; compact: boolean }) {
+function PostCard({ r, category, isNew, done, date, covers, compact, q }: { r: Row; category?: Category; isNew: boolean; done: boolean; date: string; covers: string[]; compact: boolean; q: string }) {
   const files = r.resource_attachments.length;
   const color = categoryColor(category?.slug, category?.name);
   return (
@@ -214,14 +218,14 @@ function PostCard({ r, category, isNew, done, date, covers, compact }: { r: Row;
             <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: color }} aria-hidden />
             <span className="truncate">{category?.name}</span>
           </span>
-          <span className="text-xs text-muted">{date}</span>
+          <span className="truncate text-xs text-muted">{date}{r.presenter ? <> · <Highlight text={r.presenter} q={q} /></> : null}</span>
         </span>
         {r.is_pinned && <PushPin size={18} weight="fill" className="text-accent" aria-label="Fixată" />}
         {done ? <CheckCircle size={22} weight="fill" className="text-ok" aria-label="Terminat" /> : isNew && <span className="rounded-full bg-violet px-3 py-1 text-xs font-bold text-on-violet">{t.feed.new}</span>}
       </div>
       <div className="flex flex-col gap-2 px-5 pb-4 pt-4">
-        <h3 className={cn("font-bold leading-snug tracking-tight", compact ? "line-clamp-2 text-lg" : "text-xl")}>{r.title}</h3>
-        {r.description && <p className={cn("text-sm leading-relaxed text-muted", compact ? "line-clamp-2" : "line-clamp-3")}>{r.description}</p>}
+        <h3 className={cn("font-bold leading-snug tracking-tight", compact ? "line-clamp-2 text-lg" : "text-xl")}><Highlight text={r.title} q={q} /></h3>
+        {r.description && <p className={cn("text-sm leading-relaxed text-muted", compact ? "line-clamp-2" : "line-clamp-3")}><Highlight text={r.description} q={q} /></p>}
       </div>
       <Cover covers={covers} type={r.type} label={category?.name} title={r.title} slug={category?.slug} play={r.type === "video"} />
       <div className="mt-auto flex items-center gap-4 px-5 py-4 text-sm font-semibold text-muted">

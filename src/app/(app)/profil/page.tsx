@@ -4,6 +4,8 @@ import { requireUser, fullName } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Badge, Card, LinkButton } from "@/components/ui";
 import { ProfileForm } from "./profile-form";
+import { Devices } from "./devices";
+import { CountUp } from "@/components/count-up";
 import { logout } from "@/app/actions";
 import { t } from "@/lib/texts";
 
@@ -77,7 +79,7 @@ export default async function ProfilePage() {
       <dl className="grid grid-cols-3 gap-3">
         {stats.map((s) => (
           <div key={s.label} className="rounded-card border border-line bg-surface p-4 text-center">
-            <dd className="text-2xl font-bold">{s.value}</dd>
+            <dd className="text-2xl font-bold"><CountUp value={s.value} /></dd>
             <dt className="mt-1 text-xs text-muted">{s.label}</dt>
           </div>
         ))}
@@ -136,6 +138,8 @@ export default async function ProfilePage() {
         </div>
         <LinkButton href="/recente" variant="secondary">Deschide lista</LinkButton>
       </Card>
+
+      <Devices userId={viewer.id} currentSession={viewer.sessionId} />
 
       <Card className="flex flex-wrap items-center justify-between gap-4">
         <div>

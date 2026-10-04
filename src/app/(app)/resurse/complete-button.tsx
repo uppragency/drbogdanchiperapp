@@ -7,6 +7,7 @@ import { setCompleted } from "./actions";
 
 export function CompleteButton({ resourceId, initial }: { resourceId: string; initial: boolean }) {
   const [done, setDone] = useState(initial);
+  const [animate, setAnimate] = useState(false);
   const [pending, start] = useTransition();
   return (
     <button
@@ -16,6 +17,7 @@ export function CompleteButton({ resourceId, initial }: { resourceId: string; in
       onClick={() => {
         const next = !done;
         setDone(next);
+        setAnimate(next);
         start(async () => {
           const result = await setCompleted(resourceId, next);
           setDone(result);
@@ -28,7 +30,15 @@ export function CompleteButton({ resourceId, initial }: { resourceId: string; in
         done ? "border-ok bg-ok-bg text-ok" : "border-line bg-surface text-ink hover:bg-surface2",
       )}
     >
-      <CheckCircle size={22} weight={done ? "fill" : "regular"} /> {done ? "Lecție terminată" : "Am terminat lecția"}
+      {done ? (
+        <svg key={animate ? "a" : "s"} viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={animate ? "check-draw" : "check-static"} aria-hidden>
+          <circle cx="12" cy="12" r="10" />
+          <path d="M7.5 12.5l3 3 6-6.5" />
+        </svg>
+      ) : (
+        <CheckCircle size={22} />
+      )}{" "}
+      {done ? "Lecție terminată" : "Am terminat lecția"}
     </button>
   );
 }

@@ -18,7 +18,7 @@ export async function searchPreview(q: string): Promise<SearchHit[]> {
     .eq("status", "published")
     .is("deleted_at", null)
     .or(`publish_at.is.null,publish_at.lte.${nowIso}`)
-    .or(`title.ilike.%${needle}%,description.ilike.%${needle}%,body.ilike.%${needle}%`)
+    .or(`title.ilike.%${needle}%,description.ilike.%${needle}%,presenter.ilike.%${needle}%,body.ilike.%${needle}%`)
     .order("created_at", { ascending: false })
     .limit(8);
   return ((data ?? []) as unknown as { id: string; title: string; type: SearchHit["type"]; categories: { name: string } | { name: string }[] | null }[]).map((r) => ({

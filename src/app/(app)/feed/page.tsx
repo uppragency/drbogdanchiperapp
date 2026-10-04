@@ -31,7 +31,7 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
     supabase.from("categories").select("id,name,slug").order("position"),
     supabase
       .from("resources")
-      .select("id,title,description,type,video_url,is_pinned,publish_at,created_at,category_id,cover_path,resource_attachments(id)")
+      .select("id,title,description,presenter,type,video_url,is_pinned,publish_at,created_at,category_id,cover_path,resource_attachments(id)")
       .eq("status", "published")
       .is("deleted_at", null)
       .or(`publish_at.is.null,publish_at.lte.${nowIso}`)
@@ -61,7 +61,7 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
   if (q) {
     const needle = q.replace(/[%,()*\\]/g, " ").trim();
     const { data: hits } = needle
-      ? await supabase.from("resources").select("id").eq("status", "published").is("deleted_at", null).or(`title.ilike.%${needle}%,description.ilike.%${needle}%,body.ilike.%${needle}%`).limit(200)
+      ? await supabase.from("resources").select("id").eq("status", "published").is("deleted_at", null).or(`title.ilike.%${needle}%,description.ilike.%${needle}%,presenter.ilike.%${needle}%,body.ilike.%${needle}%`).limit(200)
       : { data: [] };
     matchIds = new Set((hits ?? []).map((h: { id: string }) => h.id));
   }

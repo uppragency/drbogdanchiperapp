@@ -69,15 +69,15 @@ export function Field({
         minLength={minLength}
         disabled={disabled}
         aria-invalid={error ? true : undefined}
-        aria-describedby={help ? `${name}-help` : undefined}
-        className="h-11 rounded-control border border-line bg-bg px-4 text-base text-ink placeholder:text-muted focus:border-accent focus:outline-none"
+        aria-describedby={error ? `${name}-error` : help ? `${name}-help` : undefined}
+        className="h-11 rounded-control border border-line bg-bg px-4 text-base text-ink placeholder:text-muted focus:border-accent focus:outline-none aria-[invalid=true]:border-danger"
       />
       {help && (
         <p id={`${name}-help`} className="text-sm text-muted">
           {help}
         </p>
       )}
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {error && <p id={`${name}-error`} role="alert" className="text-sm font-semibold text-danger">{error}</p>}
     </div>
   );
 }

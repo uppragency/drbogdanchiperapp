@@ -9,6 +9,7 @@ import { t } from "@/lib/texts";
 export type HeroCard = { id: string; title: string; category: string; type: ResourceType; date: string; covers: string[] };
 type Props = {
   name: string;
+  greeting: string;
   groups: string[];
   newCount: number;
   cards: HeroCard[];
@@ -18,7 +19,7 @@ type Props = {
 
 const spring = { type: "spring", stiffness: 320, damping: 30 } as const;
 
-export function Hero({ name, groups, newCount, cards, resume, announcements }: Props) {
+export function Hero({ name, greeting, groups, newCount, cards, resume, announcements }: Props) {
   const reduce = useReducedMotion();
   const mx = useMotionValue(720);
   const my = useMotionValue(180);
@@ -51,7 +52,7 @@ export function Hero({ name, groups, newCount, cards, resume, announcements }: P
       <div className="mx-auto grid min-h-[520px] w-full max-w-6xl items-center gap-8 px-4 pb-[88px] pt-10 md:grid-cols-[1.1fr_1fr] md:gap-10">
         <div className="flex min-w-0 flex-col gap-5">
           <h1 className="text-4xl font-bold leading-[1.1] tracking-tight md:text-6xl">
-            {name ? `${t.home.greeting}, ${name}` : "Bine ai venit"}
+            {name ? `${greeting}, ${name}` : "Bine ai venit"}
           </h1>
           <p className="text-lg text-[#0d1c5c]/75 dark:text-white/75">
             {newCount > 0 ? (

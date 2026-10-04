@@ -4,6 +4,7 @@ import { ArrowRight, FilePdf, Link as LinkIcon, MagnifyingGlass, TextAlignLeft, 
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { EmptyState } from "@/components/ui";
+import { Highlight } from "@/components/highlight";
 import { categoryColor } from "@/lib/category-color";
 import { t } from "@/lib/texts";
 
@@ -27,7 +28,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/cauta">) 
       .eq("status", "published")
       .is("deleted_at", null)
       .or(`publish_at.is.null,publish_at.lte.${nowIso}`)
-      .or(`title.ilike.%${needle}%,description.ilike.%${needle}%,body.ilike.%${needle}%`)
+      .or(`title.ilike.%${needle}%,description.ilike.%${needle}%,presenter.ilike.%${needle}%,body.ilike.%${needle}%`)
       .order("created_at", { ascending: false })
       .limit(60);
     hits = (data ?? []) as unknown as Hit[];
@@ -77,8 +78,8 @@ export default async function SearchPage({ searchParams }: PageProps<"/cauta">) 
                   <Link href={`/resurse/${h.id}`} className="flex items-center gap-4 p-5 transition-colors hover:bg-surface2">
                     <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-violet-soft text-violet"><Icon size={20} /></span>
                     <span className="flex min-w-0 flex-1 flex-col">
-                      <span className="font-bold">{h.title}</span>
-                      {h.description && <span className="line-clamp-1 text-sm text-muted">{h.description}</span>}
+                      <span className="font-bold"><Highlight text={h.title} q={q} /></span>
+                      {h.description && <span className="line-clamp-1 text-sm text-muted"><Highlight text={h.description} q={q} /></span>}
                     </span>
                     <ArrowRight size={18} className="shrink-0 text-muted" />
                   </Link>

@@ -39,6 +39,7 @@ export function FeedToolbar(props: {
         </form>
         <button
           type="button"
+          data-tour="filters"
           aria-expanded={open}
           aria-controls={panelId}
           onClick={() => setOpen((v) => !v)}

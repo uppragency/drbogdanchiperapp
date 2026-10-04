@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { localInputToIso } from "@/lib/format";
 import type { FormState } from "@/app/login/actions";
 
@@ -12,6 +13,7 @@ const https = z.string().trim().url().refine((v) => v.startsWith("https://"), "L
 const schema = z.object({
   title: z.string().trim().min(1, "Titlul este obligatoriu").max(200),
   description: z.string().trim().max(500).default(""),
+  presenter: z.string().trim().max(120).default(""),
   type: z.enum(["video", "pdf", "text", "link"]),
   categoryId: z.string().uuid("Alege o categorie"),
   body: z.string().max(50000).default(""),
@@ -30,6 +32,7 @@ export async function saveResource(_: FormState, formData: FormData): Promise<Fo
   const parsed = schema.safeParse({
     title: formData.get("title"),
     description: formData.get("description") ?? "",
+    presenter: formData.get("presenter") ?? "",
     type: formData.get("type"),
     categoryId: formData.get("categoryId"),
     body: formData.get("body") ?? "",
@@ -52,6 +55,7 @@ export async function saveResource(_: FormState, formData: FormData): Promise<Fo
   const row = {
     title: d.title,
     description: d.description,
+    presenter: d.presenter,
     type: d.type,
     category_id: d.categoryId,
     body: d.body,
@@ -175,21 +179,34 @@ export async function setCover(resourceId: string, path: string | null): Promise
   return { ok: path ? "Coperta a fost salvată." : "Coperta a fost ștearsă." };
 }
 
-// Copies the resource as a draft: same text, group and link attachments. Uploaded files are not copied.
+// Copies the resource as a draft: text, group, presenter, link attachments and uploaded files (copied inside Storage).
 export async function duplicateResource(formData: FormData) {
   const admin = await requireAdmin();
   const id = z.string().uuid().parse(formData.get("id"));
   const supabase = await createClient();
-  const { data: r } = await supabase.from("resources").select("title,description,type,category_id,body,video_url,is_pinned").eq("id", id).maybeSingle();
+  const { data: r } = await supabase.from("resources").select("title,description,presenter,type,category_id,body,video_url,comments_enabled").eq("id", id).maybeSingle();
   if (!r) redirect("/admin/resurse");
   const { data: copy } = await supabase.from("resources").insert({ ...r, title: `${r.title} (copie)`.slice(0, 200), is_pinned: false, status: "draft", created_by: admin.id }).select("id").single();
   if (!copy) redirect("/admin/resurse");
-  const [{ data: tags }, { data: links }] = await Promise.all([
+  const [{ data: tags }, { data: atts }] = await Promise.all([
     supabase.from("resource_tags").select("tag_id").eq("resource_id", id),
-    supabase.from("resource_attachments").select("label,url,position").eq("resource_id", id).eq("kind", "link"),
+    supabase.from("resource_attachments").select("kind,label,url,file_path,position").eq("resource_id", id).order("position"),
   ]);
   if (tags?.length) await supabase.from("resource_tags").insert(tags.map((t: { tag_id: string }) => ({ resource_id: copy.id, tag_id: t.tag_id })));
-  if (links?.length) await supabase.from("resource_attachments").insert(links.map((l: { label: string; url: string; position: number }) => ({ resource_id: copy.id, kind: "link", label: l.label, url: l.url, position: l.position })));
+  const storage = createAdminClient().storage.from("resources");
+  const rows: { resource_id: string; kind: string; label: string; url: string | null; file_path: string | null; position: number }[] = [];
+  for (const a of (atts ?? []) as { kind: string; label: string; url: string | null; file_path: string | null; position: number }[]) {
+    if (a.file_path) {
+      const name = a.file_path.split("/").pop() ?? "fisier";
+      const target = `${copy.id}/${name}`;
+      const { error } = await storage.copy(a.file_path, target);
+      if (error) continue;
+      rows.push({ resource_id: copy.id, kind: a.kind, label: a.label, url: null, file_path: target, position: a.position });
+    } else {
+      rows.push({ resource_id: copy.id, kind: a.kind, label: a.label, url: a.url, file_path: null, position: a.position });
+    }
+  }
+  if (rows.length) await supabase.from("resource_attachments").insert(rows);
   revalidatePath("/admin/resurse");
   redirect(`/admin/resurse/${copy.id}?nou=1`);
 }

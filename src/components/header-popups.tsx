@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, ChatsCircle, FilePdf, Link as LinkIcon, MagnifyingGlass, Sparkle, TextAlignLeft, VideoCamera, X } from "@phosphor-icons/react";
+import { Highlight } from "@/components/highlight";
 import { notificationsPreview, searchPreview, type NoticeItem, type SearchHit } from "@/app/(app)/header-actions";
 import { markNotificationsSeen } from "@/app/(app)/notificari/actions";
 
@@ -33,6 +34,7 @@ export function SearchPopup() {
     <>
       <Link
         href="/cauta"
+        data-tour="search"
         aria-label="Caută în toate categoriile"
         title="Caută"
         className={iconBtn}
@@ -85,7 +87,7 @@ export function SearchPopup() {
                     <Link href={`/resurse/${h.id}`} onClick={close} className="flex min-h-14 items-center gap-3 rounded-control px-3 py-2 hover:bg-surface2">
                       <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-violet-soft text-violet"><Icon size={18} /></span>
                       <span className="flex min-w-0 flex-1 flex-col">
-                        <span className="truncate font-semibold">{h.title}</span>
+                        <span className="truncate font-semibold"><Highlight text={h.title} q={q} /></span>
                         <span className="text-xs text-muted">{h.category}</span>
                       </span>
                     </Link>
@@ -140,6 +142,7 @@ export function NotificationsPopup({ unread }: { unread: number }) {
     <div ref={wrap}>
       <Link
         href="/notificari"
+        data-tour="bell"
         aria-label={unread > 0 ? `Notificări, ${unread} necitite` : "Notificări"}
         aria-expanded={open}
         title="Notificări"

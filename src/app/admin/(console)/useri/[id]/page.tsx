@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Badge, Card, PageTitle, btn } from "@/components/ui";
 import { formatDateTime, isoToLocalInput } from "@/lib/format";
 import { UserForm } from "../user-form";
-import { purgeUser, resendInvite, resetSessions, restoreUser, sendResetLink, trashUser, updateUser, validateAccount } from "../actions";
+import { pauseUser, resumeUser, purgeUser, resendInvite, resetSessions, restoreUser, sendResetLink, trashUser, updateUser, validateAccount } from "../actions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PasswordForm } from "../password-form";
 
@@ -65,7 +65,7 @@ export default async function EditUser({ params }: PageProps<"/admin/useri/[id]"
         </div>
         <ul className="flex flex-wrap gap-2 text-sm">
           <li><Badge tone={emailConfirmed ? "ok" : "danger"}>{emailConfirmed ? "Email confirmat" : "Email neconfirmat"}</Badge></li>
-          <li><Badge tone={p.is_active ? "ok" : "danger"}>{p.is_active ? "Cont activ" : "Cont inactiv"}</Badge></li>
+          <li><Badge tone={p.is_active ? "ok" : "warn"}>{p.is_active ? "Cont activ" : "Cont pe pauză"}</Badge></li>
           <li><Badge tone={p.terms_accepted_at ? "ok" : "neutral"}>{p.terms_accepted_at ? "Termeni acceptați" : "Termeni neacceptați"}</Badge></li>
         </ul>
         {!validated && (
@@ -106,6 +106,11 @@ export default async function EditUser({ params }: PageProps<"/admin/useri/[id]"
           <div className="flex flex-wrap gap-2">
             <form action={resendInvite}><input type="hidden" name="id" value={p.id} /><button className={btn.secondary}>{inv?.sent_at ? "Retrimite invitația" : "Trimite invitația"}</button></form>
             <form action={resetSessions}><input type="hidden" name="id" value={p.id} /><button className={btn.secondary}>Deconectează de pe toate dispozitivele</button></form>
+            {p.is_active ? (
+              <form action={pauseUser}><input type="hidden" name="id" value={p.id} /><button className={btn.secondary}>Pune contul pe pauză</button></form>
+            ) : (
+              <form action={resumeUser}><input type="hidden" name="id" value={p.id} /><button className={btn.primary}>Reactivează contul</button></form>
+            )}
           </div>
         )}
       </Card>

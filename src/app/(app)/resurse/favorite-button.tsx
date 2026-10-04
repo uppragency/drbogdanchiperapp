@@ -7,6 +7,7 @@ import { setFavorite } from "./actions";
 
 export function FavoriteButton({ resourceId, initial, compact }: { resourceId: string; initial: boolean; compact?: boolean }) {
   const [on, setOn] = useState(initial);
+  const [pulse, setPulse] = useState(0);
   const [pending, start] = useTransition();
   return (
     <button
@@ -16,6 +17,7 @@ export function FavoriteButton({ resourceId, initial, compact }: { resourceId: s
       onClick={() => {
         const next = !on;
         setOn(next);
+        if (next) setPulse((n) => n + 1);
         start(async () => {
           const result = await setFavorite(resourceId, next);
           setOn(result);
@@ -26,7 +28,7 @@ export function FavoriteButton({ resourceId, initial, compact }: { resourceId: s
       aria-label={compact ? (on ? "Scoate din favorite" : "Adaugă la favorite") : undefined}
       className={cn("inline-flex h-11 items-center justify-center gap-2 rounded-full text-sm font-semibold transition-colors", compact ? "w-11 shrink-0" : "border px-4", on ? (compact ? "text-accent" : "border-accent bg-accent text-accent-ink") : compact ? "text-muted hover:bg-surface2 hover:text-ink" : "border-line bg-surface text-muted hover:text-ink")}
     >
-      <Heart size={18} weight={on ? "fill" : "regular"} /> {!compact && (on ? "În favorite" : "Adaugă la favorite")}
+      <Heart key={pulse} size={18} weight={on ? "fill" : "regular"} className={pulse > 0 && on ? "heart-pulse" : undefined} /> {!compact && (on ? "În favorite" : "Adaugă la favorite")}
     </button>
   );
 }

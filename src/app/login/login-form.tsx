@@ -11,10 +11,9 @@ export function LoginForm({ next, notice }: { next: string; notice?: string }) {
   return (
     <form action={action} className="flex flex-col gap-5">
       {notice && <Alert>{notice}</Alert>}
-      {state.error && <Alert>{state.error}</Alert>}
       <input type="hidden" name="next" value={next} />
       <Field label={t.login.email} name="email" type="email" autoComplete="email" inputMode="email" required />
-      <Field label={t.login.password} name="password" type="password" autoComplete="current-password" required />
+      <Field label={t.login.password} name="password" type="password" autoComplete="current-password" required error={state.error} />
       <SubmitButton className="w-full">{t.login.submit}</SubmitButton>
       <Link href="/parola-uitata" className="text-center text-sm font-semibold text-accent hover:underline">
         {t.login.forgot}

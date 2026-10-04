@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, EmptyState, PageTitle } from "@/components/ui";
 import { formatDate } from "@/lib/format";
 import { DownloadSimple, UsersThree } from "@phosphor-icons/react/dist/ssr";
+import { CountUp } from "@/components/count-up";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const metadata: Metadata = { title: "Statistici" };
 
@@ -25,13 +27,15 @@ export default async function StatsPage() {
     count(supabase.from("invitations").select("id", { count: "exact", head: true }).not("accepted_at", "is", null)),
     count(supabase.from("comments").select("id", { count: "exact", head: true }).gte("created_at", d30)),
     count(supabase.from("access_requests").select("id", { count: "exact", head: true }).eq("status", "pending")),
-    supabase.rpc("resource_view_counts"),
+    createAdminClient().rpc("resource_view_stats"),
     supabase.from("resources").select("id,title,category_id,type").eq("status", "published").is("deleted_at", null).limit(1000),
     supabase.from("categories").select("id,name").order("position"),
     supabase.from("profiles").select("id,email,first_name,last_name,last_login_at", { count: "exact" }).eq("role", "user").eq("is_active", true).is("deleted_at", null).or(`last_login_at.is.null,last_login_at.lt.${d30}`).order("last_login_at", { ascending: true, nullsFirst: true }).limit(15),
   ]);
 
-  const views = new Map(((viewRows ?? []) as { resource_id: string; views: number }[]).map((v) => [v.resource_id, Number(v.views)]));
+  type ViewStat = { resource_id: string; unique_viewers: number; repeat_viewers: number; total_views: number };
+  const stats = new Map(((viewRows ?? []) as ViewStat[]).map((v) => [v.resource_id, v]));
+  const views = new Map([...stats].map(([id, v]) => [id, Number(v.total_views)]));
   const res = (resources ?? []) as { id: string; title: string; category_id: string; type: string }[];
   const ranked = [...res].sort((a, b) => (views.get(b.id) ?? 0) - (views.get(a.id) ?? 0));
   const top = ranked.filter((r) => (views.get(r.id) ?? 0) > 0).slice(0, 10);
@@ -55,7 +59,7 @@ export default async function StatsPage() {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
         {cards.map((c) => (
           <div key={c.label} className="rounded-card border border-line bg-surface p-5">
-            <p className="text-3xl font-bold tracking-tight">{c.value}</p>
+            <p className="text-3xl font-bold tracking-tight">{typeof c.value === "number" ? <CountUp value={c.value} /> : c.value}</p>
             <p className="mt-1 text-sm font-semibold">{c.label}</p>
             {c.note && <p className="text-sm text-muted">{c.note}</p>}
           </div>
@@ -70,10 +74,10 @@ export default async function StatsPage() {
               <li key={r.id} className="flex items-center gap-3 py-3">
                 <span className="w-6 text-sm font-bold text-muted">{i + 1}</span>
                 <Link href={`/admin/resurse/${r.id}`} className="min-w-0 flex-1 truncate font-semibold hover:text-accent">{r.title}</Link>
-                <span className="text-sm text-muted">{views.get(r.id)} deschideri</span>
+                <span className="text-right text-sm text-muted">{stats.get(r.id)?.unique_viewers} unici, {stats.get(r.id)?.repeat_viewers} revin</span>
               </li>
             ))}
-            {top.length === 0 && <li className="py-3 text-sm text-muted">Nicio resursă deschisă de membri încă. Vizualizările adminului nu se numără.</li>}
+            {top.length === 0 && <li className="py-3 text-sm text-muted">Nicio resursă deschisă de membri încă. Vizualizările adminului nu se numără. „Unici” sunt membrii care au deschis resursa, „revin” cei care au deschis-o de mai multe ori.</li>}
           </ol>
         </Card>
 

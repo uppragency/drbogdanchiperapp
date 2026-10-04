@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Card, LinkButton, PageTitle } from "@/components/ui";
 import { formatDateTime } from "@/lib/format";
+import { CountUp } from "@/components/count-up";
 
 export const metadata: Metadata = { title: "Administrare" };
 
@@ -40,7 +41,7 @@ export default async function AdminHome() {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
         {stats.map((s) => (
           <Link key={s.label} href={s.href} className="rounded-card border border-line bg-surface p-5 transition hover:shadow-card">
-            <p className="text-3xl font-bold tracking-tight">{s.value}</p>
+            <p className="text-3xl font-bold tracking-tight"><CountUp value={s.value} /></p>
             <p className="mt-1 text-sm text-muted">{s.label}</p>
           </Link>
         ))}

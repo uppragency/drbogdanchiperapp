@@ -89,7 +89,7 @@ export default async function UsersAdmin({ searchParams }: PageProps<"/admin/use
                   <span className="text-sm text-muted">{names.join(", ") || "Fără grup"} · {r.last_login_at ? `ultima logare ${formatDate(r.last_login_at)}` : "nelogat"}</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {!r.is_active && <Badge tone="danger">Inactiv</Badge>}
+                  {!r.is_active && <Badge tone="warn">Pe pauză</Badge>}
                   {expired && <Badge tone="danger">Expirat</Badge>}
                   {inv && !inv.sent_at && <Badge>Neinvitat</Badge>}
                   {inv?.sent_at && !inv.accepted_at && <Badge tone="accent">Invitat</Badge>}

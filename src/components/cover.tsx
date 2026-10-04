@@ -33,22 +33,30 @@ export function GeneratedCover({ type, label, title, slug, className }: { type: 
 // Tries each candidate image in order, then falls back to the generated cover.
 export function Cover({ covers, type, label, title, slug, play, badge = true, ratio = "aspect-video", className }: { covers: string[]; type: ResourceType; label?: string; title?: string; slug?: string; play?: boolean; badge?: boolean; ratio?: string; className?: string }) {
   const [index, setIndex] = useState(0);
+  const [loaded, setLoaded] = useState(false);
   const src = covers[index];
+  // Shared by onLoad and the ref check below (an image can finish loading before hydration).
+  const settle = (el: HTMLImageElement) => {
+    // YouTube serves a 120px grey placeholder when maxres does not exist.
+    if (el.naturalWidth <= 120) setIndex((i) => i + 1);
+    else setLoaded(true);
+  };
   return (
     <div className={cn("relative w-full overflow-hidden bg-surface2", ratio, className)}>
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element -- remote video thumbnails, sizes unknown
         <img
+          key={src}
+          ref={(el) => {
+            if (el && el.complete && el.naturalWidth > 0 && !loaded) settle(el);
+          }}
           src={src}
           alt=""
           loading="lazy"
           referrerPolicy="no-referrer"
-          onLoad={(e) => {
-            // YouTube serves a 120px grey placeholder when maxres does not exist.
-            if (e.currentTarget.naturalWidth <= 120) setIndex((i) => i + 1);
-          }}
+          onLoad={(e) => settle(e.currentTarget)}
           onError={() => setIndex((i) => i + 1)}
-          className="size-full object-cover transition duration-500 group-hover:scale-[1.03]"
+          className={cn("size-full object-cover transition duration-500 group-hover:scale-[1.03]", loaded ? "opacity-100 blur-0" : "opacity-0 blur-xl")}
         />
       ) : (
         <GeneratedCover type={type} label={label} title={title} slug={slug} />

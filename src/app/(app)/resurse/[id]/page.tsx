@@ -17,6 +17,7 @@ import { coverUrl } from "@/lib/cover-url";
 import { FavoriteButton } from "../favorite-button";
 import { CompleteButton } from "../complete-button";
 import { CinemaFrame } from "@/components/cinema-frame";
+import { FocusToggle } from "@/components/focus-toggle";
 import { t } from "@/lib/texts";
 
 type Params = { id: string };
@@ -27,7 +28,7 @@ async function load(id: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("resources")
-    .select("id,title,description,type,body,video_url,status,publish_at,created_at,category_id,cover_path,event_at,comments_enabled,categories(name,slug),resource_attachments(id,kind,label,url,file_path,position)")
+    .select("id,title,description,presenter,type,body,video_url,status,publish_at,created_at,category_id,cover_path,event_at,comments_enabled,categories(name,slug),resource_attachments(id,kind,label,url,file_path,position)")
     .eq("id", id)
     .is("deleted_at", null)
     .maybeSingle();
@@ -49,7 +50,7 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
   // Admin views are stored too (for the "continue" banner) but are left out of the popularity counts.
   {
     const supabase = await createClient();
-    await supabase.from("resource_views").upsert({ user_id: viewer.id, resource_id: r.id, last_viewed_at: new Date().toISOString() }, { onConflict: "user_id,resource_id" });
+    await supabase.rpc("record_view", { p_resource: r.id });
   }
 
   const supabase0 = await createClient();
@@ -82,28 +83,31 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
       related={community.related}
       className="pt-10"
     >
-      <Link href="/feed" className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-muted transition-colors hover:text-ink">
-        <ArrowLeft size={16} /> {t.resource.back}
-      </Link>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link href="/feed" className="inline-flex min-h-11 w-fit items-center gap-2 text-sm font-semibold text-muted transition-colors hover:text-ink">
+          <ArrowLeft size={16} /> {t.resource.back}
+        </Link>
+        <FocusToggle />
+      </div>
 
       <article className="overflow-hidden rounded-card border border-line bg-surface shadow-card">
         <header className="flex items-center gap-3 px-5 pt-5 md:px-8 md:pt-8">
           <span className="flex size-11 items-center justify-center rounded-full bg-violet-soft text-violet"><CategoryIcon slug={category?.slug} size={22} /></span>
           <span className="flex min-w-0 flex-1 flex-col">
             <span className="truncate text-sm font-bold">{category?.name}</span>
-            <span className="text-xs text-muted">{formatDate(r.publish_at ?? r.created_at)} · {t.feed.types[r.type as keyof typeof t.feed.types]}</span>
+            <span className="text-xs text-muted">{formatDate(r.publish_at ?? r.created_at)} · {t.feed.types[r.type as keyof typeof t.feed.types]}{r.presenter ? ` · ${r.presenter}` : ""}</span>
           </span>
           {r.status === "draft" && <span className="rounded-full bg-danger-bg px-3 py-1 text-xs font-bold text-danger">Ciornă</span>}
           <FavoriteButton resourceId={r.id} initial={Boolean(favRow)} compact />
         </header>
 
-        <div className="flex flex-col gap-3 px-5 pb-6 pt-5 md:px-8">
-          <h1 className="text-3xl font-bold leading-tight tracking-tight md:text-4xl">{r.title}</h1>
+        <div className="flex flex-col gap-3 px-5 pb-8 pt-6 md:px-8">
+          <h1 className="text-[28px] font-bold leading-tight tracking-tight md:text-4xl">{r.title}</h1>
           {r.description && <p className="max-w-[65ch] text-lg font-normal leading-[1.6] text-muted">{r.description}</p>}
         </div>
 
         {embed && (
-          <div className="flex flex-col gap-3 px-5 pb-6 md:px-8">
+          <div className="flex flex-col gap-4 px-5 pb-10 pt-2 md:px-8">
             <CinemaFrame><VideoPlayer title={r.title} embed={embed} covers={covers} /></CinemaFrame>
             <p className="text-sm text-muted">{t.resource.videoHelp}</p>
           </div>

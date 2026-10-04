@@ -53,6 +53,7 @@ export default async function EditResource({ params, searchParams }: PageProps<"
             eventAt: isoToLocalInput(r.event_at),
             isPinned: r.is_pinned,
             commentsEnabled: r.comments_enabled,
+            presenter: r.presenter ?? "",
             tagIds: (rt ?? []).map((x) => x.tag_id),
           }}
         />
