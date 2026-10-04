@@ -43,7 +43,8 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
   const r = await load(id);
   if (!r) notFound();
 
-  if (viewer.role !== "admin") {
+  // Admin views are stored too (for the "continue" banner) but are left out of the popularity counts.
+  {
     const supabase = await createClient();
     await supabase.from("resource_views").upsert({ user_id: viewer.id, resource_id: r.id, last_viewed_at: new Date().toISOString() }, { onConflict: "user_id,resource_id" });
   }

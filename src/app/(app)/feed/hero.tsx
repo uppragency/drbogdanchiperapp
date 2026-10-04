@@ -56,7 +56,7 @@ export function Hero({ name, groups, newCount, cards, resume, announcements }: P
           <p className="text-lg text-[#0d1c5c]/75 dark:text-white/75">
             {newCount > 0 ? (
               <>
-                Ai <span ref={counter} className="font-bold text-[#0d1c5c] dark:text-white">{newCount}</span> {t.home.newCount} pentru tine.
+                Ai <span ref={counter} className="font-bold text-[#0d1c5c] dark:text-white">{newCount}</span> {newCount === 1 ? "resursă nouă" : t.home.newCount} pentru tine.
               </>
             ) : (
               t.home.noNew
