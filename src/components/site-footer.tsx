@@ -17,6 +17,7 @@ export function SiteFooter() {
           <p className="text-xs font-semibold uppercase tracking-wider text-white/70">{t.footer.platform}</p>
           <Link href="/feed" className={link}>{t.nav.feed}</Link>
           <Link href="/colectii" className={link}>Colecții</Link>
+          <Link href="/recente" className={link}>Văzute recent</Link>
           <Link href="/calendar" className={link}>Calendar</Link>
           <Link href="/faq" className={link}>Întrebări frecvente</Link>
           <Link href="/contact" className={link}>Contact</Link>

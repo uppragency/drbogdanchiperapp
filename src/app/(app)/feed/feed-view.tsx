@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { ArrowUpRight, CheckCircle, ClockCounterClockwise, FilePdf, Heart, Link as LinkIcon, MagnifyingGlass, PushPin, TextAlignLeft, VideoCamera, Paperclip } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight, CheckCircle, FilePdf, Heart, Link as LinkIcon, MagnifyingGlass, PushPin, TextAlignLeft, VideoCamera, Paperclip } from "@phosphor-icons/react/dist/ssr";
 import { cn, EmptyState } from "@/components/ui";
 import { categoryColor } from "@/lib/category-color";
-import { SortSelect, ViewToggle } from "./feed-controls";
+import { FeedToolbar } from "./feed-toolbar";
 import { Cover, type ResourceType } from "@/components/cover";
 import { CategoryIcon } from "@/lib/category-icons";
 import { t } from "@/lib/texts";
@@ -125,16 +125,23 @@ export function FeedView(p: FeedViewProps) {
         <>
           <h2 className="flex items-baseline gap-3 text-2xl font-bold tracking-tight md:text-3xl">{activeCategory ? activeCategory.name : t.feed.title} <span className="text-lg font-semibold text-muted">{p.totalMatching}</span></h2>
 
-          <form action="/feed" className="flex gap-2">
-            {activeCategory && <input type="hidden" name="categorie" value={activeCategory.slug} />}
-            {tip && <input type="hidden" name="tip" value={tip} />}
-            {p.fav && <input type="hidden" name="fav" value="1" />}
-            <div className="relative flex-1">
-              <MagnifyingGlass size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
-              <input name="q" defaultValue={q} placeholder={t.feed.search} aria-label={t.feed.search} className="h-12 w-full rounded-full border border-line bg-surface pl-11 pr-4 text-base placeholder:text-muted focus:border-accent focus:outline-none" />
-            </div>
-            <button type="submit" className="h-12 rounded-full bg-accent px-6 text-sm font-semibold text-accent-ink transition-colors hover:bg-accent-hover active:scale-[0.98]">{t.common.search}</button>
-          </form>
+          <FeedToolbar
+            q={q}
+            placeholder={t.feed.search}
+            submitLabel={t.common.search}
+            hidden={{ ...(activeCategory ? { categorie: activeCategory.slug } : {}), ...(tip ? { tip } : {}), ...(p.fav ? { fav: "1" } : {}), ...(p.sort !== "noi" ? { sortare: p.sort } : {}), ...(p.view === "grila" ? { vedere: "grila" } : {}) }}
+            types={[undefined, ...TYPES].map((x) => ({ value: x ?? "all", label: x ? t.feed.types[x] : t.feed.all, href: href({ tip: x, pagina: undefined }), active: tip === x }))}
+            sort={{ value: p.sort, options: SORTS.map((x) => ({ value: x, label: SORT_LABEL[x], href: href({ sortare: x === "noi" ? undefined : x, pagina: undefined }) })) }}
+            fav={{ on: p.fav, href: href({ fav: p.fav ? undefined : "1", pagina: undefined }) }}
+            chips={[
+              ...(q ? [{ label: `„${q}”`, removeHref: href({ q: undefined, pagina: undefined }) }] : []),
+              ...(tip ? [{ label: t.feed.types[tip], removeHref: href({ tip: undefined, pagina: undefined }) }] : []),
+              ...(p.fav ? [{ label: "Favorite", removeHref: href({ fav: undefined, pagina: undefined }) }] : []),
+              ...(p.sort !== "noi" ? [{ label: SORT_LABEL[p.sort], removeHref: href({ sortare: undefined, pagina: undefined }) }] : []),
+            ]}
+            clearHref={activeCategory ? `/feed?categorie=${activeCategory.slug}` : "/feed"}
+            view={{ current: p.view, listHref: href({ vedere: undefined }), gridHref: href({ vedere: "grila" }) }}
+          />
 
 
           {p.startHere.length > 0 && (
@@ -165,26 +172,6 @@ export function FeedView(p: FeedViewProps) {
               ))}
             </section>
           )}
-
-          <div className="flex flex-wrap items-center gap-3">
-          <div className="inline-flex w-fit max-w-full flex-wrap gap-1 rounded-full bg-surface2 p-1" role="group" aria-label="Tip resursă">
-            {[undefined, ...TYPES].map((x) => (
-              <Link key={x ?? "all"} href={href({ tip: x, pagina: undefined })} aria-current={tip === x ? "true" : undefined} className={cn("rounded-full px-4 py-2 text-sm font-semibold transition", tip === x ? "bg-surface text-ink shadow-sm" : "text-muted hover:text-ink")}>
-                {x ? t.feed.types[x] : t.feed.all}
-              </Link>
-            ))}
-          </div>
-          <Link href={href({ fav: p.fav ? undefined : "1", pagina: undefined })} aria-pressed={p.fav} className={cn("inline-flex h-11 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition-colors", p.fav ? "border-accent bg-accent text-accent-ink" : "border-line bg-surface text-muted hover:text-ink")}>
-            <Heart size={18} weight={p.fav ? "fill" : "regular"} /> Favorite
-          </Link>
-          <Link href="/recente" className="inline-flex h-11 items-center gap-2 rounded-full border border-line bg-surface px-4 text-sm font-semibold text-muted transition-colors hover:text-ink">
-            <ClockCounterClockwise size={18} /> Văzute recent
-          </Link>
-          <div className="ml-auto flex items-center gap-3">
-            <SortSelect value={p.sort} options={SORTS.map((x) => ({ value: x, label: SORT_LABEL[x], href: href({ sortare: x === "noi" ? undefined : x, pagina: undefined }) }))} />
-            <ViewToggle current={p.view} listHref={href({ vedere: undefined })} gridHref={href({ vedere: "grila" })} />
-          </div>
-          </div>
 
           {shown.length > 0 ? (
             <>
