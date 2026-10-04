@@ -21,7 +21,10 @@ export function GeneratedCover({ type, label, title, slug, className }: { type: 
     >
       <div aria-hidden className="absolute -right-12 -top-16 size-64 rounded-full bg-white/10 blur-3xl" />
       <Icon size={112} weight="thin" className="absolute -right-3 -bottom-4 text-white/20" />
-      {label && <span className="relative text-xs font-semibold uppercase tracking-wider text-white/80">{label}</span>}
+      <span className="relative flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white/85">
+        <Icon size={18} aria-hidden />
+        {label ?? TYPE_LABEL[type]}
+      </span>
       {title && <span className="relative line-clamp-3 max-w-[85%] text-lg font-bold leading-snug sm:text-xl">{title}</span>}
     </div>
   );
@@ -54,11 +57,6 @@ export function Cover({ covers, type, label, title, slug, play, badge = true, ra
         <span title={TYPE_LABEL[type]} className="absolute left-3 top-3 flex size-9 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur">
           {(() => { const I = TYPE_ICON[type]; return <I size={18} aria-hidden />; })()}
           <span className="sr-only">{TYPE_LABEL[type]}</span>
-        </span>
-      )}
-      {badge && !src && (
-        <span title={TYPE_LABEL[type]} className="absolute left-3 top-3 flex size-9 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur">
-          {(() => { const I = TYPE_ICON[type]; return <I size={18} aria-hidden />; })()}
         </span>
       )}
       {play && src && (
