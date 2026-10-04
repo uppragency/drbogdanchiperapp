@@ -16,7 +16,7 @@ export function ProfileForm({ firstName, lastName, email }: { firstName: string;
         <Field label={t.profile.firstName} name="firstName" defaultValue={firstName} autoComplete="given-name" required />
         <Field label={t.profile.lastName} name="lastName" defaultValue={lastName} autoComplete="family-name" required />
       </div>
-      <Field label={t.profile.email} name="email_display" type="email" defaultValue={email} help="Emailul se schimbă doar de către administrator." />
+      <Field label={t.profile.email} name="email_display" type="email" defaultValue={email} disabled help="Emailul se schimbă doar de către administrator." />
       <SubmitButton className="self-start">{t.profile.save}</SubmitButton>
     </form>
   );
