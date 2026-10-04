@@ -5,6 +5,8 @@ import { Cover, type ResourceType } from "@/components/cover";
 import { CategoryIcon } from "@/lib/category-icons";
 import { t } from "@/lib/texts";
 import { Hero, type HeroCard } from "./hero";
+import { FeaturedRow } from "./featured-row";
+import { ContinueList } from "./continue-list";
 import { CommunityShell } from "@/components/community-shell";
 
 export const TYPES = ["video", "pdf", "text", "link"] as const;
@@ -40,6 +42,8 @@ export type FeedViewProps = {
   tip?: (typeof TYPES)[number];
   fav: boolean;
   welcomes: { name: string; message: string }[];
+  featured: Row[];
+  continueItems: import("./continue-list").ContinueItem[];
   pages: number;
   filtered: boolean;
   newTotal: number;
@@ -96,6 +100,12 @@ export function FeedView(p: FeedViewProps) {
         </div>
       )}
 
+      {!filtered && p.featured.length > 0 && (
+        <div className="mx-auto w-full max-w-6xl px-4 pt-10">
+          <FeaturedRow cards={p.featured.map((r) => ({ id: r.id, title: r.title, description: r.description, category: catById.get(r.category_id)?.name ?? "", type: r.type, covers: covers.get(r.id) ?? [] }))} />
+        </div>
+      )}
+
       <CommunityShell
         categories={categories}
         activeSlug={activeCategory?.slug}
@@ -103,7 +113,7 @@ export function FeedView(p: FeedViewProps) {
         newTotal={newTotal}
         announcements={announcements.map((a) => ({ id: a.id, title: a.title, date: dateOf(a) }))}
         categoryHref={(slug) => href({ categorie: slug, pagina: undefined })}
-        className={filtered ? "" : "pt-10"}
+        className={filtered ? "pt-10" : "pt-8"}
       >
         <>
           <h2 className="text-2xl font-bold tracking-tight md:text-3xl">{activeCategory ? activeCategory.name : t.feed.title}</h2>
@@ -119,6 +129,8 @@ export function FeedView(p: FeedViewProps) {
             <button type="submit" className="h-12 rounded-full bg-accent px-6 text-sm font-semibold text-accent-ink transition-colors hover:bg-accent-hover active:scale-[0.98]">{t.common.search}</button>
           </form>
 
+
+          {p.continueItems.length > 0 && <ContinueList items={p.continueItems} />}
 
           {p.welcomes.length > 0 && (
             <section className="flex flex-col gap-3 rounded-card border border-line bg-violet-soft p-6">

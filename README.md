@@ -12,6 +12,8 @@ Platformă de curs pentru membri, la `platforma.drbogdanchiper.ro`. Next.js 16, 
 | RESEND_API_KEY | cheia Resend cu drept de trimitere |
 | EMAIL_FROM | MentorMed <platforma@drbogdanchiper.ro> |
 | NEXT_PUBLIC_SITE_URL | https://platforma.drbogdanchiper.ro |
+| ADMIN_NOTIFY_EMAIL | Opțional. Email-ul care primește notificări pentru cereri de acces și mesaje de contact |
+| NEXT_PUBLIC_SENTRY_DSN | Opțional. Fără el, raportarea erorilor este oprită |
 
 ## Pași de lansare
 

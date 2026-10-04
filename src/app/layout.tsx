@@ -14,6 +14,7 @@ export const metadata: Metadata = {
   title: { default: t.platformName, template: `%s | ${t.brand}` },
   description: "Platforma de curs pentru medicii înscriși în programul MentorMed.",
   robots: { index: false, follow: false },
+  appleWebApp: { capable: true, title: "MentorMed", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {

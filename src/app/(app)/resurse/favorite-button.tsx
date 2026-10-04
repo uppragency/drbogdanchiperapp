@@ -4,7 +4,7 @@ import { Heart } from "@phosphor-icons/react";
 import { cn } from "@/components/ui";
 import { setFavorite } from "./actions";
 
-export function FavoriteButton({ resourceId, initial }: { resourceId: string; initial: boolean }) {
+export function FavoriteButton({ resourceId, initial, compact }: { resourceId: string; initial: boolean; compact?: boolean }) {
   const [on, setOn] = useState(initial);
   const [pending, start] = useTransition();
   return (
@@ -17,9 +17,10 @@ export function FavoriteButton({ resourceId, initial }: { resourceId: string; in
         setOn(next);
         start(async () => setOn(await setFavorite(resourceId, next)));
       }}
-      className={cn("inline-flex h-11 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition-colors", on ? "border-accent bg-accent text-accent-ink" : "border-line bg-surface text-muted hover:text-ink")}
+      aria-label={compact ? (on ? "Scoate din favorite" : "Adaugă la favorite") : undefined}
+      className={cn("inline-flex h-11 items-center justify-center gap-2 rounded-full text-sm font-semibold transition-colors", compact ? "w-11 shrink-0" : "border px-4", on ? (compact ? "text-accent" : "border-accent bg-accent text-accent-ink") : compact ? "text-muted hover:bg-surface2 hover:text-ink" : "border-line bg-surface text-muted hover:text-ink")}
     >
-      <Heart size={18} weight={on ? "fill" : "regular"} /> {on ? "În favorite" : "Adaugă la favorite"}
+      <Heart size={18} weight={on ? "fill" : "regular"} /> {!compact && (on ? "În favorite" : "Adaugă la favorite")}
     </button>
   );
 }
