@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { Alert, EmptyState } from "@/components/ui";
 import { formatDateTime } from "@/lib/format";
 import { getLocale, getTx } from "@/lib/i18n";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { specialtyLabel } from "@/lib/specialties";
 import { CommentForm } from "@/app/(app)/resurse/comment-form";
 import { deleteComment } from "@/app/(app)/resurse/comments-actions";
 
@@ -14,6 +16,10 @@ export async function Comments({ resourceId, viewerId, isAdmin, enabled = true }
   const supabase = await createClient();
   const { data } = await supabase.from("comments").select("id,parent_id,user_id,author_name,body,created_at").eq("resource_id", resourceId).order("created_at").limit(400);
   const rows = (data ?? []) as Row[];
+  // Speciality and city are read for the comment authors only, through the service role (members cannot read other profiles).
+  const authorIds = [...new Set(rows.map((r) => r.user_id))];
+  const { data: authors } = authorIds.length ? await createAdminClient().from("profiles").select("id,specialty,city").in("id", authorIds) : { data: [] };
+  const meta = new Map((authors ?? []).map((a: { id: string; specialty: string; city: string }) => [a.id, [specialtyLabel(a.specialty, locale), a.city].filter(Boolean).join(", ")]));
   const top = rows.filter((r) => !r.parent_id);
   const replies = (id: string) => rows.filter((r) => r.parent_id === id);
 
@@ -22,6 +28,7 @@ export async function Comments({ resourceId, viewerId, isAdmin, enabled = true }
       <span aria-hidden className="flex size-10 shrink-0 items-center justify-center rounded-full bg-violet-soft text-sm font-bold text-violet">{(c.author_name || "?").slice(0, 1).toUpperCase()}</span>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <p className="text-sm"><span className="font-bold">{c.author_name || tx("Membru", "Member")}</span> <span className="text-muted">· {formatDateTime(c.created_at, locale)}</span></p>
+        {meta.get(c.user_id) && <p className="-mt-0.5 text-xs text-muted">{meta.get(c.user_id)}</p>}
         <p className="max-w-[65ch] whitespace-pre-line break-words leading-relaxed">{c.body}</p>
         <div className="flex items-center gap-4">
           {!reply && (

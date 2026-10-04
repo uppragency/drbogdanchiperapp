@@ -23,7 +23,7 @@ export default async function ProfilePage() {
   const supabase = await createClient();
 
   const [{ data: prof }, { data: tagRows }, { data: favRows }, views, comments, favCount] = await Promise.all([
-    supabase.from("profiles").select("created_at,access_expires_at").eq("id", viewer.id).maybeSingle(),
+    supabase.from("profiles").select("created_at,access_expires_at,specialty,city").eq("id", viewer.id).maybeSingle(),
     supabase.from("user_tags").select("tags(name,position)").eq("user_id", viewer.id),
     supabase
       .from("favorites")
@@ -95,7 +95,7 @@ export default async function ProfilePage() {
         <div className="flex flex-col gap-6">
           <Card className="md:p-6">
             <h2 className="mb-5 text-lg font-bold">{tx("Date personale", "Personal details")}</h2>
-            <ProfileForm firstName={viewer.firstName} lastName={viewer.lastName} email={viewer.email} />
+            <ProfileForm firstName={viewer.firstName} lastName={viewer.lastName} email={viewer.email} specialty={prof?.specialty ?? ""} city={prof?.city ?? ""} />
           </Card>
 
 

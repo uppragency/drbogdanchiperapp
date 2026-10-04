@@ -6,16 +6,17 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { FormState } from "@/app/login/actions";
 import { getT } from "@/lib/i18n";
+import { SPECIALTY_KEYS } from "@/lib/specialties";
 
-const schema = z.object({ firstName: z.string().trim().min(1).max(80), lastName: z.string().trim().min(1).max(80) });
+const schema = z.object({ firstName: z.string().trim().min(1).max(80), lastName: z.string().trim().min(1).max(80), specialty: z.enum(["", ...SPECIALTY_KEYS]).default(""), city: z.string().trim().max(80).default("") });
 
 export async function updateProfile(_: FormState, formData: FormData): Promise<FormState> {
   const viewer = await requireUser();
   const t = await getT();
-  const parsed = schema.safeParse({ firstName: formData.get("firstName"), lastName: formData.get("lastName") });
+  const parsed = schema.safeParse({ firstName: formData.get("firstName"), lastName: formData.get("lastName"), specialty: formData.get("specialty") ?? "", city: formData.get("city") ?? "" });
   if (!parsed.success) return { error: t.profile.required };
   const supabase = await createClient();
-  const { error } = await supabase.from("profiles").update({ first_name: parsed.data.firstName, last_name: parsed.data.lastName }).eq("id", viewer.id);
+  const { error } = await supabase.from("profiles").update({ first_name: parsed.data.firstName, last_name: parsed.data.lastName, specialty: parsed.data.specialty, city: parsed.data.city }).eq("id", viewer.id);
   if (error) return { error: t.common.error };
   revalidatePath("/profil");
   return { ok: t.profile.saved };
