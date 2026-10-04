@@ -3,7 +3,7 @@ import { CheckCircle } from "@phosphor-icons/react/dist/ssr";
 import { FullLogo } from "@/components/brand";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-const POINTS = ["Webinarii și materiale pentru fiecare ediție MentorMed", "Colecții de lecții, în ordinea recomandată", "Calendar cu evenimentele următoare"];
+const POINTS = ["Înregistrările webinariilor, disponibile oricând", "Colecții de lecții, în ordinea recomandată", "Materiale și resurse pentru fiecare ediție MentorMed"];
 
 // Single column on phones, form plus brand panel on desktop.
 export function AuthShell({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
