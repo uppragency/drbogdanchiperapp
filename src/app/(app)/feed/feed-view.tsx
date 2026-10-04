@@ -6,7 +6,8 @@ import { FeedToolbar } from "./feed-toolbar";
 import { Highlight } from "@/components/highlight";
 import { Cover, type ResourceType } from "@/components/cover";
 import { CategoryIcon } from "@/lib/category-icons";
-import { t } from "@/lib/texts";
+import { getLocale, getT, getTx, type Tx } from "@/lib/i18n";
+import type { Dict } from "@/lib/texts";
 import { Hero, type HeroCard } from "./hero";
 import { greetingNow } from "@/lib/greeting";
 import { FeaturedRow } from "./featured-row";
@@ -14,7 +15,7 @@ import { CommunityShell } from "@/components/community-shell";
 
 export const TYPES = ["video", "pdf", "text", "link"] as const;
 export const SORTS = ["noi", "vizionate", "alfabetic"] as const;
-const SORT_LABEL = { noi: "Cele mai noi", vizionate: "Cele mai vizionate", alfabetic: "Alfabetic" } as const;
+const SORT_LABEL = { noi: ["Cele mai noi", "Newest"], vizionate: ["Cele mai vizionate", "Most viewed"], alfabetic: ["Alfabetic", "Alphabetical"] } as const;
 function TypeIcon({ type }: { type: ResourceType }) {
   const props = { size: 18 };
   if (type === "video") return <VideoCamera {...props} />;
@@ -23,7 +24,7 @@ function TypeIcon({ type }: { type: ResourceType }) {
   return <LinkIcon {...props} />;
 }
 
-export type Category = { id: string; name: string; slug: string };
+export type Category = { id: string; name: string; name_en?: string | null; slug: string };
 export type Row = {
   id: string;
   title: string;
@@ -67,7 +68,9 @@ export type FeedViewProps = {
   announcements: Row[];
 };
 
-export function FeedView(p: FeedViewProps) {
+export async function FeedView(p: FeedViewProps) {
+  const [t, tx, locale] = await Promise.all([getT(), getTx(), getLocale()]);
+  const sortLabel = (x: (typeof SORTS)[number]) => tx(SORT_LABEL[x][0], SORT_LABEL[x][1]);
   const { firstName, groups, categories, activeCategory, q, tip, pages, filtered, newTotal, shown, announcements, heroRows } = p;
   const categorie = activeCategory?.slug ?? "";
   const catById = new Map(categories.map((c) => [c.id, c]));
@@ -101,7 +104,7 @@ export function FeedView(p: FeedViewProps) {
         <div>
           <Hero
             name={firstName}
-            greeting={greetingNow()}
+            greeting={greetingNow(locale)}
             groups={groups}
             newCount={newTotal}
             cards={heroCards}
@@ -135,13 +138,13 @@ export function FeedView(p: FeedViewProps) {
             submitLabel={t.common.search}
             hidden={{ ...(activeCategory ? { categorie: activeCategory.slug } : {}), ...(tip ? { tip } : {}), ...(p.fav ? { fav: "1" } : {}), ...(p.sort !== "noi" ? { sortare: p.sort } : {}), ...(p.view === "grila" ? { vedere: "grila" } : {}) }}
             types={[undefined, ...TYPES].map((x) => ({ value: x ?? "all", label: x ? t.feed.types[x] : t.feed.all, href: href({ tip: x, pagina: undefined }), active: tip === x }))}
-            sort={{ value: p.sort, options: SORTS.map((x) => ({ value: x, label: SORT_LABEL[x], href: href({ sortare: x === "noi" ? undefined : x, pagina: undefined }) })) }}
+            sort={{ value: p.sort, options: SORTS.map((x) => ({ value: x, label: sortLabel(x), href: href({ sortare: x === "noi" ? undefined : x, pagina: undefined }) })) }}
             fav={{ on: p.fav, href: href({ fav: p.fav ? undefined : "1", pagina: undefined }) }}
             chips={[
-              ...(q ? [{ label: `„${q}”`, removeHref: href({ q: undefined, pagina: undefined }) }] : []),
+              ...(q ? [{ label: tx(`„${q}”`, `“${q}”`), removeHref: href({ q: undefined, pagina: undefined }) }] : []),
               ...(tip ? [{ label: t.feed.types[tip], removeHref: href({ tip: undefined, pagina: undefined }) }] : []),
-              ...(p.fav ? [{ label: "Favorite", removeHref: href({ fav: undefined, pagina: undefined }) }] : []),
-              ...(p.sort !== "noi" ? [{ label: SORT_LABEL[p.sort], removeHref: href({ sortare: undefined, pagina: undefined }) }] : []),
+              ...(p.fav ? [{ label: tx("Favorite", "Favorites"), removeHref: href({ fav: undefined, pagina: undefined }) }] : []),
+              ...(p.sort !== "noi" ? [{ label: sortLabel(p.sort), removeHref: href({ sortare: undefined, pagina: undefined }) }] : []),
             ]}
             clearHref={activeCategory ? `/feed?categorie=${activeCategory.slug}` : "/feed"}
             view={{ current: p.view, listHref: href({ vedere: undefined }), gridHref: href({ vedere: "grila" }) }}
@@ -150,14 +153,14 @@ export function FeedView(p: FeedViewProps) {
 
           {p.startHere.length > 0 && (
             <section aria-labelledby="incepe-aici" className="flex flex-col gap-3 rounded-card border border-line bg-surface p-6 shadow-card">
-              <h2 id="incepe-aici" className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-muted"><PushPin size={18} /> Începe de aici</h2>
+              <h2 id="incepe-aici" className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-muted"><PushPin size={18} /> {tx("Începe de aici", "Start here")}</h2>
               <ul className="flex flex-col divide-y divide-line">
                 {p.startHere.map((r) => (
                   <li key={r.id}>
                     <Link href={`/resurse/${r.id}`} className="flex min-h-11 items-center gap-3 py-3 font-semibold hover:text-accent">
                       <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: categoryColor(catById.get(r.category_id)?.slug, catById.get(r.category_id)?.name) }} aria-hidden />
                       <span className="min-w-0 flex-1">{r.title}</span>
-                      {doneSet.has(r.id) && <CheckCircle size={20} weight="fill" className="shrink-0 text-ok" aria-label="Terminat" />}
+                      {doneSet.has(r.id) && <CheckCircle size={20} weight="fill" className="shrink-0 text-ok" aria-label={tx("Terminat", "Completed")} />}
                       <ArrowUpRight size={18} className="shrink-0 text-muted" />
                     </Link>
                   </li>
@@ -182,22 +185,22 @@ export function FeedView(p: FeedViewProps) {
               <ul className={cn("gap-6", p.view === "grila" ? "grid sm:grid-cols-2" : "flex flex-col")}>
                 {shown.map((r) => (
                   <li key={r.id}>
-                    <PostCard r={r} category={catById.get(r.category_id)} isNew={isNew(r)} done={doneSet.has(r.id)} date={dateOf(r)} covers={covers.get(r.id) ?? []} compact={p.view === "grila"} q={q} />
+                    <PostCard t={t} tx={tx} r={r} category={catById.get(r.category_id)} isNew={isNew(r)} done={doneSet.has(r.id)} date={dateOf(r)} covers={covers.get(r.id) ?? []} compact={p.view === "grila"} q={q} />
                   </li>
                 ))}
               </ul>
               {list.length > shown.length && (
                 <Link href={href({ pagina: String(pages + 1) })} scroll={false} className="self-center rounded-full border border-line bg-surface px-6 py-3 text-sm font-semibold transition hover:bg-surface2">
-                  Încarcă mai multe
+                  {tx("Încarcă mai multe", "Load more")}
                 </Link>
               )}
             </>
           ) : (
             <EmptyState
               icon={p.fav ? Heart : MagnifyingGlass}
-              title={p.fav && !q ? "Nu ai resurse favorite încă" : filtered ? "Nu am găsit nicio resursă" : t.feed.empty}
-              text={p.fav && !q ? "Apasă inima de pe o resursă ca să o găsești rapid aici." : filtered ? t.feed.emptyFiltered : undefined}
-              action={filtered ? <Link href="/feed" className="inline-flex h-11 items-center rounded-full border border-line bg-surface px-5 text-sm font-semibold transition-colors hover:bg-surface2">Șterge filtrele</Link> : undefined}
+              title={p.fav && !q ? tx("Nu ai resurse favorite încă", "You have no favorite resources yet") : filtered ? tx("Nu am găsit nicio resursă", "No resources found") : t.feed.empty}
+              text={p.fav && !q ? tx("Apasă inima de pe o resursă ca să o găsești rapid aici.", "Tap the heart on a resource to find it quickly here.") : filtered ? t.feed.emptyFiltered : undefined}
+              action={filtered ? <Link href="/feed" className="inline-flex h-11 items-center rounded-full border border-line bg-surface px-5 text-sm font-semibold transition-colors hover:bg-surface2">{tx("Șterge filtrele", "Clear filters")}</Link> : undefined}
             />
           )}
         </>
@@ -206,7 +209,7 @@ export function FeedView(p: FeedViewProps) {
   );
 }
 
-function PostCard({ r, category, isNew, done, date, covers, compact, q }: { r: Row; category?: Category; isNew: boolean; done: boolean; date: string; covers: string[]; compact: boolean; q: string }) {
+function PostCard({ t, tx, r, category, isNew, done, date, covers, compact, q }: { t: Dict; tx: Tx; r: Row; category?: Category; isNew: boolean; done: boolean; date: string; covers: string[]; compact: boolean; q: string }) {
   const files = r.resource_attachments.length;
   const color = categoryColor(category?.slug, category?.name);
   return (
@@ -220,8 +223,8 @@ function PostCard({ r, category, isNew, done, date, covers, compact, q }: { r: R
           </span>
           <span className="truncate text-xs text-muted">{date}{r.presenter ? <> · <Highlight text={r.presenter} q={q} /></> : null}</span>
         </span>
-        {r.is_pinned && <PushPin size={18} weight="fill" className="text-accent" aria-label="Fixată" />}
-        {done ? <CheckCircle size={22} weight="fill" className="text-ok" aria-label="Terminat" /> : isNew && <span className="rounded-full bg-violet px-3 py-1 text-xs font-bold text-on-violet">{t.feed.new}</span>}
+        {r.is_pinned && <PushPin size={18} weight="fill" className="text-accent" aria-label={tx("Fixată", "Pinned")} />}
+        {done ? <CheckCircle size={22} weight="fill" className="text-ok" aria-label={tx("Terminat", "Completed")} /> : isNew && <span className="rounded-full bg-violet px-3 py-1 text-xs font-bold text-on-violet">{t.feed.new}</span>}
       </div>
       <div className="flex flex-col gap-2 px-5 pb-4 pt-4">
         <h3 className={cn("font-bold leading-snug tracking-tight", compact ? "line-clamp-2 text-lg" : "text-xl")}><Highlight text={r.title} q={q} /></h3>

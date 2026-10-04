@@ -10,6 +10,9 @@ export type ResourceValues = {
   id?: string;
   title: string;
   description: string;
+  titleEn: string;
+  descriptionEn: string;
+  bodyEn: string;
   type: "video" | "pdf" | "text" | "link";
   categoryId: string;
   body: string;
@@ -33,8 +36,10 @@ export function ResourceForm({ values, categories, tags }: { values: ResourceVal
   return (
     <form action={action} className="flex flex-col gap-6">
       {values.id && <input type="hidden" name="id" value={values.id} />}
-      <Field label="Titlu" name="title" defaultValue={values.title} required />
-      <TextArea label="Descriere scurtă" name="description" defaultValue={values.description} rows={2} help="Apare în listă, sub titlu. Maximum 500 de caractere." />
+      <Field label="Titlu (română)" name="title" defaultValue={values.title} required />
+      <Field label="Titlu (engleză)" name="titleEn" defaultValue={values.titleEn} help="Opțional. Dacă rămâne gol, membrii care aleg engleza văd titlul în română." />
+      <TextArea label="Descriere scurtă (română)" name="description" defaultValue={values.description} rows={2} help="Apare în listă, sub titlu. Maximum 500 de caractere." />
+      <TextArea label="Descriere scurtă (engleză)" name="descriptionEn" defaultValue={values.descriptionEn} rows={2} />
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-2">
           <label htmlFor="type" className="text-sm font-semibold">Tip</label>
@@ -53,7 +58,8 @@ export function ResourceForm({ values, categories, tags }: { values: ResourceVal
       {(type === "video" || type === "link") && (
         <Field label={type === "video" ? "Link video (YouTube sau Vimeo)" : "Link resursă"} name="videoUrl" type="url" defaultValue={values.videoUrl} placeholder="https://" required />
       )}
-      <TextArea label="Text" name="body" defaultValue={values.body} rows={10} help="Paragrafele se separă printr-un rând liber." />
+      <TextArea label="Text (română)" name="body" defaultValue={values.body} rows={10} help="Paragrafele se separă printr-un rând liber." />
+      <TextArea label="Text (engleză)" name="bodyEn" defaultValue={values.bodyEn} rows={10} help="Opțional. Același format, paragrafele separate printr-un rând liber." />
 
       <fieldset className="flex flex-col gap-3">
         <legend className="text-sm font-semibold">Cine vede resursa</legend>

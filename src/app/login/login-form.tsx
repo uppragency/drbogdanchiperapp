@@ -4,9 +4,10 @@ import { useActionState } from "react";
 import { login, type FormState } from "./actions";
 import { Alert, Field } from "@/components/ui";
 import { SubmitButton } from "@/components/submit-button";
-import { t } from "@/lib/texts";
+import { useT } from "@/components/locale-provider";
 
 export function LoginForm({ next, notice }: { next: string; notice?: string }) {
+  const t = useT();
   const [state, action] = useActionState<FormState, FormData>(login, {});
   return (
     <form action={action} className="flex flex-col gap-5">

@@ -3,9 +3,11 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Alert, Field, btn } from "@/components/ui";
-import { t } from "@/lib/texts";
+import { useT, useTx } from "@/components/locale-provider";
 
 export function MfaChallenge({ next }: { next: string }) {
+  const t = useT();
+  const tx = useTx();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -32,7 +34,7 @@ export function MfaChallenge({ next }: { next: string }) {
       {error && <Alert>{error}</Alert>}
       <Field label={t.mfa.code} name="code" inputMode="numeric" autoComplete="one-time-code" required />
       <button type="submit" disabled={pending} className={`${btn.primary} w-full`}>
-        {pending ? "Se verifică" : t.mfa.submit}
+        {pending ? tx("Se verifică", "Verifying") : t.mfa.submit}
       </button>
     </form>
   );

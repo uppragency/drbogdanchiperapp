@@ -7,14 +7,18 @@ import { Wordmark } from "@/components/brand";
 import { PROGRAM_URL } from "@/components/community-shell";
 import { btn } from "@/components/ui";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { t } from "@/lib/texts";
+import { getT, getTx } from "@/lib/i18n";
 import { RequestForm } from "./landing/request-form";
 
-export const metadata: Metadata = { title: t.brand };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT()).brand };
+}
 
 export default async function Home() {
   const viewer = await getViewer();
   if (viewer) redirect("/feed");
+  const t = await getT();
+  const tx = await getTx();
   return (
     <>
       <header className="border-b border-line">
@@ -22,18 +26,18 @@ export default async function Home() {
           <Wordmark />
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Link href="/login" className={btn.secondary}>Intră în cont</Link>
+            <Link href="/login" className={btn.secondary}>{tx("Intră în cont", "Sign in")}</Link>
           </div>
         </div>
       </header>
 
       <main className="flex-1">
         <section className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-20 md:py-28">
-          <h1 className="max-w-3xl text-4xl font-bold leading-[1.1] tracking-tight text-ink md:text-6xl">Platforma membrilor MentorMed.</h1>
+          <h1 className="max-w-3xl text-4xl font-bold leading-[1.1] tracking-tight text-ink md:text-6xl">{tx("Platforma membrilor MentorMed.", "The MentorMed members platform.")}</h1>
           <p className="max-w-[55ch] text-lg leading-relaxed text-muted">{t.footer.tagline}</p>
           <div className="flex flex-wrap gap-3 pt-2">
-            <a href="#acces" className={btn.primary}>Cere acces</a>
-            <Link href="/login" className={btn.secondary}>Am deja cont</Link>
+            <a href="#acces" className={btn.primary}>{tx("Cere acces", "Request access")}</a>
+            <Link href="/login" className={btn.secondary}>{tx("Am deja cont", "I already have an account")}</Link>
           </div>
         </section>
 
@@ -52,8 +56,8 @@ export default async function Home() {
         </section>
 
         <section id="acces" className="mx-auto w-full max-w-2xl scroll-mt-8 px-4 py-20">
-          <h2 className="text-3xl font-bold tracking-tight">Cere acces</h2>
-          <p className="mt-3 text-muted">Accesul este rezervat participanților la program. Trimite datele tale, iar echipa verifică înscrierea și îți creează contul.</p>
+          <h2 className="text-3xl font-bold tracking-tight">{tx("Cere acces", "Request access")}</h2>
+          <p className="mt-3 text-muted">{tx("Accesul este rezervat participanților la program. Trimite datele tale, iar echipa verifică înscrierea și îți creează contul.", "Access is reserved for program participants. Send your details and our team will verify your enrollment and create your account.")}</p>
           <div className="mt-8 rounded-card border border-line bg-surface p-6 md:p-8">
             <RequestForm />
           </div>

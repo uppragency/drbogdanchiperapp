@@ -2,11 +2,14 @@ import type { Metadata } from "next";
 import { AuthShell } from "@/components/auth-shell";
 import { LoginForm } from "./login-form";
 import { safeNext } from "@/lib/safe-next";
-import { t } from "@/lib/texts";
+import { getT } from "@/lib/i18n";
 
-export const metadata: Metadata = { title: t.login.title };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT()).login.title };
+}
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
+  const t = await getT();
   const sp = await searchParams;
   const motiv = typeof sp.motiv === "string" ? sp.motiv : undefined;
   const next = safeNext(typeof sp.next === "string" ? sp.next : undefined);

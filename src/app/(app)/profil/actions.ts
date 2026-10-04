@@ -5,12 +5,13 @@ import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { FormState } from "@/app/login/actions";
-import { t } from "@/lib/texts";
+import { getT } from "@/lib/i18n";
 
 const schema = z.object({ firstName: z.string().trim().min(1).max(80), lastName: z.string().trim().min(1).max(80) });
 
 export async function updateProfile(_: FormState, formData: FormData): Promise<FormState> {
   const viewer = await requireUser();
+  const t = await getT();
   const parsed = schema.safeParse({ firstName: formData.get("firstName"), lastName: formData.get("lastName") });
   if (!parsed.success) return { error: t.profile.required };
   const supabase = await createClient();

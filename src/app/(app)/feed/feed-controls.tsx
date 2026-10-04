@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ListBullets, SquaresFour } from "@phosphor-icons/react";
 import { cn } from "@/components/ui";
+import { useTx } from "@/components/locale-provider";
 
 function remember(view: string) {
   try {
@@ -11,6 +12,7 @@ function remember(view: string) {
 }
 
 export function ViewToggle({ current, listHref, gridHref }: { current: "lista" | "grila"; listHref: string; gridHref: string }) {
+  const tx = useTx();
   const item = (key: "lista" | "grila", href: string, label: string, Icon: typeof ListBullets) => (
     <Link
       href={href}
@@ -25,18 +27,19 @@ export function ViewToggle({ current, listHref, gridHref }: { current: "lista" |
     </Link>
   );
   return (
-    <div className="inline-flex gap-1 rounded-full bg-surface2 p-1" role="group" aria-label="Mod de afișare">
-      {item("lista", listHref, "Listă", ListBullets)}
-      {item("grila", gridHref, "Grilă", SquaresFour)}
+    <div className="inline-flex gap-1 rounded-full bg-surface2 p-1" role="group" aria-label={tx("Mod de afișare", "Display mode")}>
+      {item("lista", listHref, tx("Listă", "List"), ListBullets)}
+      {item("grila", gridHref, tx("Grilă", "Grid"), SquaresFour)}
     </div>
   );
 }
 
 export function SortSelect({ value, options }: { value: string; options: { value: string; label: string; href: string }[] }) {
   const router = useRouter();
+  const tx = useTx();
   return (
     <label className="inline-flex items-center gap-2 text-sm font-semibold text-muted">
-      <span className="sr-only sm:not-sr-only">Sortare</span>
+      <span className="sr-only sm:not-sr-only">{tx("Sortare", "Sort by")}</span>
       <select
         value={value}
         onChange={(e) => {

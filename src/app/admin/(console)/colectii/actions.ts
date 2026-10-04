@@ -6,11 +6,11 @@ import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 const uuid = z.string().uuid();
-const meta = z.object({ title: z.string().trim().min(1).max(160), description: z.string().trim().max(500) });
+const meta = z.object({ title: z.string().trim().min(1).max(160), description: z.string().trim().max(500), title_en: z.string().trim().max(160), description_en: z.string().trim().max(500) });
 
 export async function createCollection(formData: FormData) {
   await requireAdmin();
-  const p = meta.safeParse({ title: formData.get("title"), description: formData.get("description") ?? "" });
+  const p = meta.safeParse({ title: formData.get("title"), description: formData.get("description") ?? "", title_en: formData.get("titleEn") ?? "", description_en: formData.get("descriptionEn") ?? "" });
   if (!p.success) redirect("/admin/colectii");
   const supabase = await createClient();
   const { count } = await supabase.from("collections").select("id", { count: "exact", head: true });
@@ -22,7 +22,7 @@ export async function createCollection(formData: FormData) {
 export async function updateCollection(formData: FormData) {
   await requireAdmin();
   const id = uuid.parse(formData.get("id"));
-  const p = meta.safeParse({ title: formData.get("title"), description: formData.get("description") ?? "" });
+  const p = meta.safeParse({ title: formData.get("title"), description: formData.get("description") ?? "", title_en: formData.get("titleEn") ?? "", description_en: formData.get("descriptionEn") ?? "" });
   if (!p.success) return;
   const supabase = await createClient();
   await supabase.from("collections").update(p.data).eq("id", id);

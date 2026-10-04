@@ -4,17 +4,22 @@ import { ArrowRight, Stack } from "@phosphor-icons/react/dist/ssr";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { EmptyState } from "@/components/ui";
+import { getLocale, getTx, pick } from "@/lib/i18n";
 
-export const metadata: Metadata = { title: "Colecții" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getTx())("Colecții", "Collections") };
+}
 
 export default async function CollectionsPage() {
   const viewer = await requireUser();
+  const tx = await getTx();
+  const locale = await getLocale();
   const supabase = await createClient();
   const [{ data }, { data: views }] = await Promise.all([
-    supabase.from("collections").select("id,title,description,collection_resources(resource_id,resources(id))").order("position"),
+    supabase.from("collections").select("id,title,title_en,description,description_en,collection_resources(resource_id,resources(id))").order("position"),
     supabase.from("resource_views").select("resource_id,completed").eq("user_id", viewer.id).eq("completed", true),
   ]);
-  type C = { id: string; title: string; description: string; collection_resources: { resource_id: string; resources: { id: string } | { id: string }[] | null }[] };
+  type C = { id: string; title: string; title_en: string | null; description: string; description_en: string | null; collection_resources: { resource_id: string; resources: { id: string } | { id: string }[] | null }[] };
   const done = new Set((views ?? []).map((v: { resource_id: string }) => v.resource_id));
   const rows = ((data ?? []) as C[])
     .map((c) => {
@@ -24,17 +29,17 @@ export default async function CollectionsPage() {
     .filter((c) => c.count > 0);
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10">
-      <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Colecții</h1>
-      <p className="max-w-[65ch] text-muted">Cursuri pe teme, cu lecțiile în ordine. Vezi doar ce este disponibil pentru grupul tău.</p>
+      <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{tx("Colecții", "Collections")}</h1>
+      <p className="max-w-[65ch] text-muted">{tx("Cursuri pe teme, cu lecțiile în ordine. Vezi doar ce este disponibil pentru grupul tău.", "Courses by topic, with lessons in order. You only see what is available to your group.")}</p>
       <ul className="grid gap-6 sm:grid-cols-2">
         {rows.map((c) => (
           <li key={c.id}>
             <Link href={`/colectii/${c.id}`} className="card-lift flex h-full flex-col gap-2 rounded-card border border-line bg-surface p-6 shadow-card">
               <span className="flex size-11 items-center justify-center rounded-full bg-violet-soft text-violet"><Stack size={22} /></span>
-              <span className="mt-2 text-lg font-bold leading-snug">{c.title}</span>
-              {c.description && <span className="line-clamp-3 text-sm leading-relaxed text-muted">{c.description}</span>}
+              <span className="mt-2 text-lg font-bold leading-snug">{pick(locale, c.title, c.title_en)}</span>
+              {pick(locale, c.description, c.description_en) && <span className="line-clamp-3 text-sm leading-relaxed text-muted">{pick(locale, c.description, c.description_en)}</span>}
               <span className="mt-auto flex items-center justify-between pt-3 text-sm font-semibold text-accent">
-                <span>{c.count} {c.count === 1 ? "lecție" : "lecții"}{c.finished > 0 && ` · ${c.finished} terminate`}</span>
+                <span>{c.count} {c.count === 1 ? tx("lecție", "lesson") : tx("lecții", "lessons")}{c.finished > 0 && ` · ${c.finished} ${tx("terminate", "completed")}`}</span>
                 <ArrowRight size={16} />
               </span>
             </Link>
@@ -42,7 +47,7 @@ export default async function CollectionsPage() {
         ))}
         {rows.length === 0 && (
           <li className="sm:col-span-2">
-            <EmptyState icon={Stack} title="Nu există colecții disponibile încă" text="Colecțiile apar aici imediat ce sunt publicate pentru grupul tău." action={<Link href="/feed" className="inline-flex h-11 items-center rounded-full border border-line bg-surface px-5 text-sm font-semibold hover:bg-surface2">Înapoi la resurse</Link>} />
+            <EmptyState icon={Stack} title={tx("Nu există colecții disponibile încă", "No collections available yet")} text={tx("Colecțiile apar aici imediat ce sunt publicate pentru grupul tău.", "Collections appear here as soon as they are published for your group.")} action={<Link href="/feed" className="inline-flex h-11 items-center rounded-full border border-line bg-surface px-5 text-sm font-semibold hover:bg-surface2">{tx("Înapoi la resurse", "Back to resources")}</Link>} />
           </li>
         )}
       </ul>

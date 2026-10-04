@@ -14,6 +14,9 @@ const schema = z.object({
   title: z.string().trim().min(1, "Titlul este obligatoriu").max(200),
   description: z.string().trim().max(500).default(""),
   presenter: z.string().trim().max(120).default(""),
+  titleEn: z.string().trim().max(200).default(""),
+  descriptionEn: z.string().trim().max(500).default(""),
+  bodyEn: z.string().max(50000).default(""),
   type: z.enum(["video", "pdf", "text", "link"]),
   categoryId: z.string().uuid("Alege o categorie"),
   body: z.string().max(50000).default(""),
@@ -33,6 +36,9 @@ export async function saveResource(_: FormState, formData: FormData): Promise<Fo
     title: formData.get("title"),
     description: formData.get("description") ?? "",
     presenter: formData.get("presenter") ?? "",
+    titleEn: formData.get("titleEn") ?? "",
+    descriptionEn: formData.get("descriptionEn") ?? "",
+    bodyEn: formData.get("bodyEn") ?? "",
     type: formData.get("type"),
     categoryId: formData.get("categoryId"),
     body: formData.get("body") ?? "",
@@ -56,6 +62,9 @@ export async function saveResource(_: FormState, formData: FormData): Promise<Fo
     title: d.title,
     description: d.description,
     presenter: d.presenter,
+    title_en: d.titleEn,
+    description_en: d.descriptionEn,
+    body_en: d.bodyEn,
     type: d.type,
     category_id: d.categoryId,
     body: d.body,
@@ -184,7 +193,7 @@ export async function duplicateResource(formData: FormData) {
   const admin = await requireAdmin();
   const id = z.string().uuid().parse(formData.get("id"));
   const supabase = await createClient();
-  const { data: r } = await supabase.from("resources").select("title,description,presenter,type,category_id,body,video_url,comments_enabled").eq("id", id).maybeSingle();
+  const { data: r } = await supabase.from("resources").select("title,description,presenter,type,category_id,body,video_url,comments_enabled,title_en,description_en,body_en").eq("id", id).maybeSingle();
   if (!r) redirect("/admin/resurse");
   const { data: copy } = await supabase.from("resources").insert({ ...r, title: `${r.title} (copie)`.slice(0, 200), is_pinned: false, status: "draft", created_by: admin.id }).select("id").single();
   if (!copy) redirect("/admin/resurse");

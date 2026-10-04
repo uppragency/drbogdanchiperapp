@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Montserrat } from "next/font/google";
 import "./globals.css";
-import { t } from "@/lib/texts";
 import { SiteFooter } from "@/components/site-footer";
+import { LocaleProvider } from "@/components/locale-provider";
+import { getLocale, getT, getTx } from "@/lib/i18n";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -10,12 +11,16 @@ const montserrat = Montserrat({
   display: "swap",
 });
 
-export const metadata: Metadata = {
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  const tx = await getTx();
+  return {
   title: { default: t.platformName, template: `%s | ${t.brand}` },
-  description: "Platforma de curs pentru medicii înscriși în programul MentorMed.",
+  description: tx("Platforma de curs pentru medicii înscriși în programul MentorMed.", "The course platform for doctors enrolled in the MentorMed program."),
   robots: { index: false, follow: false },
   appleWebApp: { capable: true, title: "MentorMed", statusBarStyle: "default" },
-};
+  };
+}
 
 // Runs before first paint so the chosen theme never flashes.
 const THEME_SCRIPT = `(function(){try{var s=localStorage.getItem('theme');var d=s==='dark'||(s!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light');matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(e){var v=localStorage.getItem('theme');if(v!=='light'&&v!=='dark')document.documentElement.setAttribute('data-theme',e.matches?'dark':'light')})}catch(e){document.documentElement.setAttribute('data-theme','light')}})()`;
@@ -29,15 +34,18 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const locale = await getLocale();
   return (
-    <html lang="ro" className={`${montserrat.variable} h-full`} suppressHydrationWarning>
+    <html lang={locale} className={`${montserrat.variable} h-full`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body className="min-h-dvh flex flex-col">
-        {children}
-        <SiteFooter />
+        <LocaleProvider locale={locale}>
+          {children}
+          <SiteFooter />
+        </LocaleProvider>
       </body>
     </html>
   );

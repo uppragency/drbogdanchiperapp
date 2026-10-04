@@ -27,8 +27,10 @@ export default async function EditCollection({ params }: PageProps<"/admin/colec
       <Card>
         <form action={updateCollection} className="flex flex-col gap-4">
           <input type="hidden" name="id" value={c.id} />
-          <Field label="Titlu" name="title" defaultValue={c.title} required />
-          <TextArea label="Descriere" name="description" defaultValue={c.description} rows={2} />
+          <Field label="Titlu (română)" name="title" defaultValue={c.title} required />
+          <Field label="Titlu (engleză)" name="titleEn" defaultValue={c.title_en ?? ""} />
+          <TextArea label="Descriere (română)" name="description" defaultValue={c.description} rows={2} />
+          <TextArea label="Descriere (engleză)" name="descriptionEn" defaultValue={c.description_en ?? ""} rows={2} />
           <div><SubmitButton>Salvează</SubmitButton></div>
         </form>
       </Card>

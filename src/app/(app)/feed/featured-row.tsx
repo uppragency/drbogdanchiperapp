@@ -3,10 +3,12 @@ import Link from "next/link";
 import { useRef } from "react";
 import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { Cover, type ResourceType } from "@/components/cover";
+import { useTx } from "@/components/locale-provider";
 
 export type FeaturedCard = { id: string; title: string; description: string; category: string; type: ResourceType; covers: string[] };
 
 export function FeaturedRow({ cards }: { cards: FeaturedCard[] }) {
+  const tx = useTx();
   const scroller = useRef<HTMLUListElement>(null);
   const move = (dir: 1 | -1) => {
     const el = scroller.current;
@@ -17,12 +19,12 @@ export function FeaturedRow({ cards }: { cards: FeaturedCard[] }) {
     <section aria-labelledby="recomandate" className="flex flex-col gap-4">
       <div className="flex items-end justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <h2 id="recomandate" className="text-2xl font-bold tracking-tight">Videoclipuri populare</h2>
-          <p className="text-sm text-muted">Cele mai urmărite videoclipuri, actualizate automat.</p>
+          <h2 id="recomandate" className="text-2xl font-bold tracking-tight">{tx("Videoclipuri populare", "Popular videos")}</h2>
+          <p className="text-sm text-muted">{tx("Cele mai urmărite videoclipuri, actualizate automat.", "The most watched videos, updated automatically.")}</p>
         </div>
         <div className="flex gap-2">
-          <button type="button" onClick={() => move(-1)} aria-label="Înapoi" className="flex size-11 items-center justify-center rounded-full border border-line bg-surface transition-colors hover:bg-surface2"><CaretLeft size={18} /></button>
-          <button type="button" onClick={() => move(1)} aria-label="Înainte" className="flex size-11 items-center justify-center rounded-full border border-line bg-surface transition-colors hover:bg-surface2"><CaretRight size={18} /></button>
+          <button type="button" onClick={() => move(-1)} aria-label={tx("Înapoi", "Back")} className="flex size-11 items-center justify-center rounded-full border border-line bg-surface transition-colors hover:bg-surface2"><CaretLeft size={18} /></button>
+          <button type="button" onClick={() => move(1)} aria-label={tx("Înainte", "Forward")} className="flex size-11 items-center justify-center rounded-full border border-line bg-surface transition-colors hover:bg-surface2"><CaretRight size={18} /></button>
         </div>
       </div>
       <ul ref={scroller} className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

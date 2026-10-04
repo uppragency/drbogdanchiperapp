@@ -4,9 +4,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { allow, clientIp } from "@/lib/throttle";
 import { confirmLink, resetEmail, sendEmails } from "@/lib/email";
 import type { FormState } from "@/app/login/actions";
-import { t } from "@/lib/texts";
+import { getT } from "@/lib/i18n";
 
 export async function requestReset(_: FormState, formData: FormData): Promise<FormState> {
+  const t = await getT();
   const parsed = z.string().trim().email().max(200).safeParse(formData.get("email"));
   // Always answer the same way so the form never reveals which emails exist.
   const done: FormState = { ok: t.forgot.done };

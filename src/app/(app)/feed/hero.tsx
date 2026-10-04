@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, animate, motion, useMotionTemplate, useMotionValue, useReducedMotion, type PanInfo } from "motion/react";
 import { ArrowRight, CaretLeft, CaretRight, Megaphone, PlayCircle } from "@phosphor-icons/react";
 import { Cover, type ResourceType } from "@/components/cover";
-import { t } from "@/lib/texts";
+import { useT, useTx } from "@/components/locale-provider";
 
 export type HeroCard = { id: string; title: string; category: string; type: ResourceType; date: string; covers: string[] };
 type Props = {
@@ -20,6 +20,8 @@ type Props = {
 const spring = { type: "spring", stiffness: 320, damping: 30 } as const;
 
 export function Hero({ name, greeting, groups, newCount, cards, resume, announcements }: Props) {
+  const t = useT();
+  const tx = useTx();
   const reduce = useReducedMotion();
   const mx = useMotionValue(720);
   const my = useMotionValue(180);
@@ -52,12 +54,12 @@ export function Hero({ name, greeting, groups, newCount, cards, resume, announce
       <div className="mx-auto grid min-h-[520px] w-full max-w-6xl items-center gap-8 px-4 pb-[88px] pt-10 md:grid-cols-[1.6fr_1fr] md:gap-10">
         <div className="flex min-w-0 flex-col gap-5">
           <h1 className="text-[26px] font-bold leading-[1.1] tracking-tight sm:text-4xl md:whitespace-nowrap md:text-[clamp(32px,4.4vw,50px)]">
-            {name ? `${greeting}, ${name}` : "Bine ai venit"}
+            {name ? `${greeting}, ${name}` : tx("Bine ai venit", "Welcome")}
           </h1>
           <p className="text-lg text-[#0d1c5c]/75 dark:text-white/75">
             {newCount > 0 ? (
               <>
-                Ai <span ref={counter} className="font-bold text-[#0d1c5c] dark:text-white">{newCount}</span> {newCount === 1 ? "resursă nouă" : t.home.newCount} pentru tine.
+                {tx("Ai ", "You have ")}<span ref={counter} className="font-bold text-[#0d1c5c] dark:text-white">{newCount}</span> {newCount === 1 ? tx("resursă nouă", "new resource") : t.home.newCount}{tx(" pentru tine.", " for you.")}
               </>
             ) : (
               t.home.noNew
@@ -90,6 +92,8 @@ export function Hero({ name, greeting, groups, newCount, cards, resume, announce
 }
 
 function Deck({ cards, reduce }: { cards: HeroCard[]; reduce: boolean }) {
+  const t = useT();
+  const tx = useTx();
   const [order, setOrder] = useState(() => cards.map((c) => c.id));
   const dragged = useRef(false);
   const byId = new Map(cards.map((c) => [c.id, c]));
@@ -109,7 +113,7 @@ function Deck({ cards, reduce }: { cards: HeroCard[]; reduce: boolean }) {
 
   return (
     <div className="flex min-w-0 flex-col items-center gap-4 md:items-end">
-      <div className="relative h-[300px] w-full max-w-[380px]" role="group" aria-roledescription="carusel" aria-label={t.home.newForYou}>
+      <div className="relative h-[300px] w-full max-w-[380px]" role="group" aria-roledescription={tx("carusel", "carousel")} aria-label={t.home.newForYou}>
         {order.slice(0, 3).map((id, i) => {
           const c = byId.get(id)!;
           const top = i === 0;
@@ -148,9 +152,9 @@ function Deck({ cards, reduce }: { cards: HeroCard[]; reduce: boolean }) {
       </div>
       {cards.length > 1 && (
         <div className="flex items-center gap-3">
-          <button type="button" onClick={() => rotate(-1)} aria-label="Anterioara" className="flex size-11 items-center justify-center rounded-full border border-line transition-colors hover:bg-white dark:border-white/20 dark:hover:bg-white/15"><CaretLeft size={18} /></button>
+          <button type="button" onClick={() => rotate(-1)} aria-label={tx("Anterioara", "Previous")} className="flex size-11 items-center justify-center rounded-full border border-line transition-colors hover:bg-white dark:border-white/20 dark:hover:bg-white/15"><CaretLeft size={18} /></button>
           <span className="min-w-12 text-center text-sm text-[#0d1c5c]/80 dark:text-white/80" aria-live="polite">{cards.findIndex((c) => c.id === order[0]) + 1} / {cards.length}</span>
-          <button type="button" onClick={() => rotate(1)} aria-label="Următoarea" className="flex size-11 items-center justify-center rounded-full border border-line transition-colors hover:bg-white dark:border-white/20 dark:hover:bg-white/15"><CaretRight size={18} /></button>
+          <button type="button" onClick={() => rotate(1)} aria-label={tx("Următoarea", "Next")} className="flex size-11 items-center justify-center rounded-full border border-line transition-colors hover:bg-white dark:border-white/20 dark:hover:bg-white/15"><CaretRight size={18} /></button>
         </div>
       )}
     </div>
@@ -158,6 +162,8 @@ function Deck({ cards, reduce }: { cards: HeroCard[]; reduce: boolean }) {
 }
 
 function Ticker({ items }: { items: { id: string; title: string }[] }) {
+  const t = useT();
+  const tx = useTx();
   const [i, setI] = useState(0);
   useEffect(() => {
     if (items.length < 2) return;
@@ -177,7 +183,7 @@ function Ticker({ items }: { items: { id: string; title: string }[] }) {
                 <Link href={`/resurse/${item.id}`} className="block truncate text-sm font-semibold hover:underline">{item.title}</Link>
               </motion.div>
             ) : (
-              <motion.span key="none" className="absolute inset-0 text-sm text-muted">Niciun anunț nou.</motion.span>
+              <motion.span key="none" className="absolute inset-0 text-sm text-muted">{tx("Niciun anunț nou.", "No new announcements.")}</motion.span>
             )}
           </AnimatePresence>
         </div>

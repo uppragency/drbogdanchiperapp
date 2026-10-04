@@ -1,15 +1,22 @@
 import type { ReactNode } from "react";
+import { getTx } from "@/lib/i18n";
 import { CheckCircle } from "@phosphor-icons/react/dist/ssr";
 import { FullLogo } from "@/components/brand";
+import { LangSwitch } from "@/components/lang-switch";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-const POINTS = ["Înregistrările webinariilor, disponibile oricând", "Colecții de lecții, în ordinea recomandată", "Materiale și resurse pentru fiecare ediție MentorMed"];
 
 // Single column on phones, form plus brand panel on desktop.
-export function AuthShell({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
+export async function AuthShell({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
+  const tx = await getTx();
+  const POINTS = [
+    tx("Înregistrările webinariilor, disponibile oricând", "Webinar recordings, available anytime"),
+    tx("Colecții de lecții, în ordinea recomandată", "Lesson collections, in the recommended order"),
+    tx("Materiale și resurse pentru fiecare ediție MentorMed", "Materials and resources for every MentorMed edition"),
+  ];
   return (
     <main className="relative grid flex-1 lg:grid-cols-2">
-      <div className="absolute right-4 top-4 z-10"><ThemeToggle /></div>
+      <div className="absolute right-4 top-4 z-10 flex items-center gap-2"><LangSwitch /><ThemeToggle /></div>
       <section className="flex flex-col items-center justify-center px-4 py-16">
         <div className="mb-8 flex justify-center lg:hidden">
           <FullLogo />
@@ -25,7 +32,7 @@ export function AuthShell({ title, subtitle, children }: { title: string; subtit
         <div className="absolute -bottom-32 -left-16 size-96 rounded-full bg-[#313885] blur-3xl" />
         <div className="relative max-w-md">
           <p className="text-xs font-semibold uppercase tracking-wider text-white/75">MentorMed</p>
-          <p className="mt-4 text-4xl font-bold leading-tight tracking-tight">Platforma membrilor Dr. Bogdan Chiper.</p>
+          <p className="mt-4 text-4xl font-bold leading-tight tracking-tight">{tx("Platforma membrilor Dr. Bogdan Chiper.", "The Dr. Bogdan Chiper members platform.")}</p>
           <ul className="mt-10 flex flex-col gap-4">
             {POINTS.map((x) => (
               <li key={x} className="flex items-start gap-3 text-white/90">

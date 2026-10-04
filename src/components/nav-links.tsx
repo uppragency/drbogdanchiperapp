@@ -2,14 +2,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/components/ui";
+import { useTx } from "@/components/locale-provider";
 
 export type NavItem = { href: string; label: string; match: string[] };
 
 // Active section = underline. Works on one row, scrolls sideways on narrow phones.
 export function NavLinks({ items }: { items: NavItem[] }) {
   const path = usePathname();
+  const tx = useTx();
   return (
-    <nav aria-label="Navigare principală" className="no-scrollbar -mx-4 flex overflow-x-auto px-4 md:mx-0 md:px-0">
+    <nav aria-label={tx("Navigare principală", "Main navigation")} className="no-scrollbar -mx-4 flex overflow-x-auto px-4 md:mx-0 md:px-0">
       <ul className="flex items-center gap-1">
         {items.map((it) => {
           const active = it.match.some((m) => path === m || path.startsWith(m + "/"));

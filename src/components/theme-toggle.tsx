@@ -1,6 +1,7 @@
 "use client";
 import { useSyncExternalStore } from "react";
 import { Moon, Sun } from "@phosphor-icons/react";
+import { useTx } from "@/components/locale-provider";
 
 export type ThemePref = "light" | "dark" | "auto";
 const EVENT = "theme-pref-change";
@@ -40,6 +41,7 @@ export function useThemePref(): ThemePref {
 // Quick light/dark switch for pages without the user menu (login, password reset).
 export function ThemeToggle() {
   const pref = useThemePref();
+  const tx = useTx();
   const isDark = useSyncExternalStore(
     subscribe,
     () => document.documentElement.getAttribute("data-theme") === "dark",
@@ -51,8 +53,8 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={() => applyTheme(next)}
-      aria-label={next === "dark" ? "Comută pe tema închisă" : "Comută pe tema luminoasă"}
-      title={next === "dark" ? "Tema închisă" : "Tema luminoasă"}
+      aria-label={next === "dark" ? tx("Comută pe tema închisă", "Switch to dark theme") : tx("Comută pe tema luminoasă", "Switch to light theme")}
+      title={next === "dark" ? tx("Tema închisă", "Dark theme") : tx("Tema luminoasă", "Light theme")}
       className="flex size-11 items-center justify-center rounded-control text-muted transition-colors hover:bg-surface2 hover:text-ink"
     >
       {isDark ? <Sun size={20} /> : <Moon size={20} />}

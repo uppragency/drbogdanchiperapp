@@ -4,17 +4,19 @@ import { useEffect, useRef, useState } from "react";
 import { ClockCounterClockwise, Desktop, GearSix, Moon, SignOut, Sun, UserCircle } from "@phosphor-icons/react";
 import { logout } from "@/app/actions";
 import { cn } from "@/components/ui";
+import { useTx } from "@/components/locale-provider";
 import { applyTheme, useThemePref, type ThemePref } from "@/components/theme-toggle";
 
-const THEMES: { value: ThemePref; label: string; Icon: typeof Sun }[] = [
-  { value: "light", label: "Luminos", Icon: Sun },
-  { value: "dark", label: "Întunecat", Icon: Moon },
-  { value: "auto", label: "Automat", Icon: Desktop },
+const THEMES: { value: ThemePref; ro: string; en: string; Icon: typeof Sun }[] = [
+  { value: "light", ro: "Luminos", en: "Light", Icon: Sun },
+  { value: "dark", ro: "Întunecat", en: "Dark", Icon: Moon },
+  { value: "auto", ro: "Automat", en: "Auto", Icon: Desktop },
 ];
 
 const item = "flex min-h-11 w-full items-center gap-3 rounded-control px-3 text-sm font-semibold transition-colors hover:bg-surface2";
 
 export function UserMenu({ initials, name, email, isAdmin }: { initials: string; name: string; email: string; isAdmin: boolean }) {
+  const tx = useTx();
   const [open, setOpen] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
   const pref = useThemePref();
@@ -39,7 +41,7 @@ export function UserMenu({ initials, name, email, isAdmin }: { initials: string;
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label="Meniul contului"
+        aria-label={tx("Meniul contului", "Account menu")}
         data-tour="menu"
         onClick={() => setOpen((v) => !v)}
         className="ml-1 flex size-11 items-center justify-center"
@@ -53,13 +55,13 @@ export function UserMenu({ initials, name, email, isAdmin }: { initials: string;
             <p className="truncate text-xs text-muted">{email}</p>
           </div>
           <div className="my-1 h-px bg-line" />
-          <Link role="menuitem" href="/profil" onClick={() => setOpen(false)} className={item}><UserCircle size={20} /> Profil</Link>
-          <Link role="menuitem" href="/recente" onClick={() => setOpen(false)} className={item}><ClockCounterClockwise size={20} /> Văzute recent</Link>
-          {isAdmin && <Link role="menuitem" href="/admin" onClick={() => setOpen(false)} className={item}><GearSix size={20} /> Administrare</Link>}
+          <Link role="menuitem" href="/profil" onClick={() => setOpen(false)} className={item}><UserCircle size={20} /> {tx("Profil", "Profile")}</Link>
+          <Link role="menuitem" href="/recente" onClick={() => setOpen(false)} className={item}><ClockCounterClockwise size={20} /> {tx("Văzute recent", "Recently viewed")}</Link>
+          {isAdmin && <Link role="menuitem" href="/admin" onClick={() => setOpen(false)} className={item}><GearSix size={20} /> {tx("Administrare", "Administration")}</Link>}
           <div className="my-1 h-px bg-line" />
-          <div className="px-3 pb-1 pt-2 text-xs font-bold uppercase tracking-wider text-muted">Temă</div>
-          <div role="radiogroup" aria-label="Temă" className="grid grid-cols-3 gap-1 px-1 pb-2">
-            {THEMES.map(({ value, label, Icon }) => (
+          <div className="px-3 pb-1 pt-2 text-xs font-bold uppercase tracking-wider text-muted">{tx("Temă", "Theme")}</div>
+          <div role="radiogroup" aria-label={tx("Temă", "Theme")} className="grid grid-cols-3 gap-1 px-1 pb-2">
+            {THEMES.map(({ value, ro, en, Icon }) => (
               <button
                 key={value}
                 type="button"
@@ -68,13 +70,13 @@ export function UserMenu({ initials, name, email, isAdmin }: { initials: string;
                 onClick={() => applyTheme(value)}
                 className={cn("flex min-h-14 flex-col items-center justify-center gap-1 rounded-control border text-xs font-semibold transition-colors", pref === value ? "border-accent bg-surface2 text-ink" : "border-transparent text-muted hover:bg-surface2 hover:text-ink")}
               >
-                <Icon size={18} /> {label}
+                <Icon size={18} /> {tx(ro, en)}
               </button>
             ))}
           </div>
           <div className="my-1 h-px bg-line" />
           <form action={logout}>
-            <button type="submit" role="menuitem" className={item}><SignOut size={20} /> Ieși din cont</button>
+            <button type="submit" role="menuitem" className={item}><SignOut size={20} /> {tx("Ieși din cont", "Sign out")}</button>
           </form>
         </div>
       )}

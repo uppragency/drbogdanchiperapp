@@ -4,13 +4,14 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { allow, clientIp } from "@/lib/throttle";
 import { safeNext } from "@/lib/safe-next";
-import { t } from "@/lib/texts";
+import { getT } from "@/lib/i18n";
 
 export type FormState = { error?: string; ok?: string; field?: string };
 
 const schema = z.object({ email: z.string().trim().email().max(200), password: z.string().min(1).max(200) });
 
 export async function login(_: FormState, formData: FormData): Promise<FormState> {
+  const t = await getT();
   const parsed = schema.safeParse({ email: formData.get("email"), password: formData.get("password") });
   if (!parsed.success) return { error: t.login.invalid, field: "password" };
 

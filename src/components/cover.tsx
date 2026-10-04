@@ -3,14 +3,16 @@ import { useState } from "react";
 import { FilePdf, Link as LinkIcon, Play, TextAlignLeft, VideoCamera } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "@/components/ui";
 import { categoryColor } from "@/lib/category-color";
+import { useTx } from "@/components/locale-provider";
 
 const TYPE_ICON = { video: VideoCamera, pdf: FilePdf, text: TextAlignLeft, link: LinkIcon } as const;
 export type ResourceType = keyof typeof TYPE_ICON;
 
-const TYPE_LABEL = { video: "Video", pdf: "Document", text: "Articol", link: "Link" } as const;
+const TYPE_LABEL = { video: ["Video", "Video"], pdf: ["Document", "Document"], text: ["Articol", "Article"], link: ["Link", "Link"] } as const;
 
 // Generated cover for resources without an image: category colour, category name and title on a quiet gradient.
 export function GeneratedCover({ type, label, title, slug, className }: { type: ResourceType; label?: string; title?: string; slug?: string; className?: string }) {
+  const tx = useTx();
   const Icon = TYPE_ICON[type];
   const c = categoryColor(slug, label);
   return (
@@ -23,7 +25,7 @@ export function GeneratedCover({ type, label, title, slug, className }: { type: 
       <Icon size={112} weight="thin" className="absolute -right-3 -bottom-4 text-white/20" />
       <span className="relative flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white/85">
         <Icon size={18} aria-hidden />
-        {label ?? TYPE_LABEL[type]}
+        {label ?? tx(TYPE_LABEL[type][0], TYPE_LABEL[type][1])}
       </span>
       {title && <span className="relative line-clamp-3 max-w-[85%] text-lg font-bold leading-snug sm:text-xl">{title}</span>}
     </div>
@@ -32,6 +34,8 @@ export function GeneratedCover({ type, label, title, slug, className }: { type: 
 
 // Tries each candidate image in order, then falls back to the generated cover.
 export function Cover({ covers, type, label, title, slug, play, badge = true, ratio = "aspect-video", className }: { covers: string[]; type: ResourceType; label?: string; title?: string; slug?: string; play?: boolean; badge?: boolean; ratio?: string; className?: string }) {
+  const tx = useTx();
+  const typeLabel = tx(TYPE_LABEL[type][0], TYPE_LABEL[type][1]);
   const [index, setIndex] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const src = covers[index];
@@ -62,9 +66,9 @@ export function Cover({ covers, type, label, title, slug, play, badge = true, ra
         <GeneratedCover type={type} label={label} title={title} slug={slug} />
       )}
       {badge && src && (
-        <span title={TYPE_LABEL[type]} className="absolute left-3 top-3 flex size-9 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur">
+        <span title={typeLabel} className="absolute left-3 top-3 flex size-9 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur">
           {(() => { const I = TYPE_ICON[type]; return <I size={18} aria-hidden />; })()}
-          <span className="sr-only">{TYPE_LABEL[type]}</span>
+          <span className="sr-only">{typeLabel}</span>
         </span>
       )}
       {play && src && (

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { t } from "@/lib/texts";
+import { getT } from "@/lib/i18n";
+import { LangSwitch } from "@/components/lang-switch";
 import { Wordmark } from "@/components/brand";
 import { UserMenu } from "@/components/user-menu";
 import { HeaderShell } from "@/components/header-shell";
@@ -7,7 +8,8 @@ import { NotificationsPopup, SearchPopup } from "@/components/header-popups";
 import { NavLinks, type NavItem } from "@/components/nav-links";
 
 
-export function AppHeader({ isAdmin, unread = 0, initials = "?", name = "", email = "" }: { isAdmin: boolean; unread?: number; initials?: string; name?: string; email?: string }) {
+export async function AppHeader({ isAdmin, unread = 0, initials = "?", name = "", email = "" }: { isAdmin: boolean; unread?: number; initials?: string; name?: string; email?: string }) {
+  const t = await getT();
   const items: NavItem[] = [
     { href: "/feed", label: t.nav.feed, match: ["/feed", "/resurse", "/cauta", "/recente"] },
     { href: "/profil", label: t.nav.profile, match: ["/profil"] },
@@ -24,6 +26,7 @@ export function AppHeader({ isAdmin, unread = 0, initials = "?", name = "", emai
             <NavLinks items={items} />
           </div>
           <div className="flex items-center">
+            <LangSwitch className="mr-1" />
             <SearchPopup />
             <NotificationsPopup unread={unread} />
             <UserMenu initials={initials} name={name} email={email} isAdmin={isAdmin} />

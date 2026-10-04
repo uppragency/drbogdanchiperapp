@@ -5,15 +5,18 @@ import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
 import { videoCovers } from "@/lib/video";
 import { coverUrl } from "@/lib/cover-url";
-import { t } from "@/lib/texts";
+import { getLocale, getT, pick } from "@/lib/i18n";
 import { FeedView, TYPES, SORTS, type Category, type Row } from "./feed-view";
 
-export const metadata: Metadata = { title: t.feed.title };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT()).feed.title };
+}
 
 const PAGE = 12;
 
 export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
   const viewer = await requireUser();
+  const locale = await getLocale();
   const sp = await searchParams;
   const q = (typeof sp.q === "string" ? sp.q : "").trim().slice(0, 80);
   const categorie = typeof sp.categorie === "string" ? sp.categorie : "";
@@ -28,10 +31,10 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
   const supabase = await createClient();
   const nowIso = new Date().toISOString();
   const [{ data: cats }, { data: rowsRaw }, { data: views }, { data: myTags }, { data: favRows }] = await Promise.all([
-    supabase.from("categories").select("id,name,slug").order("position"),
+    supabase.from("categories").select("id,name,name_en,slug").order("position"),
     supabase
       .from("resources")
-      .select("id,title,description,presenter,type,video_url,is_pinned,publish_at,created_at,category_id,cover_path,resource_attachments(id)")
+      .select("id,title,title_en,description,description_en,presenter,type,video_url,is_pinned,publish_at,created_at,category_id,cover_path,resource_attachments(id)")
       .eq("status", "published")
       .is("deleted_at", null)
       .or(`publish_at.is.null,publish_at.lte.${nowIso}`)
@@ -44,13 +47,14 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
     supabase.from("favorites").select("resource_id").eq("user_id", viewer.id),
   ]);
 
-  const categories = (cats ?? []) as Category[];
-  const all = (rowsRaw ?? []) as unknown as Row[];
+  // Content is localized once here (English falls back to Romanian when empty), so every view downstream just displays it.
+  const categories = ((cats ?? []) as Category[]).map((c) => ({ ...c, name: pick(locale, c.name, c.name_en) }));
+  const all = ((rowsRaw ?? []) as unknown as (Row & { title_en: string | null; description_en: string | null })[]).map((r) => ({ ...r, title: pick(locale, r.title, r.title_en), description: pick(locale, r.description, r.description_en) })) as Row[];
   const catById = new Map(categories.map((c) => [c.id, c]));
   const seen = new Set((views ?? []).map((v: { resource_id: string }) => v.resource_id));
   const weekAgo = new Date(nowIso).getTime() - 7 * 86400000;
   const isNew = (r: Row) => (isAdmin ? new Date(r.publish_at ?? r.created_at).getTime() > weekAgo : !seen.has(r.id));
-  const dateOf = (r: Row) => formatDate(r.publish_at ?? r.created_at);
+  const dateOf = (r: Row) => formatDate(r.publish_at ?? r.created_at, locale);
   const chronological = [...all].sort((a, b) => +new Date(b.publish_at ?? b.created_at) - +new Date(a.publish_at ?? a.created_at));
 
   const activeCategory = categories.find((c) => c.slug === categorie);
@@ -61,7 +65,7 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
   if (q) {
     const needle = q.replace(/[%,()*\\]/g, " ").trim();
     const { data: hits } = needle
-      ? await supabase.from("resources").select("id").eq("status", "published").is("deleted_at", null).or(`title.ilike.%${needle}%,description.ilike.%${needle}%,presenter.ilike.%${needle}%,body.ilike.%${needle}%`).limit(200)
+      ? await supabase.from("resources").select("id").eq("status", "published").is("deleted_at", null).or(`title.ilike.%${needle}%,description.ilike.%${needle}%,presenter.ilike.%${needle}%,body.ilike.%${needle}%${locale === "en" ? `,title_en.ilike.%${needle}%,description_en.ilike.%${needle}%,body_en.ilike.%${needle}%` : ""}`).limit(200)
       : { data: [] };
     matchIds = new Set((hits ?? []).map((h: { id: string }) => h.id));
   }
@@ -76,7 +80,7 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
       (!matchIds || matchIds.has(r.id)),
   );
   if (sort === "vizionate") list.sort((a, b) => (viewCount.get(b.id) ?? 0) - (viewCount.get(a.id) ?? 0));
-  else if (sort === "alfabetic") list.sort((a, b) => a.title.localeCompare(b.title, "ro"));
+  else if (sort === "alfabetic") list.sort((a, b) => a.title.localeCompare(b.title, locale));
   const shown = list.slice(0, PAGE * pages);
 
   const newByCategory = new Map<string, number>();

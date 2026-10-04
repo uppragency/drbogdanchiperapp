@@ -1,5 +1,5 @@
 // Toate textele interfetei si ale emailurilor, intr-un singur loc, in romana.
-export const t = {
+const ro = {
   brand: "MentorMed",
   platformName: "Platforma de curs MentorMed",
   nav: { feed: "Resurse", profile: "Profil", admin: "Administrare", logout: "Ieși din cont" },
@@ -112,3 +112,124 @@ export const t = {
     footer: "Dr. Bogdan Chiper, MentorMed",
   },
 } as const;
+
+type Widen<T> = T extends string ? string : { [K in keyof T]: Widen<T[K]> };
+export type Dict = Widen<typeof ro>;
+export type Locale = "ro" | "en";
+
+const en: Dict = {
+  brand: "MentorMed",
+  platformName: "MentorMed course platform",
+  nav: { feed: "Resources", profile: "Profile", admin: "Administration", logout: "Sign out" },
+  login: {
+    title: "Sign in",
+    subtitle: "Use the email you enrolled in the program with.",
+    email: "Email",
+    password: "Password",
+    submit: "Sign in",
+    forgot: "I forgot my password",
+    invalid: "Incorrect email or password.",
+    throttled: "Too many attempts. Try again in 15 minutes.",
+    inactive: "Your account no longer has active access. Write to us at platforma@drbogdanchiper.ro.",
+    sessionEnded: "The session on this device was closed because the account is used on two other devices.",
+    noAccount: "No account? Access is by invitation only.",
+  },
+  forgot: {
+    title: "Reset password",
+    subtitle: "We will send you a reset link by email.",
+    submit: "Send link",
+    done: "If the address exists on the platform, you received an email with the reset link.",
+    back: "Back to sign in",
+  },
+  setPassword: {
+    title: "Set password",
+    subtitle: "Choose a password of at least 10 characters.",
+    password: "New password",
+    confirm: "Repeat password",
+    submit: "Save password",
+    tooShort: "The password must have at least 10 characters.",
+    mismatch: "The passwords do not match.",
+    compromised: "This password appears in known data breaches. Choose another one.",
+    failed: "We could not save the password. Request a new link.",
+  },
+  terms: {
+    title: "Terms and privacy",
+    intro: "Before you continue, confirm that you have read and accept the documents below.",
+    accept: "I have read and accept the terms and the privacy policy",
+    submit: "Continue",
+    required: "You must accept to continue.",
+    termsLink: "Terms and conditions",
+    privacyLink: "Privacy policy",
+  },
+  mfa: {
+    title: "Two step verification",
+    subtitle: "Enter the code from your authenticator app.",
+    code: "6 digit code",
+    submit: "Verify",
+    invalid: "Incorrect code. Try again.",
+  },
+  feed: {
+    title: "Your resources",
+    empty: "There are no resources for you yet. Come back after the next session.",
+    emptyFiltered: "No resource matches the selected filters.",
+    search: "Search resources",
+    all: "All",
+    new: "New",
+    types: { video: "Video", pdf: "PDF", text: "Text", link: "Link" },
+  },
+  resource: {
+    attachments: "Attached materials",
+    download: "Download",
+    open: "Open",
+    back: "Back to resources",
+    videoHelp: "Video not working? Reload the page or write to us at platforma@drbogdanchiper.ro.",
+  },
+  profile: {
+    title: "Your profile",
+    firstName: "First name",
+    lastName: "Last name",
+    email: "Email",
+    save: "Save",
+    saved: "Your details were saved.",
+    changePassword: "Change password",
+    required: "Fill in your first and last name.",
+  },
+  footer: {
+    tagline: "The private platform for doctors enrolled in the MentorMed program.",
+    platform: "Platform",
+    legal: "Legal",
+    contact: "Contact",
+    site: "drbogdanchiper.ro",
+    program: "The MentorMed program",
+    rights: "All rights reserved.",
+  },
+  home: {
+    greeting: "Hello",
+    newForYou: "New for you",
+    newCount: "new resources",
+    continue: "Continue where you left off",
+    announcements: "Announcements",
+    nextProgram: "Next MentorMed",
+    nextProgramText: "See the details and enrol in the next edition.",
+    nextProgramCta: "See the program",
+    categories: "Categories",
+    yourGroups: "Your groups",
+    noNew: "You are up to date with all resources.",
+    scroll: "Your resources",
+  },
+  common: { loading: "Loading", error: "Something went wrong. Try again.", cancel: "Cancel", save: "Save", delete: "Delete", edit: "Edit", search: "Search", none: "None" },
+  email: {
+    inviteSubject: "Invitation to the MentorMed platform",
+    inviteTitle: "Welcome to the MentorMed platform",
+    inviteBody: "You now have access to the program resources. Press the button below, set your password and enter the platform.",
+    inviteCta: "Set password",
+    resetSubject: "Password reset for the MentorMed platform",
+    resetTitle: "Reset your password",
+    resetBody: "We received a request to reset your password. The link is valid for one hour. If you did not request it, ignore this email.",
+    resetCta: "Choose a new password",
+    footer: "Dr. Bogdan Chiper, MentorMed",
+  },
+};
+
+export const t: Dict = ro;
+export const dictionaries: Record<Locale, Dict> = { ro, en };

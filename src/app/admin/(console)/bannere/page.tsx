@@ -18,10 +18,12 @@ export default async function BannersAdmin({ searchParams }: PageProps<"/admin/b
       {sp.err && <Alert>Mesajul este obligatoriu (maximum 240 de caractere), iar linkul trebuie să înceapă cu https://.</Alert>}
       <Card>
         <form action={createBanner} className="flex flex-col gap-4">
-          <Field label="Mesaj" name="message" required />
+          <Field label="Mesaj (română)" name="message" required />
+          <Field label="Mesaj (engleză)" name="messageEn" help="Opțional. Dacă rămâne gol, se afișează mesajul în română." />
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Link (opțional)" name="linkUrl" type="url" placeholder="https://" />
-            <Field label="Text buton link" name="linkLabel" placeholder="Vezi detalii" />
+            <Field label="Text buton link (română)" name="linkLabel" placeholder="Vezi detalii" />
+            <Field label="Text buton link (engleză)" name="linkLabelEn" placeholder="See details" />
             <Field label="Începe la (opțional)" name="startsAt" type="datetime-local" />
             <Field label="Se oprește la (opțional)" name="endsAt" type="datetime-local" help="Ora României." />
           </div>

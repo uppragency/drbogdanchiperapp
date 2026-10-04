@@ -4,10 +4,11 @@ import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { isPasswordCompromised, MIN_PASSWORD_LENGTH } from "@/lib/password";
 import type { FormState } from "@/app/login/actions";
-import { t } from "@/lib/texts";
+import { getT } from "@/lib/i18n";
 
 export async function setPassword(_: FormState, formData: FormData): Promise<FormState> {
   await requireUser({ allowUnacceptedTerms: true });
+  const t = await getT();
   const password = String(formData.get("password") ?? "");
   const confirm = String(formData.get("confirm") ?? "");
   if (password.length < MIN_PASSWORD_LENGTH) return { error: t.setPassword.tooShort };

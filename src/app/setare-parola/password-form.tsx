@@ -4,9 +4,10 @@ import { setPassword } from "./actions";
 import { Alert, Field } from "@/components/ui";
 import { SubmitButton } from "@/components/submit-button";
 import type { FormState } from "@/app/login/actions";
-import { t } from "@/lib/texts";
+import { useT } from "@/components/locale-provider";
 
 export function PasswordForm() {
+  const t = useT();
   const [state, action] = useActionState<FormState, FormData>(setPassword, {});
   return (
     <form action={action} className="flex flex-col gap-5">

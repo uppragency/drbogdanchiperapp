@@ -4,11 +4,11 @@ import { ArrowUpRight, List } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "@/components/ui";
 import { CategoryIcon } from "@/lib/category-icons";
 import { categoryColor } from "@/lib/category-color";
-import { t } from "@/lib/texts";
+import { getLocale, getT, getTx, pick } from "@/lib/i18n";
 
 export const PROGRAM_URL = "https://drbogdanchiper.ro/produs/mentormed/";
 
-export type ShellCategory = { id: string; name: string; slug: string };
+export type ShellCategory = { id: string; name: string; name_en?: string | null; slug: string };
 export type ShellLink = { id: string; title: string; date: string };
 
 type Props = {
@@ -24,13 +24,15 @@ type Props = {
 };
 
 // Shared three column layout: categories on the left, content in the middle, announcements and the program card on the right.
-export function CommunityShell({ categories, activeSlug, newByCategory, newTotal, announcements, related = [], categoryHref = (s) => (s ? `/feed?categorie=${s}` : "/feed"), className, children }: Props) {
+export async function CommunityShell({ categories, activeSlug, newByCategory, newTotal, announcements, related = [], categoryHref = (s) => (s ? `/feed?categorie=${s}` : "/feed"), className, children }: Props) {
+  const [t, tx, locale] = await Promise.all([getT(), getTx(), getLocale()]);
+  const nameOf = (c: ShellCategory) => pick(locale, c.name, c.name_en);
   const active = categories.find((c) => c.slug === activeSlug);
   const rail = (
     <nav aria-label={t.home.categories} className="flex flex-col gap-1">
       <RailLink href={categoryHref()} active={!activeSlug} label={t.feed.all} count={newTotal} />
       {categories.map((c) => (
-        <RailLink key={c.id} href={categoryHref(c.slug)} active={activeSlug === c.slug} slug={c.slug} label={c.name} count={newByCategory[c.id] ?? 0} />
+        <RailLink key={c.id} href={categoryHref(c.slug)} active={activeSlug === c.slug} slug={c.slug} label={nameOf(c)} count={newByCategory[c.id] ?? 0} />
       ))}
     </nav>
   );
@@ -44,7 +46,7 @@ export function CommunityShell({ categories, activeSlug, newByCategory, newTotal
       <div className="flex min-w-0 flex-col gap-5">
         <details className="group md:hidden">
           <summary className="flex h-12 cursor-pointer list-none items-center justify-between rounded-full border border-line bg-surface px-5 text-sm font-semibold">
-            <span className="flex items-center gap-2"><List size={18} /> {active?.name ?? t.home.categories}</span>
+            <span className="flex items-center gap-2"><List size={18} /> {active ? nameOf(active) : t.home.categories}</span>
             <span className="text-muted group-open:rotate-180">⌄</span>
           </summary>
           <div className="mt-2 rounded-card border border-line bg-surface p-2 shadow-card">{rail}</div>
@@ -54,7 +56,7 @@ export function CommunityShell({ categories, activeSlug, newByCategory, newTotal
 
       <aside className="shell-side flex flex-col gap-6 md:col-start-2 lg:col-start-3 lg:row-start-1 lg:sticky lg:top-24 lg:self-start">
         <LinkList title={t.home.announcements} items={announcements} />
-        <LinkList title="Din aceeași categorie" items={related} />
+        <LinkList title={tx("Din aceeași categorie", "More in this category")} items={related} />
         <div className="relative overflow-hidden rounded-card border border-line bg-violet-soft p-6 text-ink dark:bg-surface2">
           <div aria-hidden className="absolute -right-12 -top-12 size-44 rounded-full bg-[#9155f6]/20 blur-3xl" />
           <p className="relative text-xs font-semibold uppercase tracking-wider text-muted">{t.home.nextProgram}</p>

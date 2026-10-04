@@ -1,6 +1,9 @@
-export default function Loading() {
+import { getTx } from "@/lib/i18n";
+
+export default async function Loading() {
+  const tx = await getTx();
   return (
-    <div aria-busy="true" aria-label="Se încarcă" className="mx-auto w-full max-w-6xl px-4 py-10">
+    <div aria-busy="true" aria-label={tx("Se încarcă", "Loading")} className="mx-auto w-full max-w-6xl px-4 py-10">
       <div className="animate-pulse rounded-[28px] bg-surface2 h-[320px] md:h-[420px]" />
       <div className="mt-10 grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)_300px]">
         <div className="hidden animate-pulse rounded-card bg-surface2 h-72 lg:block" />

@@ -15,8 +15,10 @@ export default async function FaqAdmin() {
       <Card>
         <form action={saveFaq} className="flex flex-col gap-4">
           <h2 className="text-lg font-bold">Întrebare nouă</h2>
-          <Field label="Întrebare" name="question" required />
-          <TextArea label="Răspuns" name="answer" rows={4} />
+          <Field label="Întrebare (română)" name="question" required />
+          <Field label="Întrebare (engleză)" name="questionEn" />
+          <TextArea label="Răspuns (română)" name="answer" rows={4} />
+          <TextArea label="Răspuns (engleză)" name="answerEn" rows={4} />
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Poziție" name="position" type="number" defaultValue={(data?.length ?? 0) + 1} />
             <label className="flex min-h-11 items-center gap-3 self-end text-sm font-semibold"><input type="checkbox" name="published" defaultChecked className="size-5 accent-[var(--accent)]" /> Vizibilă membrilor</label>
@@ -28,8 +30,10 @@ export default async function FaqAdmin() {
         <Card key={f.id}>
           <form action={saveFaq} className="flex flex-col gap-4">
             <input type="hidden" name="id" value={f.id} />
-            <Field label="Întrebare" name={`question`} defaultValue={f.question} required />
-            <TextArea label="Răspuns" name="answer" defaultValue={f.answer} rows={4} />
+            <Field label="Întrebare (română)" name={`question`} defaultValue={f.question} required />
+            <Field label="Întrebare (engleză)" name="questionEn" defaultValue={f.question_en ?? ""} />
+            <TextArea label="Răspuns (română)" name="answer" defaultValue={f.answer} rows={4} />
+            <TextArea label="Răspuns (engleză)" name="answerEn" defaultValue={f.answer_en ?? ""} rows={4} />
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Poziție" name="position" type="number" defaultValue={f.position} />
               <label className="flex min-h-11 items-center gap-3 self-end text-sm font-semibold"><input type="checkbox" name="published" defaultChecked={f.is_published} className="size-5 accent-[var(--accent)]" /> Vizibilă membrilor</label>

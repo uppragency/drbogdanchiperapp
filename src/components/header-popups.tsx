@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, ChatsCircle, FilePdf, Link as LinkIcon, MagnifyingGlass, Sparkle, TextAlignLeft, VideoCamera, X } from "@phosphor-icons/react";
+import { useTx } from "@/components/locale-provider";
 import { Highlight } from "@/components/highlight";
 import { notificationsPreview, searchPreview, type NoticeItem, type SearchHit } from "@/app/(app)/header-actions";
 import { markNotificationsSeen } from "@/app/(app)/notificari/actions";
@@ -13,6 +14,7 @@ const TYPE_ICON = { video: VideoCamera, pdf: FilePdf, text: TextAlignLeft, link:
 const plain = (e: React.MouseEvent) => !(e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0);
 
 export function SearchPopup() {
+  const tx = useTx();
   const dialog = useRef<HTMLDialogElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const router = useRouter();
@@ -35,8 +37,8 @@ export function SearchPopup() {
       <Link
         href="/cauta"
         data-tour="search"
-        aria-label="Caută în toate categoriile"
-        title="Caută"
+        aria-label={tx("Caută în toate categoriile", "Search all categories")}
+        title={tx("Caută", "Search")}
         className={iconBtn}
         onClick={(e) => {
           if (!plain(e)) return;
@@ -48,7 +50,7 @@ export function SearchPopup() {
       </Link>
       <dialog
         ref={dialog}
-        aria-label="Căutare"
+        aria-label={tx("Căutare", "Search")}
         onClick={(e) => e.target === dialog.current && close()}
         className="m-0 mx-auto mt-[8vh] w-[min(40rem,calc(100vw-2rem))] max-w-none rounded-card border border-line bg-surface p-0 text-ink shadow-card backdrop:bg-black/60 backdrop:backdrop-blur-sm"
       >
@@ -66,18 +68,18 @@ export function SearchPopup() {
           <input
             value={q}
             onChange={(e) => onChange(e.target.value)}
-            placeholder="Caută în toate categoriile"
-            aria-label="Caută în toate categoriile"
+            placeholder={tx("Caută în toate categoriile", "Search all categories")}
+            aria-label={tx("Caută în toate categoriile", "Search all categories")}
             autoComplete="off"
             className="h-16 min-w-0 flex-1 bg-transparent text-base placeholder:text-muted focus:outline-none"
           />
-          <button type="button" onClick={close} aria-label="Închide" className="flex size-11 shrink-0 items-center justify-center rounded-control text-muted hover:bg-surface2 hover:text-ink">
+          <button type="button" onClick={close} aria-label={tx("Închide", "Close")} className="flex size-11 shrink-0 items-center justify-center rounded-control text-muted hover:bg-surface2 hover:text-ink">
             <X size={20} />
           </button>
         </form>
         <div className="max-h-[60vh] overflow-y-auto p-2" aria-live="polite">
-          {hits === null && <p className="px-3 py-6 text-center text-sm text-muted">Scrie cel puțin 2 caractere. Apasă Enter pentru toate rezultatele.</p>}
-          {hits && hits.length === 0 && <p className="px-3 py-6 text-center text-sm text-muted">Nu am găsit nicio resursă pentru „{q}”.</p>}
+          {hits === null && <p className="px-3 py-6 text-center text-sm text-muted">{tx("Scrie cel puțin 2 caractere. Apasă Enter pentru toate rezultatele.", "Type at least 2 characters. Press Enter for all results.")}</p>}
+          {hits && hits.length === 0 && <p className="px-3 py-6 text-center text-sm text-muted">{tx(`Nu am găsit nicio resursă pentru „${q}”.`, `No resources found for “${q}”.`)}</p>}
           {hits && hits.length > 0 && (
             <ul>
               {hits.map((h) => {
@@ -96,7 +98,7 @@ export function SearchPopup() {
               })}
               <li>
                 <Link href={`/cauta?q=${encodeURIComponent(q.trim())}`} onClick={close} className="flex min-h-11 items-center justify-center rounded-control text-sm font-semibold text-accent hover:bg-surface2">
-                  Vezi toate rezultatele
+                  {tx("Vezi toate rezultatele", "See all results")}
                 </Link>
               </li>
             </ul>
@@ -108,6 +110,7 @@ export function SearchPopup() {
 }
 
 export function NotificationsPopup({ unread }: { unread: number }) {
+  const tx = useTx();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<NoticeItem[] | null>(null);
   const wrap = useRef<HTMLDivElement>(null);
@@ -143,9 +146,9 @@ export function NotificationsPopup({ unread }: { unread: number }) {
       <Link
         href="/notificari"
         data-tour="bell"
-        aria-label={unread > 0 ? `Notificări, ${unread} necitite` : "Notificări"}
+        aria-label={unread > 0 ? tx(`Notificări, ${unread} necitite`, `Notifications, ${unread} unread`) : tx("Notificări", "Notifications")}
         aria-expanded={open}
-        title="Notificări"
+        title={tx("Notificări", "Notifications")}
         className={iconBtn}
         onClick={(e) => {
           if (!plain(e)) return;
@@ -161,14 +164,14 @@ export function NotificationsPopup({ unread }: { unread: number }) {
         )}
       </Link>
       {open && (
-        <div role="dialog" aria-label="Notificări" className="page-fade absolute right-0 top-full z-50 mt-2 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-card border border-line bg-surface shadow-card">
+        <div role="dialog" aria-label={tx("Notificări", "Notifications")} className="page-fade absolute right-0 top-full z-50 mt-2 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-card border border-line bg-surface shadow-card">
           <div className="flex items-center justify-between border-b border-line px-5 py-3">
-            <p className="font-bold">Notificări</p>
-            <Link href="/notificari" onClick={() => setOpen(false)} className="text-sm font-semibold text-accent hover:underline">Vezi toate</Link>
+            <p className="font-bold">{tx("Notificări", "Notifications")}</p>
+            <Link href="/notificari" onClick={() => setOpen(false)} className="text-sm font-semibold text-accent hover:underline">{tx("Vezi toate", "See all")}</Link>
           </div>
           <div className="max-h-[60vh] overflow-y-auto p-2">
-            {items === null && <p className="px-3 py-6 text-center text-sm text-muted">Se încarcă</p>}
-            {items && items.length === 0 && <p className="px-3 py-6 text-center text-sm text-muted">Nu ai notificări.</p>}
+            {items === null && <p className="px-3 py-6 text-center text-sm text-muted">{tx("Se încarcă", "Loading")}</p>}
+            {items && items.length === 0 && <p className="px-3 py-6 text-center text-sm text-muted">{tx("Nu ai notificări.", "You have no notifications.")}</p>}
             {items && items.length > 0 && (
               <ul>
                 {items.map((n) => (

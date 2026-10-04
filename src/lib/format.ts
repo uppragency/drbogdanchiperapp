@@ -1,8 +1,21 @@
-const dateFmt = new Intl.DateTimeFormat("ro-RO", { dateStyle: "long", timeZone: "Europe/Bucharest" });
-const dateTimeFmt = new Intl.DateTimeFormat("ro-RO", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Bucharest" });
+const TZ = "Europe/Bucharest";
+const tag = (locale?: string) => (locale === "en" ? "en-GB" : "ro-RO");
+const dateFmts = new Map<string, Intl.DateTimeFormat>();
+const dateTimeFmts = new Map<string, Intl.DateTimeFormat>();
 
-export const formatDate = (iso: string | null | undefined) => (iso ? dateFmt.format(new Date(iso)) : "");
-export const formatDateTime = (iso: string | null | undefined) => (iso ? dateTimeFmt.format(new Date(iso)) : "");
+// The optional locale ("ro" or "en") picks the language of the month names. Default stays Romanian.
+export const formatDate = (iso: string | null | undefined, locale?: string) => {
+  if (!iso) return "";
+  const k = tag(locale);
+  if (!dateFmts.has(k)) dateFmts.set(k, new Intl.DateTimeFormat(k, { dateStyle: "long", timeZone: TZ }));
+  return dateFmts.get(k)!.format(new Date(iso));
+};
+export const formatDateTime = (iso: string | null | undefined, locale?: string) => {
+  if (!iso) return "";
+  const k = tag(locale);
+  if (!dateTimeFmts.has(k)) dateTimeFmts.set(k, new Intl.DateTimeFormat(k, { dateStyle: "medium", timeStyle: "short", timeZone: TZ }));
+  return dateTimeFmts.get(k)!.format(new Date(iso));
+};
 
 // Converts a datetime-local value typed in Romania time into an ISO string, and back.
 export function localInputToIso(value: string | null | undefined) {

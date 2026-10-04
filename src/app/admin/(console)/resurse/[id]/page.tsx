@@ -54,6 +54,9 @@ export default async function EditResource({ params, searchParams }: PageProps<"
             isPinned: r.is_pinned,
             commentsEnabled: r.comments_enabled,
             presenter: r.presenter ?? "",
+            titleEn: r.title_en ?? "",
+            descriptionEn: r.description_en ?? "",
+            bodyEn: r.body_en ?? "",
             tagIds: (rt ?? []).map((x) => x.tag_id),
           }}
         />

@@ -4,12 +4,15 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { AuthShell } from "@/components/auth-shell";
 import { TermsForm } from "./terms-form";
-import { t } from "@/lib/texts";
+import { getT } from "@/lib/i18n";
 
-export const metadata: Metadata = { title: t.terms.title };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT()).terms.title };
+}
 
 export default async function TermsPage() {
   const viewer = await requireUser({ allowUnacceptedTerms: true });
+  const t = await getT();
   if (viewer.termsAcceptedAt) redirect("/feed");
   return (
     <AuthShell title={t.terms.title} subtitle={t.terms.intro}>

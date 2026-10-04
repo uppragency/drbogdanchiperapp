@@ -3,9 +3,11 @@ import { useState, useTransition } from "react";
 import { CheckCircle } from "@phosphor-icons/react";
 import { cn } from "@/components/ui";
 import { toast } from "@/components/toaster";
+import { useTx } from "@/components/locale-provider";
 import { setCompleted } from "./actions";
 
 export function CompleteButton({ resourceId, initial }: { resourceId: string; initial: boolean }) {
+  const tx = useTx();
   const [done, setDone] = useState(initial);
   const [animate, setAnimate] = useState(false);
   const [pending, start] = useTransition();
@@ -21,8 +23,8 @@ export function CompleteButton({ resourceId, initial }: { resourceId: string; in
         start(async () => {
           const result = await setCompleted(resourceId, next);
           setDone(result);
-          if (result === next) toast(next ? "Marcată ca terminată" : "Marcajul a fost scos");
-          else toast("Nu am putut salva. Încearcă din nou.", "error");
+          if (result === next) toast(next ? tx("Marcată ca terminată", "Marked as completed") : tx("Marcajul a fost scos", "Mark removed"));
+          else toast(tx("Nu am putut salva. Încearcă din nou.", "Could not save. Try again."), "error");
         });
       }}
       className={cn(
@@ -38,7 +40,7 @@ export function CompleteButton({ resourceId, initial }: { resourceId: string; in
       ) : (
         <CheckCircle size={22} />
       )}{" "}
-      {done ? "Lecție terminată" : "Am terminat lecția"}
+      {done ? tx("Lecție terminată", "Lesson completed") : tx("Am terminat lecția", "Mark lesson as completed")}
     </button>
   );
 }

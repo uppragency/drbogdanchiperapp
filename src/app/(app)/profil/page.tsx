@@ -7,15 +7,19 @@ import { ProfileForm } from "./profile-form";
 import { Devices } from "./devices";
 import { CountUp } from "@/components/count-up";
 import { logout } from "@/app/actions";
-import { t } from "@/lib/texts";
+import { getLocale, getT, getTx, pick } from "@/lib/i18n";
 
-export const metadata: Metadata = { title: t.profile.title };
-
-const fmt = (iso: string | null | undefined) =>
-  iso ? new Intl.DateTimeFormat("ro-RO", { day: "numeric", month: "long", year: "numeric" }).format(new Date(iso)) : null;
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT()).profile.title };
+}
 
 export default async function ProfilePage() {
   const viewer = await requireUser();
+  const t = await getT();
+  const tx = await getTx();
+  const locale = await getLocale();
+  const fmt = (iso: string | null | undefined) =>
+    iso ? new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "ro-RO", { day: "numeric", month: "long", year: "numeric" }).format(new Date(iso)) : null;
   const supabase = await createClient();
 
   const [{ data: prof }, { data: tagRows }, { data: favRows }, views, comments, favCount] = await Promise.all([
@@ -23,7 +27,7 @@ export default async function ProfilePage() {
     supabase.from("user_tags").select("tags(name,position)").eq("user_id", viewer.id),
     supabase
       .from("favorites")
-      .select("resource_id,created_at,resources(id,title)")
+      .select("resource_id,created_at,resources(id,title,title_en)")
       .eq("user_id", viewer.id)
       .order("created_at", { ascending: false })
       .limit(5),
@@ -37,9 +41,9 @@ export default async function ProfilePage() {
     .filter((x): x is { name: string; position: number } => !!x)
     .sort((a, b) => a.position - b.position);
 
-  const favorites = ((favRows ?? []) as unknown as { resources: { id: string; title: string } | null }[])
+  const favorites = ((favRows ?? []) as unknown as { resources: { id: string; title: string; title_en: string | null } | null }[])
     .map((r) => r.resources)
-    .filter((x): x is { id: string; title: string } => !!x);
+    .filter((x): x is { id: string; title: string; title_en: string | null } => !!x);
 
   const name = fullName(viewer) || viewer.email;
   const initials =
@@ -49,9 +53,9 @@ export default async function ProfilePage() {
   const expired = expires ? new Date(expires).getTime() < new Date().getTime() : false;
 
   const stats = [
-    { label: "Resurse deschise", value: views.count ?? 0 },
-    { label: "Comentarii", value: comments.count ?? 0 },
-    { label: "Favorite", value: favCount.count ?? 0 },
+    { label: tx("Resurse deschise", "Resources opened"), value: views.count ?? 0 },
+    { label: tx("Comentarii", "Comments"), value: comments.count ?? 0 },
+    { label: tx("Favorite", "Favourites"), value: favCount.count ?? 0 },
   ];
 
   return (
@@ -90,23 +94,23 @@ export default async function ProfilePage() {
       <div className="grid items-start gap-6 md:grid-cols-2">
         <div className="flex flex-col gap-6">
           <Card className="md:p-6">
-            <h2 className="mb-5 text-lg font-bold">Date personale</h2>
+            <h2 className="mb-5 text-lg font-bold">{tx("Date personale", "Personal details")}</h2>
             <ProfileForm firstName={viewer.firstName} lastName={viewer.lastName} email={viewer.email} />
           </Card>
 
 
           <Card className="md:p-6">
-            <h2 className="mb-4 text-lg font-bold">Acces</h2>
+            <h2 className="mb-4 text-lg font-bold">{tx("Acces", "Access")}</h2>
             <ul className="divide-y divide-line text-sm">
               <li className="flex flex-wrap items-center justify-between gap-2 py-3">
-                <span className="text-muted">Membru din</span>
-                <span className="font-semibold">{fmt(prof?.created_at) ?? "Nespecificat"}</span>
+                <span className="text-muted">{tx("Membru din", "Member since")}</span>
+                <span className="font-semibold">{fmt(prof?.created_at) ?? tx("Nespecificat", "Not specified")}</span>
               </li>
               <li className="flex flex-wrap items-center justify-between gap-2 py-3">
-                <span className="text-muted">Acces activ până la</span>
+                <span className="text-muted">{tx("Acces activ până la", "Access active until")}</span>
                 <span className="flex items-center gap-2 font-semibold">
-                  {expires ? fmt(expires) : "Fără dată de expirare"}
-                  {expired && <Badge tone="danger">Expirat</Badge>}
+                  {expires ? fmt(expires) : tx("Fără dată de expirare", "No expiry date")}
+                  {expired && <Badge tone="danger">{tx("Expirat", "Expired")}</Badge>}
                 </span>
               </li>
             </ul>
@@ -114,8 +118,8 @@ export default async function ProfilePage() {
 
           <Card className="flex flex-col gap-4 md:p-6">
             <div>
-              <h2 className="text-lg font-bold">Securitate</h2>
-              <p className="mt-1 text-sm text-muted">Alege o parolă nouă de cel puțin 10 caractere.</p>
+              <h2 className="text-lg font-bold">{tx("Securitate", "Security")}</h2>
+              <p className="mt-1 text-sm text-muted">{tx("Alege o parolă nouă de cel puțin 10 caractere.", "Choose a new password of at least 10 characters.")}</p>
             </div>
             <LinkButton href="/setare-parola" variant="secondary" className="self-start">
               {t.profile.changePassword}
@@ -126,21 +130,21 @@ export default async function ProfilePage() {
         <div className="flex flex-col gap-6">
           <Card className="md:p-6">
             <div className="mb-4 flex items-center justify-between gap-4">
-              <h2 className="text-lg font-bold">Favorite recente</h2>
+              <h2 className="text-lg font-bold">{tx("Favorite recente", "Recent favourites")}</h2>
               {favorites.length > 0 && (
                 <Link href="/feed?fav=1" className="text-sm font-semibold text-accent hover:underline">
-                  Vezi toate
+                  {tx("Vezi toate", "View all")}
                 </Link>
               )}
             </div>
             {favorites.length === 0 ? (
-              <p className="text-sm text-muted">Nu ai resurse favorite încă. Apasă inima de pe o resursă ca să o găsești rapid aici.</p>
+              <p className="text-sm text-muted">{tx("Nu ai resurse favorite încă. Apasă inima de pe o resursă ca să o găsești rapid aici.", "You have no favourite resources yet. Tap the heart on a resource to find it quickly here.")}</p>
             ) : (
               <ul className="divide-y divide-line">
                 {favorites.map((f) => (
                   <li key={f.id}>
                     <Link href={`/resurse/${f.id}`} className="block py-3 text-sm font-semibold hover:text-accent">
-                      {f.title}
+                      {pick(locale, f.title, f.title_en)}
                     </Link>
                   </li>
                 ))}
@@ -150,10 +154,10 @@ export default async function ProfilePage() {
 
           <Card className="flex flex-wrap items-center justify-between gap-4 md:p-6">
             <div>
-              <h2 className="text-lg font-bold">Văzute recent</h2>
-              <p className="mt-1 text-sm text-muted">Ultimele 20 de resurse deschise.</p>
+              <h2 className="text-lg font-bold">{tx("Văzute recent", "Recently viewed")}</h2>
+              <p className="mt-1 text-sm text-muted">{tx("Ultimele 20 de resurse deschise.", "The last 20 resources you opened.")}</p>
             </div>
-            <LinkButton href="/recente" variant="secondary">Deschide lista</LinkButton>
+            <LinkButton href="/recente" variant="secondary">{tx("Deschide lista", "Open list")}</LinkButton>
           </Card>
 
 

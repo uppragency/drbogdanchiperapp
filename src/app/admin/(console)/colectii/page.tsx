@@ -16,8 +16,10 @@ export default async function CollectionsAdmin() {
       <p className="max-w-[65ch] text-muted">O colecție grupează resurse pe o temă. Membrii văd în colecție doar resursele la care au acces.</p>
       <Card>
         <form action={createCollection} className="flex flex-col gap-4">
-          <Field label="Titlu colecție" name="title" required />
-          <TextArea label="Descriere" name="description" rows={2} />
+          <Field label="Titlu colecție (română)" name="title" required />
+          <Field label="Titlu colecție (engleză)" name="titleEn" />
+          <TextArea label="Descriere (română)" name="description" rows={2} />
+          <TextArea label="Descriere (engleză)" name="descriptionEn" rows={2} />
           <div><SubmitButton>Creează colecția</SubmitButton></div>
         </form>
       </Card>

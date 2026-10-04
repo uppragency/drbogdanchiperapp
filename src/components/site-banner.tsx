@@ -1,7 +1,9 @@
 "use client";
 import { useSyncExternalStore } from "react";
 import { Megaphone, X } from "@phosphor-icons/react";
+import { useTx } from "@/components/locale-provider";
 
+// message and linkLabel arrive already picked for the current language (see the app layout).
 export type BannerData = { id: string; message: string; linkUrl: string | null; linkLabel: string };
 
 const EVENT = "banner-dismissed";
@@ -12,6 +14,7 @@ const subscribe = (cb: () => void) => {
 
 // Closing is remembered in this browser per banner id, so it stays closed until a new banner is published.
 export function SiteBanner({ banner }: { banner: BannerData }) {
+  const tx = useTx();
   const key = `banner:${banner.id}`;
   const hidden = useSyncExternalStore(
     subscribe,
@@ -34,13 +37,13 @@ export function SiteBanner({ banner }: { banner: BannerData }) {
           {banner.linkUrl && (
             <>
               {" "}
-              <a href={banner.linkUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-accent">{banner.linkLabel || "Vezi detalii"}</a>
+              <a href={banner.linkUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-accent">{banner.linkLabel || tx("Vezi detalii", "View details")}</a>
             </>
           )}
         </p>
         <button
           type="button"
-          aria-label="Închide"
+          aria-label={tx("Închide", "Close")}
           onClick={() => {
             try {
               window.localStorage.setItem(key, "1");
