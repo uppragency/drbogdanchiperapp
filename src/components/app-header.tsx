@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { Bell, MagnifyingGlass, SignOut } from "@phosphor-icons/react/dist/ssr";
+import { SignOut } from "@phosphor-icons/react/dist/ssr";
 import { logout } from "@/app/actions";
 import { t } from "@/lib/texts";
 import { Wordmark } from "@/components/brand";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { HeaderShell } from "@/components/header-shell";
+import { NotificationsPopup, SearchPopup } from "@/components/header-popups";
 import { NavLinks, type NavItem } from "@/components/nav-links";
 
 const iconBtn = "relative flex size-11 items-center justify-center rounded-control text-muted transition-colors hover:bg-surface2 hover:text-ink";
@@ -20,7 +21,7 @@ export function AppHeader({ isAdmin, unread = 0 }: { isAdmin: boolean; unread?: 
   return (
     <HeaderShell>
       <div className="mx-auto w-full max-w-6xl px-4">
-        <div className="flex h-16 items-center justify-between gap-2">
+        <div className="relative flex h-16 items-center justify-between gap-2">
           <Link href="/feed" aria-label={t.brand} className="shrink-0">
             <Wordmark />
           </Link>
@@ -28,17 +29,8 @@ export function AppHeader({ isAdmin, unread = 0 }: { isAdmin: boolean; unread?: 
             <NavLinks items={items} />
           </div>
           <div className="flex items-center">
-            <Link href="/cauta" aria-label="Caută în toate categoriile" title="Caută" className={iconBtn}>
-              <MagnifyingGlass size={20} />
-            </Link>
-            <Link href="/notificari" aria-label={unread > 0 ? `Notificări, ${unread} necitite` : "Notificări"} title="Notificări" className={iconBtn}>
-              <Bell size={20} />
-              {unread > 0 && (
-                <span aria-hidden className="absolute right-1.5 top-1.5 flex min-w-4 items-center justify-center rounded-full bg-violet px-1 text-[10px] font-bold leading-4 text-on-violet">
-                  {unread > 9 ? "9+" : unread}
-                </span>
-              )}
-            </Link>
+            <SearchPopup />
+            <NotificationsPopup unread={unread} />
             <ThemeToggle />
             <form action={logout}>
               <button type="submit" aria-label={t.nav.logout} title={t.nav.logout} className={iconBtn}>
