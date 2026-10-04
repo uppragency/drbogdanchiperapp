@@ -5,6 +5,8 @@ import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { notifyNewResource } from "@/lib/push";
+import { after } from "next/server";
 import { localInputToIso } from "@/lib/format";
 import type { FormState } from "@/app/login/actions";
 
@@ -28,6 +30,25 @@ const schema = z.object({
   commentsEnabled: z.boolean(),
   tagIds: z.array(z.string().uuid()),
 });
+
+type PublishDraft = z.infer<typeof schema>;
+
+// Warnings (not errors) shown before a resource goes live. Cover and attachments only exist after the first save.
+async function publishWarnings(supabase: Awaited<ReturnType<typeof createClient>>, id: string, d: PublishDraft): Promise<string[]> {
+  const warnings: string[] = [];
+  if (id) {
+    const [{ data: cur }, { count }] = await Promise.all([
+      supabase.from("resources").select("cover_path").eq("id", id).maybeSingle(),
+      supabase.from("resource_attachments").select("id", { count: "exact", head: true }).eq("resource_id", id),
+    ]);
+    if (!cur?.cover_path && d.type !== "video") warnings.push("Resursa nu are imagine de copertă.");
+    if (d.type === "pdf" && (count ?? 0) === 0) warnings.push("Resursa de tip PDF nu are niciun material atașat.");
+  }
+  if (!d.description) warnings.push("Descrierea scurtă este goală.");
+  if (!d.titleEn) warnings.push("Lipsește titlul în engleză.");
+  if (d.body && !d.bodyEn) warnings.push("Textul în engleză lipsește, deși există text în română.");
+  return warnings;
+}
 
 export async function saveResource(_: FormState, formData: FormData): Promise<FormState> {
   const admin = await requireAdmin();
@@ -58,6 +79,14 @@ export async function saveResource(_: FormState, formData: FormData): Promise<Fo
   }
   if (d.status === "published" && d.tagIds.length === 0) return { error: "Alege cel puțin un MentorMed înainte de publicare." };
 
+  const supabase = await createClient();
+
+  // Non-blocking checks before publishing; skipped once the admin confirmed with "Publică oricum".
+  if (d.status === "published" && formData.get("confirm") !== "1") {
+    const warnings = await publishWarnings(supabase, id, d);
+    if (warnings.length) return { warnings };
+  }
+
   const row = {
     title: d.title,
     description: d.description,
@@ -76,9 +105,11 @@ export async function saveResource(_: FormState, formData: FormData): Promise<Fo
     comments_enabled: d.commentsEnabled,
   };
 
-  const supabase = await createClient();
   let resourceId = id;
+  let wasPublished = false;
   if (id) {
+    const { data: prev } = await supabase.from("resources").select("status").eq("id", id).maybeSingle();
+    wasPublished = prev?.status === "published";
     const { error } = await supabase.from("resources").update(row).eq("id", id);
     if (error) return { error: "Nu am putut salva resursa." };
   } else {
@@ -93,6 +124,10 @@ export async function saveResource(_: FormState, formData: FormData): Promise<Fo
     const { error } = await supabase.from("resource_tags").insert(d.tagIds.map((tag_id) => ({ resource_id: resourceId, tag_id })));
     if (error) return { error: "Nu am putut salva taguri." };
   }
+
+  // Push notification on the first publish, only when the resource is already visible (scheduled ones are not announced).
+  const publishTime = row.publish_at ? new Date(row.publish_at).getTime() : 0;
+  if (d.status === "published" && !wasPublished && publishTime <= Date.now()) after(() => notifyNewResource(resourceId));
 
   revalidatePath("/admin/resurse");
   revalidatePath("/feed");
@@ -218,4 +253,53 @@ export async function duplicateResource(formData: FormData) {
   if (rows.length) await supabase.from("resource_attachments").insert(rows);
   revalidatePath("/admin/resurse");
   redirect(`/admin/resurse/${copy.id}?nou=1`);
+}
+
+const bulkSchema = z.object({
+  ids: z.array(z.string().uuid()).min(1, "Alege cel puțin o resursă.").max(200, "Maximum 200 de resurse odată."),
+  op: z.enum(["publish", "draft", "move", "trash"]),
+  categoryId: z.string().uuid().optional(),
+});
+
+// Bulk update for the resources list. Publishing skips resources without any group tag (same rule as the single form).
+export async function bulkResources(_: FormState, formData: FormData): Promise<FormState> {
+  await requireAdmin();
+  const rawCat = String(formData.get("categoryId") ?? "");
+  const parsed = bulkSchema.safeParse({ ids: formData.getAll("ids").map(String), op: formData.get("op"), categoryId: rawCat || undefined });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Date invalide." };
+  const { ids, op, categoryId } = parsed.data;
+  const supabase = await createClient();
+  let ok = "";
+
+  if (op === "publish") {
+    const { data: tagged } = await supabase.from("resource_tags").select("resource_id").in("resource_id", ids);
+    const withTag = new Set((tagged ?? []).map((t: { resource_id: string }) => t.resource_id));
+    const eligible = ids.filter((i) => withTag.has(i));
+    const skipped = ids.length - eligible.length;
+    if (eligible.length) {
+      const { data: before } = await supabase.from("resources").select("id,status,publish_at").in("id", eligible).is("deleted_at", null);
+      const fresh = (before ?? []).filter((r: { status: string; publish_at: string | null }) => r.status !== "published" && (!r.publish_at || new Date(r.publish_at).getTime() <= Date.now())).map((r: { id: string }) => r.id).slice(0, 10);
+      if (fresh.length) after(async () => { for (const rid of fresh) await notifyNewResource(rid); });
+      const { error } = await supabase.from("resources").update({ status: "published" }).in("id", eligible).is("deleted_at", null);
+      if (error) return { error: "Nu am putut publica resursele." };
+    }
+    ok = `${eligible.length} publicate.` + (skipped ? ` ${skipped} sărite, nu au niciun grup MentorMed.` : "");
+  } else if (op === "draft") {
+    const { error } = await supabase.from("resources").update({ status: "draft" }).in("id", ids).is("deleted_at", null);
+    if (error) return { error: "Nu am putut retrage resursele." };
+    ok = `${ids.length} retrase în draft.`;
+  } else if (op === "move") {
+    if (!categoryId) return { error: "Alege categoria." };
+    const { error } = await supabase.from("resources").update({ category_id: categoryId }).in("id", ids).is("deleted_at", null);
+    if (error) return { error: "Nu am putut muta resursele." };
+    ok = `${ids.length} mutate în categoria aleasă.`;
+  } else {
+    const { error } = await supabase.from("resources").update({ deleted_at: new Date().toISOString() }).in("id", ids).is("deleted_at", null);
+    if (error) return { error: "Nu am putut muta resursele în coș." };
+    ok = `${ids.length} mutate în coș.`;
+  }
+
+  revalidatePath("/admin/resurse");
+  revalidatePath("/feed");
+  return { ok };
 }

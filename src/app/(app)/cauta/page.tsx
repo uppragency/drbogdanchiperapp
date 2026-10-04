@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui";
 import { Highlight } from "@/components/highlight";
 import { categoryColor } from "@/lib/category-color";
 import { getLocale, getT, getTx, pick } from "@/lib/i18n";
+import { popularSearches } from "@/app/(app)/header-actions";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTx())("Căutare", "Search") };
@@ -23,8 +24,15 @@ export default async function SearchPage({ searchParams }: PageProps<"/cauta">) 
   const q = (typeof sp.q === "string" ? sp.q : "").trim().slice(0, 80);
   const needle = q.replace(/[%,()*\\]/g, " ").trim();
   let hits: Hit[] = [];
+  const supabase = await createClient();
+  if (needle.length >= 3) {
+    // Feeds the popular searches; failures are ignored.
+    try {
+      await supabase.rpc("log_search", { p_term: needle });
+    } catch {}
+  }
+  const popular = !q ? await popularSearches("").catch(() => [] as string[]) : [];
   if (needle.length >= 2) {
-    const supabase = await createClient();
     const nowIso = new Date().toISOString();
     const { data } = await supabase
       .from("resources")
@@ -58,6 +66,18 @@ export default async function SearchPage({ searchParams }: PageProps<"/cauta">) 
       </form>
 
       {!q && <EmptyState icon={MagnifyingGlass} title={tx("Ce cauți?", "What are you looking for?")} text={tx("Caută după titlu, descriere sau text, în toate categoriile disponibile pentru tine.", "Search by title, description or text across all categories available to you.")} />}
+      {!q && popular.length > 0 && (
+        <section aria-label={tx("Căutări populare", "Popular searches")} className="flex flex-col gap-3">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-muted">{tx("Căutări populare", "Popular searches")}</h2>
+          <ul className="flex flex-wrap gap-2">
+            {popular.map((term) => (
+              <li key={term}>
+                <Link href={`/cauta?q=${encodeURIComponent(term)}`} className="inline-flex min-h-11 items-center rounded-full border border-line bg-surface px-4 text-sm font-semibold transition-colors hover:bg-surface2">{term}</Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {q && needle.length < 2 && <EmptyState icon={MagnifyingGlass} title={tx("Scrie cel puțin 2 caractere", "Type at least 2 characters")} />}
       {needle.length >= 2 && hits.length === 0 && (
         <EmptyState

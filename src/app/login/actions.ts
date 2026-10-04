@@ -6,7 +6,7 @@ import { allow, clientIp } from "@/lib/throttle";
 import { safeNext } from "@/lib/safe-next";
 import { getT } from "@/lib/i18n";
 
-export type FormState = { error?: string; ok?: string; field?: string };
+export type FormState = { error?: string; ok?: string; field?: string; warnings?: string[] };
 
 const schema = z.object({ email: z.string().trim().email().max(200), password: z.string().min(1).max(200) });
 

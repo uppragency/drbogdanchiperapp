@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
-import { Alert, Badge, Card, Field, PageTitle, btn } from "@/components/ui";
+import { Alert, Badge, Card, Field, PageTitle, Select, btn } from "@/components/ui";
 import { SubmitButton } from "@/components/submit-button";
 import { formatDateTime } from "@/lib/format";
 import { createBanner, deleteBanner, toggleBanner } from "./actions";
@@ -10,7 +10,11 @@ export const metadata: Metadata = { title: "Bannere" };
 export default async function BannersAdmin({ searchParams }: PageProps<"/admin/bannere">) {
   const sp = await searchParams;
   const supabase = await createClient();
-  const { data } = await supabase.from("site_banners").select("*").order("created_at", { ascending: false }).limit(50);
+  const [{ data }, { data: tags }] = await Promise.all([
+    supabase.from("site_banners").select("*").order("created_at", { ascending: false }).limit(50),
+    supabase.from("tags").select("id,name").order("position"),
+  ]);
+  const tagName = new Map((tags ?? []).map((t: { id: string; name: string }) => [t.id, t.name]));
   return (
     <div className="flex flex-col gap-6">
       <PageTitle title="Bannere" />
@@ -27,6 +31,10 @@ export default async function BannersAdmin({ searchParams }: PageProps<"/admin/b
             <Field label="Începe la (opțional)" name="startsAt" type="datetime-local" />
             <Field label="Se oprește la (opțional)" name="endsAt" type="datetime-local" help="Ora României." />
           </div>
+          <Select label="Doar pentru grupul" name="tagId" defaultValue="">
+            <option value="">Toți membrii</option>
+            {(tags ?? []).map((t: { id: string; name: string }) => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </Select>
           <div><SubmitButton>Publică bannerul</SubmitButton></div>
         </form>
       </Card>
@@ -38,6 +46,7 @@ export default async function BannersAdmin({ searchParams }: PageProps<"/admin/b
               <span className="text-sm text-muted">{b.link_url ?? "Fără link"}{b.starts_at ? ` · de la ${formatDateTime(b.starts_at)}` : ""}{b.ends_at ? ` · până la ${formatDateTime(b.ends_at)}` : ""}</span>
             </div>
             <div className="flex items-center gap-2">
+              {b.tag_id && <Badge tone="info">{tagName.get(b.tag_id) ?? "Grup"}</Badge>}
               <Badge tone={b.is_active ? "ok" : "neutral"}>{b.is_active ? "Activ" : "Oprit"}</Badge>
               <form action={toggleBanner}><input type="hidden" name="id" value={b.id} /><input type="hidden" name="active" value={b.is_active ? "0" : "1"} /><button className={btn.secondary}>{b.is_active ? "Oprește" : "Activează"}</button></form>
               <form action={deleteBanner}><input type="hidden" name="id" value={b.id} /><button className={btn.danger}>Șterge</button></form>

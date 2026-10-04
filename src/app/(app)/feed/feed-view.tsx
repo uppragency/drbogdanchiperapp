@@ -12,6 +12,8 @@ import { Hero, type HeroCard } from "./hero";
 import { greetingNow } from "@/lib/greeting";
 import { FeaturedRow } from "./featured-row";
 import { CommunityShell } from "@/components/community-shell";
+import { FollowButton } from "@/components/follow-button";
+import { PollCard } from "./poll-card";
 
 export const TYPES = ["video", "pdf", "text", "link"] as const;
 export const SORTS = ["noi", "vizionate", "alfabetic"] as const;
@@ -45,6 +47,7 @@ export type FeedViewProps = {
   groups: string[];
   categories: Category[];
   activeCategory?: Category;
+  following?: boolean;
   q: string;
   tip?: (typeof TYPES)[number];
   fav: boolean;
@@ -114,6 +117,8 @@ export async function FeedView(p: FeedViewProps) {
         </div>
       )}
 
+      {!filtered && <PollCard />}
+
       {!filtered && p.featured.length > 0 && (
         <div className="mx-auto w-full max-w-6xl px-4 pt-10">
           <FeaturedRow cards={p.featured.map((r) => ({ id: r.id, title: r.title, description: r.description, category: catById.get(r.category_id)?.name ?? "", type: r.type, covers: covers.get(r.id) ?? [] }))} />
@@ -130,7 +135,10 @@ export async function FeedView(p: FeedViewProps) {
         className={filtered ? "pt-10" : "pt-8"}
       >
         <>
-          <h2 className="flex items-baseline gap-3 text-2xl font-bold tracking-tight md:text-3xl">{activeCategory ? activeCategory.name : t.feed.title} <span className="text-lg font-semibold text-muted">{p.totalMatching}</span></h2>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="flex items-baseline gap-3 text-2xl font-bold tracking-tight md:text-3xl">{activeCategory ? activeCategory.name : t.feed.title} <span className="text-lg font-semibold text-muted">{p.totalMatching}</span></h2>
+            {activeCategory && <FollowButton categoryId={activeCategory.id} initial={Boolean(p.following)} variant="category" />}
+          </div>
 
           <FeedToolbar
             q={q}

@@ -58,6 +58,17 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
   const chronological = [...all].sort((a, b) => +new Date(b.publish_at ?? b.created_at) - +new Date(a.publish_at ?? a.created_at));
 
   const activeCategory = categories.find((c) => c.slug === categorie);
+  let following = false;
+  if (activeCategory) {
+    const { data: sub } = await supabase.from("category_subscriptions").select("category_id").eq("user_id", viewer.id).eq("category_id", activeCategory.id).maybeSingle();
+    following = Boolean(sub);
+  }
+  // Searches of 3 or more characters feed the popular searches; failures are ignored.
+  if (q.length >= 3) {
+    try {
+      await supabase.rpc("log_search", { p_term: q });
+    } catch {}
+  }
   const favSet = new Set((favRows ?? []).map((f: { resource_id: string }) => f.resource_id));
   const filtered = Boolean(q || activeCategory || tip || fav);
   // Text search runs in the database over title, description and body.
@@ -118,6 +129,7 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
       groups={groups}
       categories={categories}
       activeCategory={activeCategory}
+      following={following}
       q={q}
       tip={tip}
       fav={fav}

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
 import { EmptyState } from "@/components/ui";
 import { getLocale, getTx, pick } from "@/lib/i18n";
+import { followedCategoryIds } from "@/lib/notifications";
 import { MarkSeen } from "./mark-seen";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -21,16 +22,17 @@ export default async function NotificationsPage() {
   const { data: prof } = await supabase.from("profiles").select("notifications_seen_at").eq("id", viewer.id).maybeSingle();
   const seen = (prof?.notifications_seen_at as string | undefined) ?? now;
 
+  const followed = await followedCategoryIds(supabase, viewer.id);
+  let freshQuery = supabase
+    .from("resources")
+    .select("id,title,title_en,publish_at,created_at,categories(name,name_en)")
+    .eq("status", "published")
+    .is("deleted_at", null)
+    .or(`and(publish_at.is.null,created_at.gt.${seen}),and(publish_at.gt.${seen},publish_at.lte.${now})`);
+  if (followed.length > 0) freshQuery = freshQuery.in("category_id", followed);
   const [{ data: replies }, { data: fresh }] = await Promise.all([
     supabase.from("notifications").select("id,resource_id,message,created_at,read_at").eq("user_id", viewer.id).order("created_at", { ascending: false }).limit(30),
-    supabase
-      .from("resources")
-      .select("id,title,title_en,publish_at,created_at,categories(name,name_en)")
-      .eq("status", "published")
-      .is("deleted_at", null)
-      .or(`and(publish_at.is.null,created_at.gt.${seen}),and(publish_at.gt.${seen},publish_at.lte.${now})`)
-      .order("created_at", { ascending: false })
-      .limit(20),
+    freshQuery.order("created_at", { ascending: false }).limit(20),
   ]);
   type Reply = { id: string; resource_id: string; message: string; created_at: string; read_at: string | null };
   type Cat = { name: string; name_en: string | null };
@@ -43,6 +45,12 @@ export default async function NotificationsPage() {
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10">
       <MarkSeen needed={unread > 0} />
       <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{tx("Notificări", "Notifications")}</h1>
+      <p className="-mt-2 text-sm text-muted">
+        {followed.length > 0
+          ? tx(`Primești resurse noi doar din cele ${followed.length} categorii urmărite.`, `You get new resources only from the ${followed.length} categories you follow.`)
+          : tx("Primești resurse noi din toate categoriile.", "You get new resources from all categories.")}{" "}
+        <Link href="/profil" className="font-semibold text-accent hover:underline">{tx("Schimbă în profil", "Change in profile")}</Link>
+      </p>
       {replyRows.length === 0 && freshRows.length === 0 ? (
         <EmptyState icon={Bell} title={tx("Nu ai notificări", "No notifications")} text={tx("Aici apar răspunsurile la comentariile tale și resursele noi publicate pentru tine.", "Replies to your comments and newly published resources for you appear here.")} action={<Link href="/feed" className="inline-flex h-11 items-center rounded-full border border-line bg-surface px-5 text-sm font-semibold hover:bg-surface2">{tx("Înapoi la resurse", "Back to resources")}</Link>} />
       ) : (

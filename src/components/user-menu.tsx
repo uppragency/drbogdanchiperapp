@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ClockCounterClockwise, Desktop, GearSix, Moon, SignOut, Sun, UserCircle } from "@phosphor-icons/react";
+import { ClockCounterClockwise, Desktop, GearSix, Megaphone, Moon, SignOut, Sun, UserCircle } from "@phosphor-icons/react";
 import { logout } from "@/app/actions";
 import { cn } from "@/components/ui";
 import { useTx } from "@/components/locale-provider";
@@ -57,6 +57,7 @@ export function UserMenu({ initials, name, email, isAdmin }: { initials: string;
           <div className="my-1 h-px bg-line" />
           <Link role="menuitem" href="/profil" onClick={() => setOpen(false)} className={item}><UserCircle size={20} /> {tx("Profil", "Profile")}</Link>
           <Link role="menuitem" href="/recente" onClick={() => setOpen(false)} className={item}><ClockCounterClockwise size={20} /> {tx("Văzute recent", "Recently viewed")}</Link>
+          <Link role="menuitem" href="/ce-e-nou" onClick={() => setOpen(false)} className={item}><Megaphone size={20} /> {tx("Ce e nou", "What's new")}</Link>
           {isAdmin && <Link role="menuitem" href="/admin" onClick={() => setOpen(false)} className={item}><GearSix size={20} /> {tx("Administrare", "Administration")}</Link>}
           <div className="my-1 h-px bg-line" />
           <div className="px-3 pb-1 pt-2 text-xs font-bold uppercase tracking-wider text-muted">{tx("Temă", "Theme")}</div>

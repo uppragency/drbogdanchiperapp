@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
 import { getLocale, getTx, pick } from "@/lib/i18n";
+import { followedCategoryIds } from "@/lib/notifications";
 
 export type SearchHit = { id: string; title: string; category: string; type: "video" | "pdf" | "text" | "link" };
 export type NoticeItem = { key: string; kind: "reply" | "new"; text: string; sub: string; href: string; unread: boolean };
@@ -38,16 +39,17 @@ export async function notificationsPreview(): Promise<NoticeItem[]> {
   const now = new Date().toISOString();
   const { data: prof } = await supabase.from("profiles").select("notifications_seen_at").eq("id", viewer.id).maybeSingle();
   const seen = (prof?.notifications_seen_at as string | undefined) ?? now;
+  const followed = await followedCategoryIds(supabase, viewer.id);
+  let freshQuery = supabase
+    .from("resources")
+    .select("id,title,title_en,publish_at,created_at,categories(name,name_en)")
+    .eq("status", "published")
+    .is("deleted_at", null)
+    .or(`and(publish_at.is.null,created_at.gt.${seen}),and(publish_at.gt.${seen},publish_at.lte.${now})`);
+  if (followed.length > 0) freshQuery = freshQuery.in("category_id", followed);
   const [{ data: replies }, { data: fresh }] = await Promise.all([
     supabase.from("notifications").select("id,resource_id,message,created_at,read_at").eq("user_id", viewer.id).order("created_at", { ascending: false }).limit(6),
-    supabase
-      .from("resources")
-      .select("id,title,title_en,publish_at,created_at,categories(name,name_en)")
-      .eq("status", "published")
-      .is("deleted_at", null)
-      .or(`and(publish_at.is.null,created_at.gt.${seen}),and(publish_at.gt.${seen},publish_at.lte.${now})`)
-      .order("created_at", { ascending: false })
-      .limit(5),
+    freshQuery.order("created_at", { ascending: false }).limit(5),
   ]);
   const items: NoticeItem[] = [
     ...((fresh ?? []) as unknown as { id: string; title: string; title_en: string | null; publish_at: string | null; created_at: string; categories: { name: string; name_en: string | null } | { name: string; name_en: string | null }[] | null }[]).map((r) => {
@@ -71,4 +73,13 @@ export async function notificationsPreview(): Promise<NoticeItem[]> {
     })),
   ];
   return items.slice(0, 8);
+}
+
+// Popular search terms, optionally narrowed by what the member has typed so far.
+export async function popularSearches(prefix: string): Promise<string[]> {
+  await requireUser();
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("popular_searches", { p_prefix: prefix.trim().slice(0, 40), p_limit: 6 });
+  if (error) return [];
+  return ((data ?? []) as { term: string }[]).map((r) => r.term).filter(Boolean);
 }

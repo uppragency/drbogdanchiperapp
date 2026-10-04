@@ -1,6 +1,6 @@
 "use client";
 import { useActionState, useState } from "react";
-import { Alert, Field, Select, TextArea } from "@/components/ui";
+import { Alert, Field, Select, TextArea, btn } from "@/components/ui";
 import { SubmitButton } from "@/components/submit-button";
 import { saveResource } from "./actions";
 import type { FormState } from "@/app/login/actions";
@@ -97,6 +97,18 @@ export function ResourceForm({ values, categories, tags }: { values: ResourceVal
 
       {state.error && <Alert>{state.error}</Alert>}
       {state.ok && <Alert kind="ok">{state.ok}</Alert>}
+      {state.warnings && state.warnings.length > 0 && (
+        <Alert kind="warn">
+          <p className="font-semibold">Resursa nu a fost publicată încă. Verifică:</p>
+          <ul className="mt-1 list-disc pl-5">
+            {state.warnings.map((w) => <li key={w}>{w}</li>)}
+          </ul>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <SubmitButton name="confirm" value="1">Publică oricum</SubmitButton>
+            <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className={btn.secondary}>Revin să completez</button>
+          </div>
+        </Alert>
+      )}
       <div><SubmitButton>Salvează resursa</SubmitButton></div>
     </form>
   );

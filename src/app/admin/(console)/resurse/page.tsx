@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { Badge, LinkButton, PageTitle, cn } from "@/components/ui";
-import { formatDateTime } from "@/lib/format";
+import { LinkButton, PageTitle, cn } from "@/components/ui";
+import { BulkList } from "./bulk-list";
 
 export const metadata: Metadata = { title: "Resurse" };
 
@@ -42,7 +42,7 @@ export default async function ResourcesAdmin({ searchParams }: PageProps<"/admin
   if (q) query = query.ilike("title", `%${q}%`);
   if (tip) query = query.eq("type", tip);
   if (tag) query = query.eq("tagfilter.tag_id", tag);
-  const [{ data: raw }, { data: tags }] = await Promise.all([query, supabase.from("tags").select("id,name").order("position")]);
+  const [{ data: raw }, { data: tags }, { data: categories }] = await Promise.all([query, supabase.from("tags").select("id,name").order("position"), supabase.from("categories").select("id,name").order("position")]);
   const tagTotal = (tags ?? []).length;
 
   type Row = { id: string; title: string; type: string; status: string; publish_at: string | null; is_pinned: boolean; updated_at: string; categories: { name: string } | { name: string }[] | null; resource_tags: { tag_id: string; tags: { name: string; position: number } | null }[] };
@@ -93,26 +93,18 @@ export default async function ResourcesAdmin({ searchParams }: PageProps<"/admin
           </Link>
         ))}
       </div>
-      <ul className="divide-y divide-line rounded-card border border-line bg-surface">
-        {rows.map((r) => {
-          const scheduled = r.status === "published" && r.publish_at && new Date(r.publish_at) > new Date();
-          return (
-            <li key={r.id}>
-              <Link href={`/admin/resurse/${r.id}`} className="flex flex-col gap-2 p-4 hover:bg-surface2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex flex-col gap-1">
-                  <span className="font-semibold">{r.title}</span>
-                  <span className="text-sm text-muted">{(Array.isArray(r.categories) ? r.categories[0] : r.categories)?.name} · {r.type} · {editionLabel(r)} · {formatDateTime(r.updated_at)}</span>
-                </div>
-                <div className="flex gap-2">
-                  {r.is_pinned && <Badge tone="accent">Fixat</Badge>}
-                  {scheduled ? <Badge tone="accent">Programat</Badge> : r.status === "draft" ? <Badge>Draft</Badge> : <Badge tone="ok">Publicat</Badge>}
-                </div>
-              </Link>
-            </li>
-          );
-        })}
-        {rows.length === 0 && <li className="p-6 text-sm text-muted">Nicio resursă.</li>}
-      </ul>
+      <BulkList
+        selectable={status !== "trash"}
+        categories={categories ?? []}
+        rows={rows.map((r) => ({
+          id: r.id,
+          title: r.title,
+          meta: `${(Array.isArray(r.categories) ? r.categories[0] : r.categories)?.name} · ${r.type} · ${editionLabel(r)}`,
+          updatedAt: r.updated_at,
+          pinned: r.is_pinned,
+          state: r.status === "published" && r.publish_at && new Date(r.publish_at) > new Date() ? "scheduled" : r.status === "draft" ? "draft" : "published",
+        }))}
+      />
     </div>
   );
 }

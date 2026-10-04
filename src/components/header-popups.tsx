@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Bell, ChatsCircle, FilePdf, Link as LinkIcon, MagnifyingGlass, Sparkle, TextAlignLeft, VideoCamera, X } from "@phosphor-icons/react";
 import { useTx } from "@/components/locale-provider";
 import { Highlight } from "@/components/highlight";
-import { notificationsPreview, searchPreview, type NoticeItem, type SearchHit } from "@/app/(app)/header-actions";
+import { notificationsPreview, popularSearches, searchPreview, type NoticeItem, type SearchHit } from "@/app/(app)/header-actions";
 import { markNotificationsSeen } from "@/app/(app)/notificari/actions";
 
 const iconBtn = "relative flex size-11 items-center justify-center rounded-control text-muted transition-colors hover:bg-surface2 hover:text-ink";
@@ -19,17 +19,29 @@ export function SearchPopup() {
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const router = useRouter();
   const [q, setQ] = useState("");
+  const input = useRef<HTMLInputElement>(null);
   const [hits, setHits] = useState<SearchHit[] | null>(null);
+  const [popular, setPopular] = useState<string[]>([]);
+  const [suggest, setSuggest] = useState<string[]>([]);
 
   const onChange = (value: string) => {
     setQ(value);
     clearTimeout(timer.current);
-    if (value.trim().length < 2) {
-      setHits(null);
-      return;
-    }
-    timer.current = setTimeout(async () => setHits(await searchPreview(value)), 220);
+    const len = value.trim().length;
+    if (len < 1) setSuggest([]);
+    if (len < 2) setHits(null);
+    if (len < 1) return;
+    timer.current = setTimeout(async () => {
+      const [s, h] = await Promise.all([popularSearches(value), len >= 2 ? searchPreview(value) : Promise.resolve(null)]);
+      setSuggest(s.filter((x) => x.toLowerCase() !== value.trim().toLowerCase()));
+      setHits(h);
+    }, 220);
   };
+  const pickTerm = (term: string) => {
+    onChange(term);
+    input.current?.focus();
+  };
+  const chip = "inline-flex min-h-11 items-center rounded-full border border-line bg-surface px-4 text-sm font-semibold transition-colors hover:bg-surface2";
   const close = () => dialog.current?.close();
 
   return (
@@ -44,6 +56,7 @@ export function SearchPopup() {
           if (!plain(e)) return;
           e.preventDefault();
           dialog.current?.showModal();
+          void popularSearches("").then(setPopular).catch(() => {});
         }}
       >
         <MagnifyingGlass size={20} />
@@ -66,6 +79,7 @@ export function SearchPopup() {
         >
           <MagnifyingGlass size={20} className="shrink-0 text-muted" />
           <input
+            ref={input}
             value={q}
             onChange={(e) => onChange(e.target.value)}
             placeholder={tx("Caută în toate categoriile", "Search all categories")}
@@ -78,7 +92,27 @@ export function SearchPopup() {
           </button>
         </form>
         <div className="max-h-[60vh] overflow-y-auto p-2" aria-live="polite">
-          {hits === null && <p className="px-3 py-6 text-center text-sm text-muted">{tx("Scrie cel puțin 2 caractere. Apasă Enter pentru toate rezultatele.", "Type at least 2 characters. Press Enter for all results.")}</p>}
+          {q.trim().length === 0 && popular.length > 0 && (
+            <div className="px-3 py-3">
+              <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">{tx("Căutări populare", "Popular searches")}</p>
+              <ul className="flex flex-wrap gap-2">
+                {popular.map((term) => (
+                  <li key={term}><button type="button" onClick={() => pickTerm(term)} className={chip}>{term}</button></li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {q.trim().length > 0 && suggest.length > 0 && (
+            <div className="px-3 py-3">
+              <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">{tx("Poate cauți:", "Maybe you are looking for:")}</p>
+              <ul className="flex flex-wrap gap-2">
+                {suggest.map((term) => (
+                  <li key={term}><button type="button" onClick={() => pickTerm(term)} className={chip}>{term}</button></li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {hits === null && !(q.trim().length === 0 && popular.length > 0) && <p className="px-3 py-6 text-center text-sm text-muted">{tx("Scrie cel puțin 2 caractere. Apasă Enter pentru toate rezultatele.", "Type at least 2 characters. Press Enter for all results.")}</p>}
           {hits && hits.length === 0 && <p className="px-3 py-6 text-center text-sm text-muted">{tx(`Nu am găsit nicio resursă pentru „${q}”.`, `No resources found for “${q}”.`)}</p>}
           {hits && hits.length > 0 && (
             <ul>

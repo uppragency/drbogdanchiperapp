@@ -18,8 +18,10 @@ export async function createBanner(formData: FormData) {
   await requireAdmin();
   const p = schema.safeParse({ message: formData.get("message"), linkUrl: formData.get("linkUrl") ?? "", linkLabel: formData.get("linkLabel") ?? "", messageEn: formData.get("messageEn") ?? "", linkLabelEn: formData.get("linkLabelEn") ?? "" });
   if (!p.success) redirect("/admin/bannere?err=1");
+  const tagId = z.string().uuid().safeParse(formData.get("tagId"));
   const supabase = await createClient();
   await supabase.from("site_banners").insert({
+    tag_id: tagId.success ? tagId.data : null,
     message: p.data.message,
     message_en: p.data.messageEn,
     link_label_en: p.data.linkUrl ? p.data.linkLabelEn : "",

@@ -14,6 +14,8 @@ const items = [
   { href: "/admin/colectii", label: "Colecții" },
   { href: "/admin/grupuri", label: "Grupuri" },
   { href: "/admin/bannere", label: "Bannere" },
+  { href: "/admin/sondaje", label: "Sondaje" },
+  { href: "/admin/linkuri", label: "Linkuri" },
   { href: "/admin/faq", label: "FAQ" },
   { href: "/admin/mesaje", label: "Mesaje" },
   { href: "/admin/cos", label: "Coș" },

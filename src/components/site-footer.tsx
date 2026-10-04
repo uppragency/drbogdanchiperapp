@@ -28,6 +28,7 @@ export async function SiteFooter() {
           <Link href="/feed" className={link}>{t.nav.feed}</Link>
           <Link href="/colectii" className={link}>{tx("Colecții", "Collections")}</Link>
           <Link href="/recente" className={link}>{tx("Văzute recent", "Recently viewed")}</Link>
+          <Link href="/ce-e-nou" className={link}>{tx("Ce e nou", "What's new")}</Link>
           <Link href="/contact" className={link}>Contact</Link>
         </nav>
         <nav aria-label={t.footer.legal} className="flex flex-col gap-3">

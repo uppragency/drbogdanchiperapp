@@ -14,7 +14,7 @@ export default async function AdminHome() {
   const ago30 = new Date(now.getTime() - 30 * 86400000).toISOString();
   const count = (q: PromiseLike<{ count: number | null }>) => q.then((r) => r.count ?? 0);
 
-  const [users, published, drafts, pending, expiring, inactive, recent] = await Promise.all([
+  const [users, published, drafts, pending, expiring, inactive, recent, brokenLinks] = await Promise.all([
     count(supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "user").is("deleted_at", null)),
     count(supabase.from("resources").select("id", { count: "exact", head: true }).eq("status", "published").is("deleted_at", null)),
     count(supabase.from("resources").select("id", { count: "exact", head: true }).eq("status", "draft").is("deleted_at", null)),
@@ -22,6 +22,7 @@ export default async function AdminHome() {
     count(supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "user").is("deleted_at", null).not("access_expires_at", "is", null).lte("access_expires_at", in14)),
     count(supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "user").is("deleted_at", null).eq("is_active", true).or(`last_login_at.is.null,last_login_at.lt.${ago30}`)),
     supabase.from("resources").select("id,title,status,updated_at").is("deleted_at", null).order("updated_at", { ascending: false }).limit(6),
+    count(supabase.from("link_checks").select("resource_id", { count: "exact", head: true }).eq("ok", false)),
   ]);
 
   const stats = [
@@ -38,6 +39,9 @@ export default async function AdminHome() {
       <PageTitle title="Administrare">
         <LinkButton href="/admin/resurse/nou">Resursă nouă</LinkButton>
       </PageTitle>
+      {brokenLinks > 0 && (
+        <Link href="/admin/linkuri" className="text-sm font-semibold text-danger hover:underline">{brokenLinks} linkuri cu probleme, vezi detaliile</Link>
+      )}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
         {stats.map((s) => (
           <Link key={s.label} href={s.href} className="rounded-card border border-line bg-surface p-5 transition hover:shadow-card">

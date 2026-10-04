@@ -15,8 +15,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const tx = await getTx();
   const supabase = await createClient();
   const nowIso = new Date().toISOString();
-  const { data } = await supabase.from("site_banners").select("id,message,message_en,link_url,link_label,link_label_en,starts_at,ends_at").eq("is_active", true).order("created_at", { ascending: false }).limit(5);
-  const b = (data ?? []).find((x: { starts_at: string | null; ends_at: string | null }) => (!x.starts_at || x.starts_at <= nowIso) && (!x.ends_at || x.ends_at > nowIso));
+  const { data } = await supabase.from("site_banners").select("id,message,message_en,link_url,link_label,link_label_en,starts_at,ends_at,tag_id").eq("is_active", true).order("created_at", { ascending: false }).limit(20);
+  // A banner with tag_id is for that group only; admins see all of them as a preview.
+  const needsTags = viewer.role !== "admin" && (data ?? []).some((x: { tag_id: string | null }) => x.tag_id);
+  const myTags = new Set<string>();
+  if (needsTags) {
+    const { data: ut } = await supabase.from("user_tags").select("tag_id").eq("user_id", viewer.id);
+    (ut ?? []).forEach((t: { tag_id: string }) => myTags.add(t.tag_id));
+  }
+  const b = (data ?? []).find((x: { starts_at: string | null; ends_at: string | null; tag_id: string | null }) => (!x.starts_at || x.starts_at <= nowIso) && (!x.ends_at || x.ends_at > nowIso) && (!x.tag_id || viewer.role === "admin" || myTags.has(x.tag_id)));
   const unread = await notificationCount(supabase, viewer.id);
   const { data: tourRow } = await supabase.from("profiles").select("tour_seen_at").eq("id", viewer.id).maybeSingle();
   const showTour = viewer.role !== "admin" && !tourRow?.tour_seen_at;
