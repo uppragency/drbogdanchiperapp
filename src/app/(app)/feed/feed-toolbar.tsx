@@ -26,6 +26,7 @@ export function FeedToolbar(props: {
   const panelId = useId();
   const count = props.chips.length;
   const [open, setOpen] = useState(false);
+  const [typed, setTyped] = useState(props.q.trim().length > 0);
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-2">
@@ -35,9 +36,9 @@ export function FeedToolbar(props: {
           ))}
           <div className="relative min-w-0 flex-1">
             <MagnifyingGlass size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
-            <input name="q" defaultValue={props.q} placeholder={props.placeholder} aria-label={props.placeholder} className="h-12 w-full rounded-full border border-line bg-surface pl-11 pr-4 text-base placeholder:text-muted focus:border-accent focus:outline-none" />
+            <input name="q" defaultValue={props.q} onChange={(e) => setTyped(e.target.value.trim().length > 0)} placeholder={props.placeholder} aria-label={props.placeholder} className="h-12 w-full rounded-full border border-line bg-surface pl-11 pr-4 text-base placeholder:text-muted focus:border-accent focus:outline-none" />
           </div>
-          <button type="submit" className="hidden h-12 rounded-full bg-accent px-6 text-sm font-semibold text-accent-ink transition-colors hover:bg-accent-hover active:scale-[0.98] sm:block">{props.submitLabel}</button>
+          <button type="submit" className={cn("hidden h-12 rounded-full px-6 text-sm font-semibold transition-colors active:scale-[0.98] sm:block", typed ? "bg-accent text-accent-ink hover:bg-accent-hover" : "bg-[#121438] text-white hover:bg-[#1b1f55]")}>{props.submitLabel}</button>
         </form>
         <button
           type="button"
