@@ -13,7 +13,6 @@ const iconBtn = "relative flex size-11 items-center justify-center rounded-contr
 export function AppHeader({ isAdmin, unread = 0 }: { isAdmin: boolean; unread?: number }) {
   const items: NavItem[] = [
     { href: "/feed", label: t.nav.feed, match: ["/feed", "/resurse", "/cauta", "/recente"] },
-    { href: "/colectii", label: "Colecții", match: ["/colectii"] },
     { href: "/profil", label: t.nav.profile, match: ["/profil"] },
     ...(isAdmin ? [{ href: "/admin", label: t.nav.admin, match: ["/admin"] }] : []),
   ];
