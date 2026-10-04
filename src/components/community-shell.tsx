@@ -75,8 +75,8 @@ function LinkList({ title, items }: { title: string; items: ShellLink[] }) {
       <h3 className="text-sm font-bold uppercase tracking-wider text-muted">{title}</h3>
       <ul className="mt-4 flex flex-col divide-y divide-line">
         {items.map((a) => (
-          <li key={a.id}>
-            <Link href={`/resurse/${a.id}`} className="flex flex-col gap-1 py-3 first:pt-0 last:pb-0 hover:text-accent">
+          <li key={a.id} className="pb-3 pt-[5px] first:pt-0 last:pb-0">
+            <Link href={`/resurse/${a.id}`} className="flex flex-col gap-1 hover:text-accent">
               <span className="text-sm font-semibold leading-snug">{a.title}</span>
               <span className="text-xs text-muted">{a.date}</span>
             </Link>
