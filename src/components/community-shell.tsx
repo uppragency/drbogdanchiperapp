@@ -54,9 +54,9 @@ export function CommunityShell({ categories, activeSlug, newByCategory, newTotal
       <aside className="flex flex-col gap-6 lg:sticky lg:top-24 lg:self-start">
         <LinkList title={t.home.announcements} items={announcements} />
         <LinkList title="Din aceeași categorie" items={related} />
-        <div className="relative overflow-hidden rounded-card bg-[#0d1c5c] p-6 text-white dark:bg-surface2">
-          <div aria-hidden className="absolute -right-12 -top-12 size-44 rounded-full bg-[#9155f6]/45 blur-3xl" />
-          <p className="relative text-xs font-semibold uppercase tracking-wider text-white/75">{t.home.nextProgram}</p>
+        <div className="relative overflow-hidden rounded-card border border-line bg-violet-soft p-6 text-ink dark:bg-surface2">
+          <div aria-hidden className="absolute -right-12 -top-12 size-44 rounded-full bg-[#9155f6]/20 blur-3xl" />
+          <p className="relative text-xs font-semibold uppercase tracking-wider text-muted">{t.home.nextProgram}</p>
           <p className="relative mt-3 text-lg font-bold leading-snug">{t.home.nextProgramText}</p>
           <a href={PROGRAM_URL} target="_blank" rel="noopener noreferrer" className="relative mt-5 inline-flex h-11 items-center gap-2 rounded-full bg-violet px-5 text-sm font-semibold text-white transition-colors hover:bg-violet-hover active:scale-[0.98]">
             {t.home.nextProgramCta} <ArrowUpRight size={16} weight="bold" />
