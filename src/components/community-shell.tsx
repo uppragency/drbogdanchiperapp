@@ -7,6 +7,11 @@ import { categoryColor } from "@/lib/category-color";
 import { getLocale, getT, getTx, pick } from "@/lib/i18n";
 
 export const PROGRAM_URL = "https://drbogdanchiper.ro/produs/mentormed/";
+const LIVE_OP_URL = "https://drbogdanchiper.ro/mentormed-live-op-mentorship/";
+const LIVE_OP_COURSES = [
+  { title: "Inserare Implant cu Ghid Chirurgical în Zona Estetică + GBR de Contur + Augmentare de Țesuturi", url: "https://drbogdanchiper.ro/produs/inserare-implant-cu-ghid-chirurgical-in-zona-estetica-gbr-de-contur-augmentare-de-tesuturi/" },
+  { title: "Stackable All-on-4: Protocol Full-Arch Ghidat (Mandibulă)", url: "https://drbogdanchiper.ro/produs/stackable-all-on-4-protocol-full-arch-ghidat-mandibula/" },
+];
 
 export type ShellCategory = { id: string; name: string; name_en?: string | null; slug: string };
 export type ShellLink = { id: string; title: string; date: string };
@@ -57,6 +62,25 @@ export async function CommunityShell({ categories, activeSlug, newByCategory, ne
       <aside className="shell-side flex flex-col gap-6 md:col-start-2 lg:col-start-3 lg:row-start-1 lg:sticky lg:top-24 lg:self-start">
         <LinkList title={t.home.announcements} items={announcements} />
         <LinkList title={tx("Din aceeași categorie", "More in this category")} items={related} />
+        <div className="rounded-card border border-line bg-surface p-6 shadow-card">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted">{tx("Cursuri video", "Video courses")}</p>
+          <a href={LIVE_OP_URL} target="_blank" rel="noopener noreferrer" className="mt-3 flex items-start justify-between gap-3 text-lg font-bold leading-snug hover:text-accent">
+            MentorMed Live OP Mentorship <ArrowUpRight size={18} weight="bold" className="mt-1 shrink-0" />
+          </a>
+          <p className="mt-2 text-sm leading-relaxed text-muted">
+            {tx("„Treci de la incertitudine la precizie chirurgicală. Stăpânește tehnicile și protocoale inovatoare alături de dr Bogdan Chiper, pas cu pas.”", "“Move from uncertainty to surgical precision. Master innovative techniques and protocols with Dr. Bogdan Chiper, step by step.”")}
+          </p>
+          <ul className="mt-4 flex flex-col divide-y divide-line">
+            {LIVE_OP_COURSES.map((c) => (
+              <li key={c.url} className="py-3 first:pt-0 last:pb-0">
+                <a href={c.url} target="_blank" rel="noopener noreferrer" className="flex items-start justify-between gap-3 text-sm font-semibold leading-snug hover:text-accent">
+                  {c.title} <ArrowUpRight size={16} className="mt-0.5 shrink-0 text-muted" />
+                </a>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 text-xs text-muted">{tx("Se achiziționează de pe site-ul principal, drbogdanchiper.ro.", "Available for purchase on the main website, drbogdanchiper.ro.")}</p>
+        </div>
         <div className="relative overflow-hidden rounded-card border border-line bg-violet-soft p-6 text-ink dark:bg-surface2">
           <div aria-hidden className="absolute -right-12 -top-12 size-44 rounded-full bg-[#9155f6]/20 blur-3xl" />
           <p className="relative text-xs font-semibold uppercase tracking-wider text-muted">{t.home.nextProgram}</p>
