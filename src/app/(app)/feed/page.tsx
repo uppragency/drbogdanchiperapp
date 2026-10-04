@@ -52,12 +52,21 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
   const activeCategory = categories.find((c) => c.slug === categorie);
   const favSet = new Set((favRows ?? []).map((f: { resource_id: string }) => f.resource_id));
   const filtered = Boolean(q || activeCategory || tip || fav);
+  // Text search runs in the database over title, description and body.
+  let matchIds: Set<string> | null = null;
+  if (q) {
+    const needle = q.replace(/[%,()*\\]/g, " ").trim();
+    const { data: hits } = needle
+      ? await supabase.from("resources").select("id").eq("status", "published").is("deleted_at", null).or(`title.ilike.%${needle}%,description.ilike.%${needle}%,body.ilike.%${needle}%`).limit(200)
+      : { data: [] };
+    matchIds = new Set((hits ?? []).map((h: { id: string }) => h.id));
+  }
   const list = all.filter(
     (r) =>
       (!activeCategory || r.category_id === activeCategory.id) &&
       (!tip || r.type === tip) &&
       (!fav || favSet.has(r.id)) &&
-      (!q || `${r.title} ${r.description}`.toLowerCase().includes(q.toLowerCase())),
+      (!matchIds || matchIds.has(r.id)),
   );
   const shown = list.slice(0, PAGE * pages);
 

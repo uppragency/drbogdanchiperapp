@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
 import { FullLogo } from "@/components/brand";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function AuthShell({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   return (
-    <main className="flex flex-1 flex-col items-center justify-center px-4 py-16">
+    <main className="relative flex flex-1 flex-col items-center justify-center px-4 py-16">
+      <div className="absolute right-4 top-4"><ThemeToggle /></div>
       <div className="mb-8 flex justify-center">
         <FullLogo />
       </div>

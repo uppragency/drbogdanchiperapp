@@ -168,7 +168,10 @@ export function FeedView(p: FeedViewProps) {
               )}
             </>
           ) : (
-            <div className="rounded-card border border-dashed border-line p-10 text-center text-muted">{filtered ? t.feed.emptyFiltered : t.feed.empty}</div>
+            <div className="flex flex-col items-center gap-4 rounded-card border border-dashed border-line p-10 text-center text-muted">
+              <p>{filtered ? t.feed.emptyFiltered : t.feed.empty}</p>
+              {filtered && <Link href="/feed" className="rounded-full border border-line bg-surface px-5 py-2.5 text-sm font-semibold text-ink transition hover:bg-surface2">Șterge filtrele</Link>}
+            </div>
           )}
         </>
       </CommunityShell>

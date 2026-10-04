@@ -50,10 +50,16 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
     await supabase.from("resource_views").upsert({ user_id: viewer.id, resource_id: r.id, last_viewed_at: new Date().toISOString() }, { onConflict: "user_id,resource_id" });
   }
 
+  const supabase0 = await createClient();
   const community = await loadCommunity(viewer.id, viewer.role === "admin", { id: r.id, categoryId: r.category_id });
   const category = Array.isArray(r.categories) ? r.categories[0] : r.categories;
   const video = r.type === "video" ? parseVideo(r.video_url) : null;
   const embed = video ? embedUrl(video, true) : null;
+  const { data: sib } = await supabase0.from("resources").select("id,title,publish_at,created_at").eq("category_id", r.category_id).eq("status", "published").is("deleted_at", null).order("publish_at", { ascending: false, nullsFirst: false }).order("created_at", { ascending: false }).limit(200);
+  const siblings = (sib ?? []) as { id: string; title: string }[];
+  const at = siblings.findIndex((x) => x.id === r.id);
+  const newer = at > 0 ? siblings[at - 1] : null;
+  const older = at >= 0 && at < siblings.length - 1 ? siblings[at + 1] : null;
   const covers = [...(r.cover_path ? [coverUrl(r.cover_path)] : []), ...(r.type === "video" ? await videoCovers(r.video_url) : [])];
   const supabaseFav = await createClient();
   const { data: favRow } = await supabaseFav.from("favorites").select("resource_id").eq("user_id", viewer.id).eq("resource_id", r.id).maybeSingle();
@@ -152,6 +158,22 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
           </section>
         )}
       </article>
+      {(newer || older) && (
+        <nav aria-label="Alte resurse din categorie" className="grid gap-3 sm:grid-cols-2">
+          {older ? (
+            <Link href={`/resurse/${older.id}`} className="flex flex-col gap-1 rounded-card border border-line bg-surface p-5 transition-colors hover:bg-surface2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted">Anterioară</span>
+              <span className="line-clamp-2 font-bold">{older.title}</span>
+            </Link>
+          ) : <span />}
+          {newer && (
+            <Link href={`/resurse/${newer.id}`} className="flex flex-col gap-1 rounded-card border border-line bg-surface p-5 text-right transition-colors hover:bg-surface2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted">Următoarea</span>
+              <span className="line-clamp-2 font-bold">{newer.title}</span>
+            </Link>
+          )}
+        </nav>
+      )}
       <Comments resourceId={r.id} viewerId={viewer.id} isAdmin={viewer.role === "admin"} />
     </CommunityShell>
   );
