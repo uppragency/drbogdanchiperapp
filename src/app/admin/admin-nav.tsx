@@ -5,6 +5,7 @@ import { cn } from "@/components/ui";
 
 const items = [
   { href: "/admin", label: "Prezentare", exact: true },
+  { href: "/admin/statistici", label: "Statistici" },
   { href: "/admin/resurse", label: "Resurse" },
   { href: "/admin/useri", label: "Useri" },
   { href: "/admin/invitatii", label: "Invitații" },

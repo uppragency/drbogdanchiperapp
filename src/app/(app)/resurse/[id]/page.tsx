@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { loadCommunity } from "@/lib/community";
 import { CommunityShell } from "@/components/community-shell";
 import { Cover } from "@/components/cover";
+import { Comments } from "@/components/comments";
 import { LinkButton } from "@/components/ui";
 import { VideoPlayer } from "@/components/video-player";
 import { CategoryIcon } from "@/lib/category-icons";
@@ -146,6 +147,7 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
           </section>
         )}
       </article>
+      <Comments resourceId={r.id} viewerId={viewer.id} isAdmin={viewer.role === "admin"} />
     </CommunityShell>
   );
 }
