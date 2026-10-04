@@ -8,14 +8,6 @@ import { t } from "@/lib/texts";
 
 const schema = z.object({ firstName: z.string().trim().min(1).max(80), lastName: z.string().trim().min(1).max(80) });
 
-export async function setNotifications(formData: FormData) {
-  const viewer = await requireUser();
-  const on = formData.get("enabled") === "on";
-  const { createAdminClient } = await import("@/lib/supabase/admin");
-  await createAdminClient().from("profiles").update({ email_notifications: on }).eq("id", viewer.id);
-  revalidatePath("/profil");
-}
-
 export async function updateProfile(_: FormState, formData: FormData): Promise<FormState> {
   const viewer = await requireUser();
   const parsed = schema.safeParse({ firstName: formData.get("firstName"), lastName: formData.get("lastName") });

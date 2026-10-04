@@ -14,7 +14,6 @@ Platformă de curs pentru membri, la `platforma.drbogdanchiper.ro`. Next.js 16, 
 | NEXT_PUBLIC_SITE_URL | https://platforma.drbogdanchiper.ro |
 | ADMIN_NOTIFY_EMAIL | Opțional. Email-ul care primește notificări pentru cereri de acces și mesaje de contact |
 | NEXT_PUBLIC_SENTRY_DSN | Opțional. Fără el, raportarea erorilor este oprită |
-| CRON_SECRET | Șir lung aleatoriu. Securizează joburile automate (rezumat săptămânal, remindere) și linkurile de dezabonare |
 
 ## Pași de lansare
 
