@@ -4,6 +4,7 @@ import { logout } from "@/app/actions";
 import { cn } from "@/components/ui";
 import { t } from "@/lib/texts";
 import { Wordmark } from "@/components/brand";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function AppHeader({ isAdmin, active }: { isAdmin: boolean; active: "feed" | "profile" | "admin" }) {
   const link = (key: typeof active, href: string, label: React.ReactNode) => (
@@ -21,6 +22,7 @@ export function AppHeader({ isAdmin, active }: { isAdmin: boolean; active: "feed
           {link("feed", "/feed", t.nav.feed)}
           {link("profile", "/profil", t.nav.profile)}
           {isAdmin && link("admin", "/admin", <><span className="sm:hidden">Admin</span><span className="hidden sm:inline">{t.nav.admin}</span></>)}
+          <ThemeToggle />
           <form action={logout}>
             <button type="submit" aria-label={t.nav.logout} title={t.nav.logout} className="flex size-11 items-center justify-center rounded-control text-muted transition hover:bg-surface2 hover:text-ink">
               <SignOut size={20} weight="regular" />

@@ -17,6 +17,9 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, title: "MentorMed", statusBarStyle: "default" },
 };
 
+// Runs before first paint so the chosen theme never flashes.
+const THEME_SCRIPT = `(function(){try{var s=localStorage.getItem('theme');var d=s==='dark'||(s!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light')}catch(e){document.documentElement.setAttribute('data-theme','light')}})()`;
+
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
@@ -28,7 +31,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ro" className={`${montserrat.variable} h-full`}>
+    <html lang="ro" className={`${montserrat.variable} h-full`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className="min-h-dvh flex flex-col">
         {children}
         <SiteFooter />

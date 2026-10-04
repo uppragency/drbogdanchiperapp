@@ -23,8 +23,30 @@
   --radius-card: 24px;
 }
 
+:root[data-theme="dark"] {
+  --bg: #080c24;
+  --surface: #0f1538;
+  --surface-2: #171f4d;
+  --ink: #eef0fa;
+  --muted: #a3abd2;
+  --line: #232c63;
+  --navy: #060a1f;
+  --accent: #a99cf6;
+  --accent-ink: #0d1c5c;
+  --violet: #a97bfb;
+  --violet-hover: #bb96fc;
+  --accent-hover: #c4bbfa;
+  --violet-soft: #231a4d;
+  --danger: #ff9b90;
+  --danger-bg: #3a1a22;
+  --ok: #7fd6a4;
+  --ok-bg: #0f2f26;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -12px rgba(0, 0, 0, 0.6);
+}
+
+/* Without JavaScript the system preference decides. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme]) {
     --bg: #080c24;
     --surface: #0f1538;
     --surface-2: #171f4d;
@@ -45,6 +67,8 @@
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -12px rgba(0, 0, 0, 0.6);
   }
 }
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
 @theme inline {
   --color-bg: var(--bg);
@@ -72,6 +96,12 @@
 
 html {
   color-scheme: light dark;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 body {

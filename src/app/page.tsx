@@ -6,6 +6,7 @@ import { getViewer } from "@/lib/auth";
 import { Wordmark } from "@/components/brand";
 import { PROGRAM_URL } from "@/components/community-shell";
 import { btn } from "@/components/ui";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { t } from "@/lib/texts";
 import { RequestForm } from "./landing/request-form";
 
@@ -19,7 +20,10 @@ export default async function Home() {
       <header className="border-b border-line">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4">
           <Wordmark />
-          <Link href="/login" className={btn.secondary}>Intră în cont</Link>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Link href="/login" className={btn.secondary}>Intră în cont</Link>
+          </div>
         </div>
       </header>
 
