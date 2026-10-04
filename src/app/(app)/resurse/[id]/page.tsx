@@ -103,7 +103,12 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
 
         <div className="flex flex-wrap items-center gap-3 px-5 pt-2 md:px-8">
           <FavoriteButton resourceId={r.id} initial={Boolean(favRow)} />
-          {r.event_at && <span className="text-sm font-semibold text-muted">Eveniment: {formatDateTime(r.event_at)}</span>}
+          {r.event_at && (
+            <>
+              <span className="text-sm font-semibold text-muted">Eveniment: {formatDateTime(r.event_at)}</span>
+              <a href={`/api/evenimente/${r.id}`} className="inline-flex h-11 items-center rounded-full border border-line bg-surface px-4 text-sm font-semibold hover:bg-surface2">Adaugă în calendar</a>
+            </>
+          )}
         </div>
 
         {externalUrl && (

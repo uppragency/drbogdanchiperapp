@@ -2,17 +2,35 @@ import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth";
 import { Card, LinkButton, PageTitle } from "@/components/ui";
 import { ProfileForm } from "./profile-form";
+import { SubmitButton } from "@/components/submit-button";
+import { createClient } from "@/lib/supabase/server";
+import { setNotifications } from "./actions";
 import { t } from "@/lib/texts";
 
 export const metadata: Metadata = { title: t.profile.title };
 
 export default async function ProfilePage() {
   const viewer = await requireUser();
+  const supabase = await createClient();
+  const { data: prof } = await supabase.from("profiles").select("email_notifications").eq("id", viewer.id).maybeSingle();
+  const notifications = prof?.email_notifications ?? true;
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-10">
       <PageTitle title={t.profile.title} />
       <Card>
         <ProfileForm firstName={viewer.firstName} lastName={viewer.lastName} email={viewer.email} />
+      </Card>
+      <Card>
+        <form action={setNotifications} className="flex flex-wrap items-center justify-between gap-4">
+          <div className="max-w-[48ch]">
+            <h2 className="text-lg font-bold">Emailuri cu noutăți</h2>
+            <p className="mt-1 text-sm text-muted">Un rezumat săptămânal cu resursele noi pentru grupul tău și un reminder înainte de webinarii.</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <label className="flex min-h-11 items-center gap-3 text-sm font-semibold"><input type="checkbox" name="enabled" defaultChecked={notifications} className="size-5 accent-[var(--accent)]" /> Primesc emailuri</label>
+            <SubmitButton variant="secondary">Salvează</SubmitButton>
+          </div>
+        </form>
       </Card>
       <Card className="flex flex-wrap items-center justify-between gap-4">
         <div>
