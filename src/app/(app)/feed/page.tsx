@@ -78,23 +78,15 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
   const groups = myGroups.map((x) => x.name);
   const welcomes = filtered ? [] : myGroups.filter((x) => x.welcome_message.trim()).map((x) => ({ name: x.name, message: x.welcome_message }));
 
-  const heroIds = new Set(heroRows.map((r) => r.id));
-  const featuredRows = filtered ? [] : [...chronological.filter((r) => r.is_pinned), ...chronological.filter((r) => !r.is_pinned)].filter((r, i, a) => a.findIndex((x) => x.id === r.id) === i).filter((r) => !heroIds.has(r.id) || r.is_pinned).slice(0, 6);
-  const rtf = new Intl.RelativeTimeFormat("ro", { numeric: "auto" });
-  const ago = (iso: string) => {
-    const mins = Math.round((new Date(nowIso).getTime() - new Date(iso).getTime()) / 60000);
-    if (mins < 60) return rtf.format(-Math.max(mins, 1), "minute");
-    if (mins < 1440) return rtf.format(-Math.round(mins / 60), "hour");
-    return rtf.format(-Math.round(mins / 1440), "day");
-  };
-  const byId = new Map(all.map((r) => [r.id, r]));
-  const continueItems = filtered
+  // Popular videos: most opened by members, filled automatically. Newest first when views are equal or missing.
+  const { data: counts } = filtered ? { data: [] } : await supabase.rpc("resource_view_counts");
+  const viewCount = new Map(((counts ?? []) as { resource_id: string; views: number }[]).map((c) => [c.resource_id, Number(c.views)]));
+  const featuredRows = filtered
     ? []
-    : ((views ?? []) as { resource_id: string; last_viewed_at: string }[])
-        .map((v) => ({ v, r: byId.get(v.resource_id) }))
-        .filter((x): x is { v: { resource_id: string; last_viewed_at: string }; r: Row } => Boolean(x.r))
-        .slice(0, 8)
-        .map(({ v, r }) => ({ id: r.id, title: r.title, category: catById.get(r.category_id)?.name ?? "", type: r.type, ago: ago(v.last_viewed_at), favorite: favSet.has(r.id) }));
+    : chronological
+        .filter((r) => r.type === "video")
+        .sort((a, b) => (viewCount.get(b.id) ?? 0) - (viewCount.get(a.id) ?? 0))
+        .slice(0, 6);
   const coverIds = new Set([...heroRows, ...shown, ...featuredRows].map((r) => r.id));
   const coverEntries = await Promise.all(all.filter((r) => coverIds.has(r.id) && (r.type === "video" || r.cover_path)).map(async (r) => [r.id, [...(r.cover_path ? [coverUrl(r.cover_path)] : []), ...(r.type === "video" ? await videoCovers(r.video_url) : [])]] as [string, string[]]));
   const covers = new Map(coverEntries);
@@ -110,7 +102,6 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
       fav={fav}
       welcomes={welcomes}
       featured={featuredRows}
-      continueItems={continueItems}
       pages={pages}
       filtered={filtered}
       newTotal={newTotal}

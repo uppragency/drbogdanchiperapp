@@ -7,7 +7,7 @@ import { MfaEnroll } from "./mfa-enroll";
 export const metadata: Metadata = { title: "Securitate" };
 
 export default async function SecurityPage() {
-  await requireAdmin({ allowEnrol: true });
+  await requireAdmin();
   const supabase = await createClient();
   const { data } = await supabase.auth.mfa.listFactors();
   const enrolled = (data?.totp?.length ?? 0) > 0;
@@ -20,7 +20,7 @@ export default async function SecurityPage() {
           <Alert kind="ok">Verificarea în doi pași este activă pentru contul de administrator.</Alert>
         ) : (
           <>
-            <p className="text-sm text-muted">Contul de administrator controlează accesul tuturor medicilor. Activează verificarea în doi pași cu o aplicație de autentificare (Google Authenticator, Authy, 1Password) ca să poți folosi administrarea.</p>
+            <p className="text-sm text-muted">Contul de administrator controlează accesul tuturor medicilor. Activează verificarea în doi pași cu o aplicație de autentificare (Google Authenticator, Authy, 1Password) pentru o protecție în plus. Este opțională.</p>
             <MfaEnroll />
           </>
         )}

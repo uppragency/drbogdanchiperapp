@@ -17,8 +17,8 @@ export function FeaturedRow({ cards }: { cards: FeaturedCard[] }) {
     <section aria-labelledby="recomandate" className="flex flex-col gap-4">
       <div className="flex items-end justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <h2 id="recomandate" className="text-2xl font-bold tracking-tight">Resurse recomandate</h2>
-          <p className="text-sm text-muted">Resursele fixate de echipă și cele mai recente pentru grupul tău.</p>
+          <h2 id="recomandate" className="text-2xl font-bold tracking-tight">Videoclipuri populare</h2>
+          <p className="text-sm text-muted">Cele mai urmărite videoclipuri, actualizate automat.</p>
         </div>
         <div className="flex gap-2">
           <button type="button" onClick={() => move(-1)} aria-label="Înapoi" className="flex size-11 items-center justify-center rounded-full border border-line bg-surface transition-colors hover:bg-surface2"><CaretLeft size={18} /></button>

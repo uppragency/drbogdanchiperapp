@@ -3,7 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { AppHeader } from "@/components/app-header";
 import { AdminNav } from "./admin-nav";
 
-// Role check only. The second factor is enforced in (console)/layout.tsx so the enrolment page stays reachable.
+// Role check only. Two step verification is optional and only challenged for admins who enrolled it.
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const viewer = await requireUser();
   if (viewer.role !== "admin") redirect("/feed");

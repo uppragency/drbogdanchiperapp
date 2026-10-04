@@ -87,14 +87,13 @@ export async function requireUser(opts: { allowUnacceptedTerms?: boolean } = {})
   return r.viewer;
 }
 
-// Admin pages require a verified second factor. An admin without a factor is sent to enrol one.
-export async function requireAdmin(opts: { allowEnrol?: boolean } = {}): Promise<Viewer> {
+// Admin role check. Two step verification is optional: an admin who enrolled a factor must pass the challenge, others are not forced to enrol.
+export async function requireAdmin(): Promise<Viewer> {
   const viewer = await requireUser();
   if (viewer.role !== "admin") redirect("/feed");
   const supabase = await createClient();
   const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
   if (data?.nextLevel === "aal2" && data.currentLevel !== "aal2") redirect("/mfa");
-  if (data?.nextLevel === "aal1" && !opts.allowEnrol) redirect("/admin/securitate");
   return viewer;
 }
 

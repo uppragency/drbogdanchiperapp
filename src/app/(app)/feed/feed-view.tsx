@@ -6,7 +6,6 @@ import { CategoryIcon } from "@/lib/category-icons";
 import { t } from "@/lib/texts";
 import { Hero, type HeroCard } from "./hero";
 import { FeaturedRow } from "./featured-row";
-import { ContinueList } from "./continue-list";
 import { CommunityShell } from "@/components/community-shell";
 
 export const TYPES = ["video", "pdf", "text", "link"] as const;
@@ -43,7 +42,6 @@ export type FeedViewProps = {
   fav: boolean;
   welcomes: { name: string; message: string }[];
   featured: Row[];
-  continueItems: import("./continue-list").ContinueItem[];
   pages: number;
   filtered: boolean;
   newTotal: number;
@@ -129,8 +127,6 @@ export function FeedView(p: FeedViewProps) {
             <button type="submit" className="h-12 rounded-full bg-accent px-6 text-sm font-semibold text-accent-ink transition-colors hover:bg-accent-hover active:scale-[0.98]">{t.common.search}</button>
           </form>
 
-
-          {p.continueItems.length > 0 && <ContinueList items={p.continueItems} />}
 
           {p.welcomes.length > 0 && (
             <section className="flex flex-col gap-3 rounded-card border border-line bg-violet-soft p-6">
