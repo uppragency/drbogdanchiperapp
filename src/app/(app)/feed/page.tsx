@@ -72,9 +72,7 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
     .sort((a, b) => a.position - b.position)
     .map((x) => x.name);
 
-  const seenOrder = new Map((views ?? []).map((v: { resource_id: string }, i: number) => [v.resource_id, i]));
-  const continueRows = filtered ? [] : all.filter((r) => seenOrder.has(r.id) && r.id !== resumeRow?.id).sort((a, b) => seenOrder.get(a.id)! - seenOrder.get(b.id)!).slice(0, 3);
-  const coverIds = new Set([...heroRows, ...shown, ...continueRows].map((r) => r.id));
+  const coverIds = new Set([...heroRows, ...shown].map((r) => r.id));
   const coverEntries = await Promise.all(all.filter((r) => coverIds.has(r.id) && r.type === "video").map(async (r) => [r.id, await videoCovers(r.video_url)] as const));
   const covers = new Map(coverEntries);
 
@@ -98,7 +96,6 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
       heroRows={heroRows}
       resume={resumeRow ? { id: resumeRow.id, title: resumeRow.title, category: catById.get(resumeRow.category_id)?.name ?? "" } : null}
       announcements={announcements}
-      continueRows={continueRows}
     />
   );
 }

@@ -1,8 +1,8 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { animate, motion, useMotionTemplate, useMotionValue, useReducedMotion, type PanInfo } from "motion/react";
-import { ArrowRight, CaretLeft, CaretRight, PlayCircle } from "@phosphor-icons/react";
+import { AnimatePresence, animate, motion, useMotionTemplate, useMotionValue, useReducedMotion, type PanInfo } from "motion/react";
+import { ArrowRight, CaretLeft, CaretRight, Megaphone, PlayCircle } from "@phosphor-icons/react";
 import { Cover, type ResourceType } from "@/components/cover";
 import { t } from "@/lib/texts";
 
@@ -13,11 +13,12 @@ type Props = {
   newCount: number;
   cards: HeroCard[];
   resume: { id: string; title: string; category: string } | null;
+  announcements: { id: string; title: string }[];
 };
 
 const spring = { type: "spring", stiffness: 320, damping: 30 } as const;
 
-export function Hero({ name, groups, newCount, cards, resume }: Props) {
+export function Hero({ name, groups, newCount, cards, resume, announcements }: Props) {
   const reduce = useReducedMotion();
   const mx = useMotionValue(720);
   const my = useMotionValue(180);
@@ -36,7 +37,7 @@ export function Hero({ name, groups, newCount, cards, resume }: Props) {
 
   return (
     <section
-      className="relative isolate overflow-hidden rounded-[28px] bg-gradient-to-br from-[#313885] to-[#0d1c5c] text-white dark:from-[#1b2163] dark:to-[#060a1f]"
+      className="relative isolate overflow-hidden bg-[#0d1c5c] text-white dark:bg-[#060a1f]"
       onPointerMove={(e) => {
         if (reduce) return;
         const r = e.currentTarget.getBoundingClientRect();
@@ -45,13 +46,14 @@ export function Hero({ name, groups, newCount, cards, resume }: Props) {
       }}
     >
       <motion.div aria-hidden className="absolute inset-0 -z-10" style={{ background: glow }} />
+      <div aria-hidden className="absolute inset-0 -z-10 opacity-[0.07] [background-image:linear-gradient(white_1px,transparent_1px),linear-gradient(90deg,white_1px,transparent_1px)] [background-size:56px_56px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]" />
 
-      <div className="grid min-h-[520px] items-center gap-8 px-6 py-10 md:grid-cols-[1.05fr_1fr] md:gap-10 md:px-12">
+      <div className="mx-auto grid min-h-[520px] w-full max-w-6xl items-center gap-8 px-4 pb-[88px] pt-10 md:grid-cols-[1.1fr_1fr] md:gap-10">
         <div className="flex min-w-0 flex-col gap-5">
-          <h1 className="text-4xl font-bold leading-[1.1] tracking-tight md:text-5xl">
+          <h1 className="text-4xl font-bold leading-[1.1] tracking-tight md:text-6xl">
             {name ? `${t.home.greeting}, ${name}` : "Bine ai venit"}
           </h1>
-          <p className="text-lg text-white/80">
+          <p className="text-lg text-white/75">
             {newCount > 0 ? (
               <>
                 Ai <span ref={counter} className="font-bold text-white">{newCount}</span> {t.home.newCount} pentru tine.
@@ -60,21 +62,28 @@ export function Hero({ name, groups, newCount, cards, resume }: Props) {
               t.home.noNew
             )}
           </p>
-          {groups.length > 0 && <p className="text-sm text-white/75" aria-label={t.home.yourGroups}>{groups.join(" · ")}</p>}
-          <div className="mt-2">
-            {resume ? (
-              <Link href={`/resurse/${resume.id}`} className="inline-flex h-12 items-center gap-2 rounded-full bg-white px-6 text-sm font-semibold text-[#0d1c5c] transition-colors hover:bg-[#e8e9f7] active:scale-[0.98]">
-                <PlayCircle size={20} weight="fill" /> {t.home.continue} <ArrowRight size={16} weight="bold" />
-              </Link>
-            ) : cards[0] ? (
-              <Link href={`/resurse/${cards[0].id}`} className="inline-flex h-12 items-center gap-2 rounded-full bg-white px-6 text-sm font-semibold text-[#0d1c5c] transition-colors hover:bg-[#e8e9f7] active:scale-[0.98]">
-                Vezi cea mai nouă resursă <ArrowRight size={16} weight="bold" />
-              </Link>
-            ) : null}
-          </div>
+          {groups.length > 0 && (
+            <ul className="flex flex-wrap gap-2" aria-label={t.home.yourGroups}>
+              {groups.map((g) => (
+                <li key={g} className="rounded-full border border-white/25 px-3 py-1 text-xs font-semibold">{g}</li>
+              ))}
+            </ul>
+          )}
+          {resume && (
+            <Link href={`/resurse/${resume.id}`} className="group flex w-full max-w-md items-center gap-4 rounded-2xl border border-white/20 bg-[#16276e] p-4 transition-colors hover:bg-[#1d3180] dark:bg-[#0f1a52] dark:hover:bg-[#16226a]">
+              <PlayCircle size={36} weight="fill" className="shrink-0 text-[#b896ff]" />
+              <span className="min-w-0 flex-1">
+                <span className="block text-xs font-semibold uppercase tracking-wider text-white/75">{t.home.continue}</span>
+                <span className="block truncate text-base font-semibold">{resume.title}</span>
+              </span>
+              <ArrowRight size={20} className="shrink-0 transition group-hover:translate-x-1" />
+            </Link>
+          )}
         </div>
         <Deck cards={cards} reduce={Boolean(reduce)} />
       </div>
+
+      <Ticker items={announcements} />
     </section>
   );
 }
@@ -143,6 +152,35 @@ function Deck({ cards, reduce }: { cards: HeroCard[]; reduce: boolean }) {
           <button type="button" onClick={() => rotate(1)} aria-label="Următoarea" className="flex size-11 items-center justify-center rounded-full border border-white/20 transition-colors hover:bg-white/15"><CaretRight size={18} /></button>
         </div>
       )}
+    </div>
+  );
+}
+
+function Ticker({ items }: { items: { id: string; title: string }[] }) {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (items.length < 2) return;
+    const id = window.setInterval(() => setI((x) => (x + 1) % items.length), 5000);
+    return () => window.clearInterval(id);
+  }, [items.length]);
+  const item = items[i];
+  return (
+    <div className="absolute inset-x-0 bottom-0 border-t border-white/10 bg-[#0b1750] dark:bg-[#050818]">
+      <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-3 px-4">
+        <Megaphone size={20} weight="fill" className="shrink-0 text-[#b896ff]" />
+        <span className="shrink-0 text-xs font-semibold uppercase tracking-wider text-white/75">{t.home.announcements}</span>
+        <div className="relative h-6 min-w-0 flex-1 overflow-hidden">
+          <AnimatePresence mode="wait" initial={false}>
+            {item ? (
+              <motion.div key={item.id} initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -16, opacity: 0 }} transition={{ duration: 0.25 }} className="absolute inset-0">
+                <Link href={`/resurse/${item.id}`} className="block truncate text-sm font-semibold hover:underline">{item.title}</Link>
+              </motion.div>
+            ) : (
+              <motion.span key="none" className="absolute inset-0 text-sm text-white/75">Niciun anunț nou.</motion.span>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
     </div>
   );
 }

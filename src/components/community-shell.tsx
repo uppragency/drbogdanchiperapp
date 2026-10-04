@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight, List } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "@/components/ui";
+import { CategoryIcon } from "@/lib/category-icons";
 import { t } from "@/lib/texts";
 
 export const PROGRAM_URL = "https://drbogdanchiper.ro/produs/mentormed/";
@@ -16,28 +17,41 @@ type Props = {
   newTotal: number;
   announcements: ShellLink[];
   related?: ShellLink[];
-  aside?: ReactNode;
   categoryHref?: (slug?: string) => string;
   className?: string;
   children: ReactNode;
 };
 
-// Shared content layout: category chips (mobile), main column, and a right column with announcements and the program card.
-export function CommunityShell({ categories, activeSlug, newByCategory, newTotal, announcements, related = [], aside, categoryHref = (s) => (s ? `/feed?categorie=${s}` : "/feed"), className, children }: Props) {
+// Shared three column layout: categories on the left, content in the middle, announcements and the program card on the right.
+export function CommunityShell({ categories, activeSlug, newByCategory, newTotal, announcements, related = [], categoryHref = (s) => (s ? `/feed?categorie=${s}` : "/feed"), className, children }: Props) {
+  const active = categories.find((c) => c.slug === activeSlug);
+  const rail = (
+    <nav aria-label={t.home.categories} className="flex flex-col gap-1">
+      <RailLink href={categoryHref()} active={!activeSlug} label={t.feed.all} count={newTotal} />
+      {categories.map((c) => (
+        <RailLink key={c.id} href={categoryHref(c.slug)} active={activeSlug === c.slug} slug={c.slug} label={c.name} count={newByCategory[c.id] ?? 0} />
+      ))}
+    </nav>
+  );
+
   return (
-    <div className={cn("mx-auto grid w-full max-w-[1120px] gap-8 px-4 lg:px-8 xl:grid-cols-[minmax(0,1fr)_320px]", className)}>
+    <div className={cn("mx-auto grid w-full max-w-6xl gap-8 px-4 lg:grid-cols-[220px_minmax(0,1fr)_300px]", className)}>
+      <aside className="hidden lg:block">
+        <div className="sticky top-24">{rail}</div>
+      </aside>
+
       <div className="flex min-w-0 flex-col gap-5">
-        <nav aria-label={t.home.categories} className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:hidden">
-          <Chip href={categoryHref()} active={!activeSlug} label={t.feed.all} count={newTotal} />
-          {categories.map((c) => (
-            <Chip key={c.id} href={categoryHref(c.slug)} active={activeSlug === c.slug} label={c.name} count={newByCategory[c.id] ?? 0} />
-          ))}
-        </nav>
+        <details className="group lg:hidden">
+          <summary className="flex h-12 cursor-pointer list-none items-center justify-between rounded-full border border-line bg-surface px-5 text-sm font-semibold">
+            <span className="flex items-center gap-2"><List size={18} /> {active?.name ?? t.home.categories}</span>
+            <span className="text-muted group-open:rotate-180">⌄</span>
+          </summary>
+          <div className="mt-2 rounded-card border border-line bg-surface p-2 shadow-card">{rail}</div>
+        </details>
         {children}
       </div>
 
-      <aside className="flex flex-col gap-6 xl:sticky xl:top-8 xl:self-start">
-        {aside}
+      <aside className="flex flex-col gap-6 lg:sticky lg:top-24 lg:self-start">
         <LinkList title={t.home.announcements} items={announcements} />
         <LinkList title="Din aceeași categorie" items={related} />
         <div className="relative overflow-hidden rounded-card bg-[#0d1c5c] p-6 text-white dark:bg-surface2">
@@ -50,15 +64,6 @@ export function CommunityShell({ categories, activeSlug, newByCategory, newTotal
         </div>
       </aside>
     </div>
-  );
-}
-
-function Chip({ href, active, label, count }: { href: string; active: boolean; label: string; count: number }) {
-  return (
-    <Link href={href} aria-current={active ? "page" : undefined} className={cn("inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-semibold transition-colors", active ? "bg-accent text-accent-ink" : "bg-surface2 text-muted hover:text-ink")}>
-      {label}
-      {count > 0 && <span className="rounded-full bg-violet px-2 py-0.5 text-xs font-bold text-white">{count}</span>}
-    </Link>
   );
 }
 
@@ -78,5 +83,15 @@ function LinkList({ title, items }: { title: string; items: ShellLink[] }) {
         ))}
       </ul>
     </div>
+  );
+}
+
+function RailLink({ href, active, slug, label, count }: { href: string; active: boolean; slug?: string; label: string; count: number }) {
+  return (
+    <Link href={href} aria-current={active ? "page" : undefined} className={cn("flex min-h-11 items-center gap-3 rounded-2xl px-3 text-sm font-semibold transition-colors", active ? "bg-surface2 text-ink" : "text-muted hover:bg-surface2 hover:text-ink")}>
+      <CategoryIcon slug={slug} size={20} weight={active ? "fill" : "regular"} className={active ? "text-accent" : ""} />
+      <span className="flex-1">{label}</span>
+      {count > 0 && <span className="rounded-full bg-violet px-2 py-0.5 text-xs font-bold text-white">{count}</span>}
+    </Link>
   );
 }
