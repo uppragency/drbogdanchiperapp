@@ -180,6 +180,13 @@ export default async function ProfilePage() {
               {t.profile.changePassword}
             </LinkButton>
           </Card>
+
+          <Card className="flex flex-col gap-4 md:p-6">
+            <h2 className="text-lg font-bold">{tx("Notificări pe telefon", "Phone notifications")}</h2>
+            <PushToggle />
+          </Card>
+
+          <Devices userId={viewer.id} currentSession={viewer.sessionId} />
         </div>
 
         <div className="flex flex-col gap-6">
@@ -260,13 +267,6 @@ export default async function ProfilePage() {
             </div>
             <LinkButton href="/recente" variant="secondary">{tx("Deschide lista", "Open list")}</LinkButton>
           </Card>
-
-          <Card className="flex flex-col gap-4 md:p-6">
-            <h2 className="text-lg font-bold">{tx("Notificări pe telefon", "Phone notifications")}</h2>
-            <PushToggle />
-          </Card>
-
-          <Devices userId={viewer.id} currentSession={viewer.sessionId} />
 
           <form action={logout} className="self-start">
             <button type="submit" className="min-h-11 text-sm font-semibold text-muted underline-offset-4 hover:text-ink hover:underline">
