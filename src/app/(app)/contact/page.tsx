@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { getTx } from "@/lib/i18n";
 import { EnvelopeSimple, MapPin, Phone } from "@phosphor-icons/react/dist/ssr";
@@ -17,6 +18,7 @@ export default async function ContactPage() {
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-10">
       <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Contact</h1>
       <p className="text-muted">{tx(`Scrie-ne o întrebare sau o problemă tehnică. Răspundem pe ${viewer.email}.`, `Send us a question or report a technical issue. We reply to ${viewer.email}.`)}</p>
+      <p className="text-sm text-muted">{tx("Poate răspunsul este deja în ", "The answer may already be in ")}<Link href="/faq" className="font-semibold text-accent hover:underline">{tx("Întrebări frecvente", "Frequently asked questions")}</Link>.</p>
       <div className="rounded-card border border-line bg-surface p-6 md:p-8">
         <ContactForm />
       </div>
