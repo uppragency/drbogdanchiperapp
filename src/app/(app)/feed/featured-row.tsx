@@ -27,7 +27,7 @@ export function FeaturedRow({ cards }: { cards: FeaturedCard[] }) {
           <button type="button" onClick={() => move(1)} aria-label={tx("Înainte", "Forward")} className="flex size-11 items-center justify-center rounded-full border border-line bg-surface transition-colors hover:bg-surface2"><CaretRight size={18} /></button>
         </div>
       </div>
-      <ul ref={scroller} className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <ul ref={scroller} className="-mx-4 flex snap-x snap-mandatory gap-4 no-scrollbar overflow-x-auto px-4 pb-2">
         {cards.map((c) => (
           <li key={c.id} className="flex w-[78%] shrink-0 snap-start sm:w-[calc((100%-2rem)/3)]">
             <Link href={`/resurse/${c.id}`} className="group card-lift flex w-full flex-col overflow-hidden rounded-card border border-line bg-surface shadow-card">
