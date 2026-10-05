@@ -2,7 +2,7 @@ import Image from "next/image";
 import { t } from "@/lib/texts";
 
 export function BrandMark({ height = 28 }: { height?: number }) {
-  const w = Math.round(height * 0.62);
+  const w = Math.round(height * 0.477);
   return (
     <>
       <Image src="/brand/mark.png" alt="" width={w} height={height} className="w-auto dark:hidden" style={{ height }} priority />
@@ -14,7 +14,7 @@ export function BrandMark({ height = 28 }: { height?: number }) {
 export function Wordmark({ className = "" }: { className?: string }) {
   return (
     <span role="img" aria-label={t.brand} className={`inline-flex items-center ${className}`}>
-      <BrandMark height={34} />
+      <BrandMark height={40} />
     </span>
   );
 }
