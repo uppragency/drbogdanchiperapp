@@ -13,6 +13,7 @@ import { ActivityMap } from "./activity-map";
 import { GoalForm } from "./goal-form";
 import { EmailRequest } from "./email-request";
 import { FollowButton } from "@/components/follow-button";
+import { changelog } from "@/lib/changelog";
 import { PushToggle } from "@/app/(app)/profil/push-toggle";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -49,7 +50,7 @@ export default async function ProfilePage({ searchParams }: PageProps<"/profil">
     supabase.from("categories").select("id,name,name_en,slug").order("position"),
     supabase
       .from("resources")
-      .select("id,title,title_en,category_id")
+      .select("id,title,title_en,category_id,publish_at,created_at")
       .eq("status", "published")
       .is("deleted_at", null)
       .or(`publish_at.is.null,publish_at.lte.${nowIso}`)
@@ -60,7 +61,7 @@ export default async function ProfilePage({ searchParams }: PageProps<"/profil">
     supabase.from("resource_notes").select("resource_id,body,updated_at,resources(id,title,title_en)").eq("user_id", viewer.id).order("updated_at", { ascending: false }).limit(100),
     supabase.from("user_goals").select("weekly_goal").eq("user_id", viewer.id).maybeSingle(),
   ]);
-  type VisRes = { id: string; title: string; title_en: string | null; category_id: string };
+  type VisRes = { id: string; title: string; title_en: string | null; category_id: string; publish_at: string | null; created_at: string };
   const visible = (visibleRows ?? []) as VisRes[];
   const doneIds = new Set(((viewRows ?? []) as { resource_id: string; completed: boolean }[]).filter((v) => v.completed).map((v) => v.resource_id));
   const followed = new Set(((subRows ?? []) as { category_id: string }[]).map((s) => s.category_id));
@@ -110,6 +111,19 @@ export default async function ProfilePage({ searchParams }: PageProps<"/profil">
   const weekStart = shift(today, -dow);
   const viewList = (viewRows ?? []) as { resource_id: string; completed: boolean; last_viewed_at: string }[];
   const openedThisWeek = viewList.filter((v) => visibleById.has(v.resource_id) && bucharestToday(new Date(v.last_viewed_at)) >= weekStart).length;
+  // "Săptămâna ta": shown on Mondays only (Bucharest time).
+  const isMonday = dow === 0;
+  const prevStart = shift(weekStart, -7);
+  const openedLastWeek = viewList.filter((v) => {
+    if (!visibleById.has(v.resource_id)) return false;
+    const d = bucharestToday(new Date(v.last_viewed_at));
+    return d >= prevStart && d < weekStart;
+  }).length;
+  const seenIds = new Set(viewList.map((v) => v.resource_id));
+  const newRes = visible
+    .filter((r) => bucharestToday(new Date(r.publish_at ?? r.created_at)) >= prevStart && !seenIds.has(r.id))
+    .sort((a, b) => +new Date(b.publish_at ?? b.created_at) - +new Date(a.publish_at ?? a.created_at));
+  const newChanges = changelog.filter((c) => c.date >= prevStart);
   const goal = goalRow?.weekly_goal ?? 0;
   const goalPct = goal > 0 ? Math.min(100, Math.round((openedThisWeek / goal) * 100)) : 0;
   const totalVisible = visible.length;
@@ -199,6 +213,51 @@ export default async function ProfilePage({ searchParams }: PageProps<"/profil">
                 </div>
               ))}
             </dl>
+
+            {isMonday && (
+              <Card className="flex flex-col gap-5 border-accent/40 md:p-6">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h2 className="text-lg font-bold">{tx("Săptămâna ta", "Your week")}</h2>
+                  <span className="text-sm text-muted">{tx("Rezumatul de luni", "Monday summary")}</span>
+                </div>
+                <div className="grid gap-6 md:grid-cols-3">
+                  <section className="flex flex-col gap-2">
+                    <h3 className="text-sm font-semibold text-muted">{tx("Ce e nou", "What's new")}</h3>
+                    {newRes.length === 0 && newChanges.length === 0 ? (
+                      <p className="text-sm text-muted">{tx("Nimic nou de deschis. Ești la zi.", "Nothing new to open. You are up to date.")}</p>
+                    ) : (
+                      <ul className="flex flex-col gap-1.5 text-sm">
+                        {newRes.slice(0, 3).map((r) => (
+                          <li key={r.id}><Link href={`/resurse/${r.id}`} className="font-semibold hover:underline">{pick(locale, r.title, r.title_en)}</Link></li>
+                        ))}
+                        {newRes.length > 3 && <li className="text-muted">{tx(`și încă ${newRes.length - 3} resurse noi`, `and ${newRes.length - 3} more new resources`)}</li>}
+                        {newChanges.slice(0, 2).map((c) => (
+                          <li key={c.title.ro} className="text-muted">{pick(locale, c.title.ro, c.title.en)}</li>
+                        ))}
+                      </ul>
+                    )}
+                    <Link href="/ce-e-nou" className="text-sm font-semibold text-violet hover:underline">{tx("Vezi tot ce e nou", "See everything new")}</Link>
+                  </section>
+                  <section className="flex flex-col gap-2">
+                    <h3 className="text-sm font-semibold text-muted">{tx("Progresul tău", "Your progress")}</h3>
+                    <p className="text-sm">{tx(`Săptămâna trecută ai deschis ${openedLastWeek} resurse.`, `Last week you opened ${openedLastWeek} resources.`)}</p>
+                    <p className="text-sm">{tx(`Ai terminat ${totalDone} din ${totalVisible} (${overallPct}%).`, `You completed ${totalDone} of ${totalVisible} (${overallPct}%).`)}</p>
+                    <p className="text-sm">{tx(`Seria curentă: ${streak.current} zile.`, `Current streak: ${streak.current} days.`)}</p>
+                  </section>
+                  <section className="flex flex-col gap-2">
+                    <h3 className="text-sm font-semibold text-muted">{tx("Obiectivul tău", "Your goal")}</h3>
+                    {goal > 0 ? (
+                      <>
+                        <p className="text-sm">{tx(`Țintă pentru săptămâna aceasta: ${goal} resurse.`, `Target for this week: ${goal} resources.`)}</p>
+                        <p className="text-sm text-muted">{tx(`Săptămâna trecută: ${openedLastWeek} din ${goal}.`, `Last week: ${openedLastWeek} of ${goal}.`)}</p>
+                      </>
+                    ) : (
+                      <p className="text-sm text-muted">{tx("Nu ai setat un obiectiv. Alege unul mai jos.", "You have not set a goal. Pick one below.")}</p>
+                    )}
+                  </section>
+                </div>
+              </Card>
+            )}
 
             <div className="grid items-stretch gap-6 md:grid-cols-2">
               <Card className="flex flex-col gap-4 md:p-6">
