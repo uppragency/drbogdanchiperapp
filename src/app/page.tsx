@@ -7,6 +7,7 @@ import { getViewer } from "@/lib/auth";
 import { Wordmark } from "@/components/brand";
 import { PROGRAM_URL } from "@/components/community-shell";
 import { btn } from "@/components/ui";
+import { LangSwitch } from "@/components/lang-switch";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { getT, getTx } from "@/lib/i18n";
 import { LoginForm } from "./login/login-form";
@@ -32,6 +33,7 @@ export default async function Home() {
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4">
           <Wordmark />
           <div className="flex items-center gap-2">
+            <LangSwitch />
             <ThemeToggle />
             <Link href="/login" className={btn.secondary}>{tx("Intră în cont", "Sign in")}</Link>
           </div>
