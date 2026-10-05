@@ -29,7 +29,7 @@ export default async function EditUser({ params }: PageProps<"/admin/useri/[id]"
   const { data: authUser } = await createAdminClient().auth.admin.getUserById(id);
   const emailConfirmed = Boolean(authUser?.user?.email_confirmed_at);
   const validated = emailConfirmed && p.is_active && !trashed;
-  const isAdminAccount = p.role === "admin";
+  const isAdminAccount = p.role !== "user";
 
   return (
     <div className="flex flex-col gap-6">
@@ -37,7 +37,7 @@ export default async function EditUser({ params }: PageProps<"/admin/useri/[id]"
       <PageTitle title={`${p.first_name} ${p.last_name}`.trim() || p.email}>
         <div className="flex flex-wrap gap-2">
           <Link href={`/admin/useri/${id}/previzualizare`} className={btn.secondary}>Ce vede userul</Link>
-          {isAdminAccount && <Badge tone="accent">Administrator</Badge>}
+          {isAdminAccount && <Badge tone="accent">{p.role === "moderator" ? "Moderator" : "Administrator"}</Badge>}
           {trashed && <Badge tone="danger">Șters</Badge>}
         </div>
       </PageTitle>
@@ -64,7 +64,7 @@ export default async function EditUser({ params }: PageProps<"/admin/useri/[id]"
       {!trashed && (
         <Card className="flex flex-col gap-4">
           <h2 className="text-lg font-bold">Email și rol</h2>
-          <AccountForms id={p.id} email={p.email} role={isAdminAccount ? "admin" : "user"} isSelf={me.id === p.id} />
+          <AccountForms id={p.id} email={p.email} role={p.role as "user" | "moderator" | "admin"} isSelf={me.id === p.id} />
         </Card>
       )}
 

@@ -8,7 +8,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export type Viewer = {
   id: string;
   email: string;
-  role: "admin" | "user";
+  role: "admin" | "moderator" | "user";
   firstName: string;
   lastName: string;
   termsAcceptedAt: string | null;
@@ -42,7 +42,7 @@ const resolve = cache(async (): Promise<Resolved> => {
     .maybeSingle();
 
   if (!profile || !profile.is_active || profile.deleted_at) return { status: "inactive" };
-  if (profile.role !== "admin" && profile.access_expires_at && new Date(profile.access_expires_at) < new Date()) {
+  if (profile.role === "user" && profile.access_expires_at && new Date(profile.access_expires_at) < new Date()) {
     return { status: "inactive" };
   }
 
@@ -88,6 +88,18 @@ export async function requireUser(opts: { allowUnacceptedTerms?: boolean } = {})
 }
 
 // Admin role check. Two step verification is optional: an admin who enrolled a factor must pass the challenge, others are not forced to enrol.
+export const isStaff = (role: Viewer["role"]) => role === "admin" || role === "moderator";
+
+// Staff (admin or moderator): resources and comment moderation. Everything else stays admin only.
+export async function requireStaff(): Promise<Viewer> {
+  const viewer = await requireUser();
+  if (!isStaff(viewer.role)) redirect("/feed");
+  const supabase = await createClient();
+  const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (data?.nextLevel === "aal2" && data.currentLevel !== "aal2") redirect("/mfa");
+  return viewer;
+}
+
 export async function requireAdmin(): Promise<Viewer> {
   const viewer = await requireUser();
   if (viewer.role !== "admin") redirect("/feed");

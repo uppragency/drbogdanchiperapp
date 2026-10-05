@@ -1,7 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { fullName, requireUser } from "@/lib/auth";
+import { fullName, isStaff, requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { allow } from "@/lib/throttle";
@@ -24,7 +24,7 @@ export async function addComment(_: FormState, formData: FormData): Promise<Form
   const supabase = await createClient();
   const { data: res } = await supabase.from("resources").select("title,comments_enabled").eq("id", p.data.resourceId).maybeSingle();
   if (!res) return { error: tx("Resursa nu mai există.", "This resource no longer exists.") };
-  if (!res.comments_enabled && viewer.role !== "admin") return { error: tx("Comentariile sunt dezactivate pentru această resursă.", "Comments are disabled for this resource.") };
+  if (!res.comments_enabled && !isStaff(viewer.role)) return { error: tx("Comentariile sunt dezactivate pentru această resursă.", "Comments are disabled for this resource.") };
   let parentId = p.data.parentId;
   let notifyUser: string | null = null;
   if (parentId) {
@@ -38,7 +38,7 @@ export async function addComment(_: FormState, formData: FormData): Promise<Form
     resource_id: p.data.resourceId,
     user_id: viewer.id,
     parent_id: parentId,
-    author_name: viewer.role === "admin" ? `${fullName(viewer)} ${tx("(echipa)", "(team)")}` : fullName(viewer),
+    author_name: isStaff(viewer.role) ? `${fullName(viewer)} ${tx("(echipa)", "(team)")}` : fullName(viewer),
     body: p.data.body,
   });
   if (error) return { error: tx("Nu am putut trimite comentariul.", "We could not post your comment.") };

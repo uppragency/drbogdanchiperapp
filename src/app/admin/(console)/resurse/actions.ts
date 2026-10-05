@@ -2,7 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyNewResource } from "@/lib/push";
@@ -51,7 +51,7 @@ async function publishWarnings(supabase: Awaited<ReturnType<typeof createClient>
 }
 
 export async function saveResource(_: FormState, formData: FormData): Promise<FormState> {
-  const admin = await requireAdmin();
+  const admin = await requireStaff();
   const id = String(formData.get("id") ?? "");
   const parsed = schema.safeParse({
     title: formData.get("title"),
@@ -136,7 +136,7 @@ export async function saveResource(_: FormState, formData: FormData): Promise<Fo
 }
 
 export async function trashResource(formData: FormData) {
-  await requireAdmin();
+  await requireStaff();
   const id = z.string().uuid().parse(formData.get("id"));
   const supabase = await createClient();
   await supabase.from("resources").update({ deleted_at: new Date().toISOString() }).eq("id", id);
@@ -146,7 +146,7 @@ export async function trashResource(formData: FormData) {
 }
 
 export async function restoreResource(formData: FormData) {
-  await requireAdmin();
+  await requireStaff();
   const id = z.string().uuid().parse(formData.get("id"));
   const supabase = await createClient();
   await supabase.from("resources").update({ deleted_at: null, status: "draft" }).eq("id", id);
@@ -167,7 +167,7 @@ export async function purgeResource(formData: FormData) {
 }
 
 export async function addLinkAttachment(_: FormState, formData: FormData): Promise<FormState> {
-  await requireAdmin();
+  await requireStaff();
   const parsed = z
     .object({ resourceId: z.string().uuid(), label: z.string().trim().min(1, "Adaugă o etichetă").max(120), url: https })
     .safeParse({ resourceId: formData.get("resourceId"), label: formData.get("label"), url: formData.get("url") });
@@ -182,7 +182,7 @@ export async function addLinkAttachment(_: FormState, formData: FormData): Promi
 
 // Called after the browser uploaded the file directly to Storage with the admin session.
 export async function registerFileAttachment(input: { resourceId: string; path: string; label: string; kind: "pdf" | "file" }): Promise<FormState> {
-  await requireAdmin();
+  await requireStaff();
   const parsed = z
     .object({ resourceId: z.string().uuid(), path: z.string().min(3).max(300), label: z.string().trim().min(1).max(120), kind: z.enum(["pdf", "file"]) })
     .safeParse(input);
@@ -196,7 +196,7 @@ export async function registerFileAttachment(input: { resourceId: string; path: 
 }
 
 export async function deleteAttachment(formData: FormData) {
-  await requireAdmin();
+  await requireStaff();
   const id = z.string().uuid().parse(formData.get("id"));
   const supabase = await createClient();
   const { data } = await supabase.from("resource_attachments").select("file_path,resource_id").eq("id", id).maybeSingle();
@@ -210,7 +210,7 @@ const COVER_OK = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp)$/;
 
 // Called after the browser uploaded the image to the public covers bucket.
 export async function setCover(resourceId: string, path: string | null): Promise<FormState> {
-  await requireAdmin();
+  await requireStaff();
   const id = z.string().uuid().safeParse(resourceId);
   if (!id.success || (path !== null && (!COVER_OK.test(path) || !path.startsWith(`${id.data}/`)))) return { error: "Date invalide." };
   const supabase = await createClient();
@@ -225,7 +225,7 @@ export async function setCover(resourceId: string, path: string | null): Promise
 
 // Copies the resource as a draft: text, group, presenter, link attachments and uploaded files (copied inside Storage).
 export async function duplicateResource(formData: FormData) {
-  const admin = await requireAdmin();
+  const admin = await requireStaff();
   const id = z.string().uuid().parse(formData.get("id"));
   const supabase = await createClient();
   const { data: r } = await supabase.from("resources").select("title,description,presenter,type,category_id,body,video_url,comments_enabled,title_en,description_en,body_en").eq("id", id).maybeSingle();
@@ -263,7 +263,7 @@ const bulkSchema = z.object({
 
 // Bulk update for the resources list. Publishing skips resources without any group tag (same rule as the single form).
 export async function bulkResources(_: FormState, formData: FormData): Promise<FormState> {
-  await requireAdmin();
+  await requireStaff();
   const rawCat = String(formData.get("categoryId") ?? "");
   const parsed = bulkSchema.safeParse({ ids: formData.getAll("ids").map(String), op: formData.get("op"), categoryId: rawCat || undefined });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Date invalide." };

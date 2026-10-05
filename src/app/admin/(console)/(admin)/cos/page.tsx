@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { Card, PageTitle, btn } from "@/components/ui";
 import { formatDateTime } from "@/lib/format";
-import { restoreResource } from "../resurse/actions";
+import { restoreResource } from "../../resurse/actions";
 import { restoreUser } from "../useri/actions";
 
 export const metadata: Metadata = { title: "Coș" };

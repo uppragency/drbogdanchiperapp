@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowSquareOut, DownloadSimple, FilePdf, Link as LinkIcon, Paperclip } from "@phosphor-icons/react/dist/ssr";
-import { requireUser } from "@/lib/auth";
+import { isStaff, requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { loadCommunity } from "@/lib/community";
 import { CommunityShell } from "@/components/community-shell";
@@ -62,7 +62,7 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
   }
 
   const supabase0 = await createClient();
-  const community = await loadCommunity(viewer.id, viewer.role === "admin", { id: r.id, categoryId: r.category_id });
+  const community = await loadCommunity(viewer.id, isStaff(viewer.role), { id: r.id, categoryId: r.category_id });
   const category0 = Array.isArray(r.categories) ? r.categories[0] : r.categories;
   const category = category0 ? { ...category0, name: pick(locale, category0.name, category0.name_en) } : category0;
   const video = r.type === "video" ? parseVideo(r.video_url) : null;
@@ -186,7 +186,7 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
           )}
         </nav>
       )}
-      <Comments resourceId={r.id} viewerId={viewer.id} isAdmin={viewer.role === "admin"} enabled={r.comments_enabled} />
+      <Comments resourceId={r.id} viewerId={viewer.id} isAdmin={isStaff(viewer.role)} enabled={r.comments_enabled} />
     </CommunityShell>
   );
 }

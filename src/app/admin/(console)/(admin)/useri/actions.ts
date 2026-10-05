@@ -74,7 +74,7 @@ export async function updateUser(_: FormState, formData: FormData): Promise<Form
   const d = parsed.data;
   // An administrator can be edited, but never paused or given an expiry date, so nobody locks themselves out.
   const { data: target } = await admin.from("profiles").select("role").eq("id", id.data).maybeSingle();
-  const isAdminTarget = target?.role === "admin";
+  const isAdminTarget = target?.role === "admin" || target?.role === "moderator";
   const { error } = await admin
     .from("profiles")
     .update({
@@ -111,7 +111,7 @@ export async function resendInvite(formData: FormData) {
 async function guardNotAdmin(id: string) {
   const admin = createAdminClient();
   const { data } = await admin.from("profiles").select("role").eq("id", id).maybeSingle();
-  if (!data || data.role === "admin") throw new Error("Operațiune interzisă pentru administrator.");
+  if (!data || data.role !== "user") throw new Error("Operațiune interzisă pentru administrator.");
   return admin;
 }
 
@@ -293,11 +293,11 @@ export async function changeEmail(_: FormState, formData: FormData): Promise<For
   return { ok: "Emailul a fost schimbat. Userul se loghează de acum cu noua adresă." };
 }
 
-// Role change. An administrator cannot change their own role, so the platform always keeps at least one admin.
+// Role change (member, moderator, administrator). An administrator cannot change their own role, so the platform always keeps at least one admin.
 export async function changeRole(_: FormState, formData: FormData): Promise<FormState> {
   const me = await requireAdmin();
   const id = uuid.safeParse(formData.get("id"));
-  const role = z.enum(["user", "admin"]).safeParse(formData.get("role"));
+  const role = z.enum(["user", "moderator", "admin"]).safeParse(formData.get("role"));
   if (!id.success || !role.success) return { error: "Date invalide." };
   if (id.data === me.id) return { error: "Nu îți poți schimba propriul rol." };
   const admin = createAdminClient();
@@ -305,10 +305,10 @@ export async function changeRole(_: FormState, formData: FormData): Promise<Form
   if (!target) return { error: "Userul nu există." };
   if (target.deleted_at) return { error: "Contul este șters. Restaurează-l mai întâi." };
   if (target.role === role.data) return { error: "Rolul este deja acesta." };
-  const { error } = await admin.from("profiles").update({ role: role.data, ...(role.data === "admin" ? { is_active: true, access_expires_at: null } : {}) }).eq("id", id.data);
+  const { error } = await admin.from("profiles").update({ role: role.data, ...(role.data !== "user" ? { is_active: true, access_expires_at: null } : {}) }).eq("id", id.data);
   if (error) return { error: "Nu am putut schimba rolul." };
   await admin.rpc("reset_user_sessions", { p_user: id.data });
   revalidatePath("/admin/useri");
   revalidatePath(`/admin/useri/${id.data}`);
-  return { ok: role.data === "admin" ? "Userul este acum administrator. S-a deconectat de pe dispozitive și trebuie să se logheze din nou." : "Administratorul este acum membru obișnuit. S-a deconectat de pe dispozitive." };
+  return { ok: `Rolul a fost schimbat în ${role.data === "admin" ? "administrator" : role.data === "moderator" ? "moderator" : "membru obișnuit"}. Contul s-a deconectat de pe dispozitive și trebuie să se logheze din nou.` };
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { requireAdmin } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Alert, Card, PageTitle } from "@/components/ui";
 import { MfaEnroll } from "./mfa-enroll";
@@ -8,7 +8,7 @@ import { MfaDisable } from "./mfa-disable";
 export const metadata: Metadata = { title: "Securitate" };
 
 export default async function SecurityPage() {
-  await requireAdmin();
+  await requireStaff();
   const supabase = await createClient();
   const { data } = await supabase.auth.mfa.listFactors();
   const enrolled = (data?.totp?.length ?? 0) > 0;

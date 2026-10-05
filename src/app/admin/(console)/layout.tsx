@@ -1,6 +1,6 @@
-import { requireAdmin } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 
 export default async function ConsoleLayout({ children }: LayoutProps<"/admin">) {
-  await requireAdmin();
+  await requireStaff();
   return children;
 }

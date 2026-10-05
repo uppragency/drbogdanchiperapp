@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
-import { requireUser } from "@/lib/auth";
+import { isStaff, requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
 import { videoCovers } from "@/lib/video";
@@ -26,7 +26,7 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
   const cookieView = (await cookies()).get("vedere")?.value;
   const view: "lista" | "grila" = sp.vedere === "grila" || sp.vedere === "lista" ? sp.vedere : cookieView === "grila" ? "grila" : "lista";
   const pages = Math.min(Math.max(Number(sp.pagina) || 1, 1), 20);
-  const isAdmin = viewer.role === "admin";
+  const isAdmin = isStaff(viewer.role);
 
   const supabase = await createClient();
   const nowIso = new Date().toISOString();

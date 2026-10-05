@@ -5,10 +5,12 @@ import { SubmitButton } from "@/components/submit-button";
 import { changeEmail, changeRole } from "./actions";
 import type { FormState } from "@/app/login/actions";
 
-export function AccountForms({ id, email, role, isSelf }: { id: string; email: string; role: "user" | "admin"; isSelf: boolean }) {
+type Role = "user" | "moderator" | "admin";
+const LABEL: Record<Role, string> = { user: "Membru", moderator: "Moderator", admin: "Administrator" };
+
+export function AccountForms({ id, email, role, isSelf }: { id: string; email: string; role: Role; isSelf: boolean }) {
   const [emailState, emailAction] = useActionState<FormState, FormData>(changeEmail, {});
   const [roleState, roleAction] = useActionState<FormState, FormData>(changeRole, {});
-  const next = role === "admin" ? "user" : "admin";
   return (
     <div className="flex flex-col gap-8">
       <form action={emailAction} className="flex flex-col gap-3">
@@ -20,16 +22,20 @@ export function AccountForms({ id, email, role, isSelf }: { id: string; email: s
       </form>
       <form action={roleAction} className="flex flex-col gap-3">
         <input type="hidden" name="id" value={id} />
-        <input type="hidden" name="role" value={next} />
-        <div className="flex flex-col gap-1">
-          <span className="text-sm font-semibold">Rol curent: {role === "admin" ? "Administrator" : "Membru"}</span>
-          <p className="text-sm text-muted">
-            {isSelf ? "Nu îți poți schimba propriul rol." : next === "admin" ? "Administratorul are acces la consola de administrare și este deconectat de pe toate dispozitivele la schimbare." : "Revine la cont de membru, fără acces la consola de administrare."}
-          </p>
-        </div>
+        <label className="flex flex-col gap-2 text-sm font-semibold">
+          Rol
+          <select name="role" defaultValue={role} disabled={isSelf} className="h-11 max-w-xs rounded-control border border-line bg-bg px-3 text-base text-ink focus:border-accent focus:outline-none disabled:opacity-60">
+            {(Object.keys(LABEL) as Role[]).map((r) => <option key={r} value={r}>{LABEL[r]}</option>)}
+          </select>
+        </label>
+        <p className="text-sm text-muted">
+          {isSelf
+            ? "Nu îți poți schimba propriul rol."
+            : "Membru: acces la conținut. Moderator: publică resurse și moderează comentarii, fără acces la useri, plăți sau setări. Administrator: acces complet. La schimbare, contul este deconectat de pe toate dispozitivele."}
+        </p>
         {roleState.error && <Alert>{roleState.error}</Alert>}
         {roleState.ok && <Alert kind="ok">{roleState.ok}</Alert>}
-        {!isSelf && <div><SubmitButton>{next === "admin" ? "Fă administrator" : "Fă membru obișnuit"}</SubmitButton></div>}
+        {!isSelf && <div><SubmitButton>Salvează rolul</SubmitButton></div>}
       </form>
     </div>
   );

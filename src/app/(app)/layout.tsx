@@ -1,4 +1,4 @@
-import { fullName, requireUser } from "@/lib/auth";
+import { fullName, isStaff, requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/app-header";
 import { SiteBanner } from "@/components/site-banner";
@@ -17,20 +17,20 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const nowIso = new Date().toISOString();
   const { data } = await supabase.from("site_banners").select("id,message,message_en,link_url,link_label,link_label_en,starts_at,ends_at,tag_id").eq("is_active", true).order("created_at", { ascending: false }).limit(20);
   // A banner with tag_id is for that group only; admins see all of them as a preview.
-  const needsTags = viewer.role !== "admin" && (data ?? []).some((x: { tag_id: string | null }) => x.tag_id);
+  const needsTags = !isStaff(viewer.role) && (data ?? []).some((x: { tag_id: string | null }) => x.tag_id);
   const myTags = new Set<string>();
   if (needsTags) {
     const { data: ut } = await supabase.from("user_tags").select("tag_id").eq("user_id", viewer.id);
     (ut ?? []).forEach((t: { tag_id: string }) => myTags.add(t.tag_id));
   }
-  const b = (data ?? []).find((x: { starts_at: string | null; ends_at: string | null; tag_id: string | null }) => (!x.starts_at || x.starts_at <= nowIso) && (!x.ends_at || x.ends_at > nowIso) && (!x.tag_id || viewer.role === "admin" || myTags.has(x.tag_id)));
+  const b = (data ?? []).find((x: { starts_at: string | null; ends_at: string | null; tag_id: string | null }) => (!x.starts_at || x.starts_at <= nowIso) && (!x.ends_at || x.ends_at > nowIso) && (!x.tag_id || isStaff(viewer.role) || myTags.has(x.tag_id)));
   const unread = await notificationCount(supabase, viewer.id);
   const { data: tourRow } = await supabase.from("profiles").select("tour_seen_at").eq("id", viewer.id).maybeSingle();
-  const showTour = viewer.role !== "admin" && !tourRow?.tour_seen_at;
+  const showTour = !isStaff(viewer.role) && !tourRow?.tour_seen_at;
   return (
     <>
       <a href="#continut" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-control focus:bg-accent focus:px-4 focus:py-3 focus:text-accent-ink">{tx("Sari la conținut", "Skip to content")}</a>
-      <AppHeader viewerId={viewer.id} isAdmin={viewer.role === "admin"} unread={unread} initials={((viewer.firstName?.[0] ?? "") + (viewer.lastName?.[0] ?? "")).toUpperCase() || viewer.email[0]?.toUpperCase() || "?"} name={fullName(viewer) || viewer.email} email={viewer.email} />
+      <AppHeader viewerId={viewer.id} isAdmin={isStaff(viewer.role)} unread={unread} initials={((viewer.firstName?.[0] ?? "") + (viewer.lastName?.[0] ?? "")).toUpperCase() || viewer.email[0]?.toUpperCase() || "?"} name={fullName(viewer) || viewer.email} email={viewer.email} />
       {b && <SiteBanner banner={{ id: b.id, message: pick(locale, b.message, b.message_en), linkUrl: b.link_url, linkLabel: pick(locale, b.link_label, b.link_label_en) }} />}
       <main id="continut" className="flex-1">{children}</main>
       <InstallHint />

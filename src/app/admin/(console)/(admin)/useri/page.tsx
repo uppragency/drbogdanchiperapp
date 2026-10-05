@@ -13,7 +13,7 @@ const STARI = [
   { key: "expira", label: "Expiră curând" },
   { key: "inactiv", label: "Fără logare 30 zile" },
   { key: "sters", label: "Șterși" },
-  { key: "admini", label: "Admini" },
+  { key: "admini", label: "Echipă" },
 ];
 
 export default async function UsersAdmin({ searchParams }: PageProps<"/admin/useri">) {
@@ -30,7 +30,7 @@ export default async function UsersAdmin({ searchParams }: PageProps<"/admin/use
 
   const sel = `id,email,role,first_name,last_name,is_active,access_expires_at,last_login_at,deleted_at,user_tags${tag ? "!inner" : ""}(tag_id,tags(name,position)),invitations(sent_at,accepted_at)`;
   let query = supabase.from("profiles").select(sel, { count: "exact" }).order("created_at", { ascending: false }).range((pagina - 1) * PAGE, pagina * PAGE - 1);
-  query = stare === "admini" ? query.eq("role", "admin") : query.eq("role", "user");
+  query = stare === "admini" ? query.in("role", ["admin", "moderator"]) : query.eq("role", "user");
   query = stare === "sters" ? query.not("deleted_at", "is", null) : query.is("deleted_at", null);
   if (tag) query = query.eq("user_tags.tag_id", tag);
   if (q) query = query.or(`email.ilike.%${q}%,first_name.ilike.%${q}%,last_name.ilike.%${q}%`);
@@ -106,6 +106,7 @@ export default async function UsersAdmin({ searchParams }: PageProps<"/admin/use
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {r.role === "admin" && <Badge tone="accent">Admin</Badge>}
+                  {r.role === "moderator" && <Badge tone="accent">Moderator</Badge>}
                   {!r.is_active && <Badge tone="warn">Pe pauză</Badge>}
                   {expired && <Badge tone="danger">Expirat</Badge>}
                   {inv && !inv.sent_at && <Badge>Neinvitat</Badge>}
