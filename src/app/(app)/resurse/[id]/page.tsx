@@ -16,6 +16,7 @@ import { embedUrl, parseVideo, videoCovers } from "@/lib/video";
 import { coverUrl } from "@/lib/cover-url";
 import { FavoriteButton } from "../favorite-button";
 import { CompleteButton } from "../complete-button";
+import { NoteBox } from "../note-box";
 import { CinemaFrame } from "@/components/cinema-frame";
 import { FocusToggle } from "@/components/focus-toggle";
 import { getLocale, getT, getTx, pick } from "@/lib/i18n";
@@ -73,9 +74,10 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
   const older = at >= 0 && at < siblings.length - 1 ? siblings[at + 1] : null;
   const covers = [...(r.cover_path ? [coverUrl(r.cover_path)] : []), ...(r.type === "video" ? await videoCovers(r.video_url) : [])];
   const supabaseFav = await createClient();
-  const [{ data: favRow }, { data: viewRow }] = await Promise.all([
+  const [{ data: favRow }, { data: viewRow }, { data: noteRow }] = await Promise.all([
     supabaseFav.from("favorites").select("resource_id").eq("user_id", viewer.id).eq("resource_id", r.id).maybeSingle(),
     supabaseFav.from("resource_views").select("completed").eq("user_id", viewer.id).eq("resource_id", r.id).maybeSingle(),
+    supabaseFav.from("resource_notes").select("body").eq("user_id", viewer.id).eq("resource_id", r.id).maybeSingle(),
   ]);
   const attachments = [...(r.resource_attachments ?? [])].sort((a: { position: number }, b: { position: number }) => a.position - b.position);
   const paragraphs = pick(locale, r.body, r.body_en).split(/\n{2,}/).filter((p: string) => p.trim());
@@ -167,6 +169,7 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
         )}
       </article>
       <CompleteButton resourceId={r.id} initial={Boolean(viewRow?.completed)} />
+      <NoteBox resourceId={r.id} initial={noteRow?.body ?? ""} />
       {(newer || older) && (
         <nav aria-label={tx("Alte resurse din categorie", "More resources in this category")} className="grid gap-3 sm:grid-cols-2">
           {older ? (
