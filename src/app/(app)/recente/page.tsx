@@ -9,7 +9,8 @@ import { categoryColor } from "@/lib/category-color";
 import { getLocale, getTx, pick } from "@/lib/i18n";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getTx())("Văzute recent", "Recently viewed") };
+  const tx = await getTx();
+  return { title: tx("Văzute recent", "Recently viewed"), description: tx("Resursele pe care le-ai deschis recent, ca să continui de unde ai rămas.", "The resources you opened recently, so you can continue where you left off.") };
 }
 const ICON = { video: VideoCamera, pdf: FilePdf, text: TextAlignLeft, link: LinkIcon } as const;
 type Cat = { name: string; name_en: string | null; slug: string };

@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AuthShell } from "@/components/auth-shell";
-import { getT } from "@/lib/i18n";
+import { getT, getTx } from "@/lib/i18n";
 import { ForgotForm } from "./forgot-form";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getT()).forgot.title };
+  const [t, tx] = await Promise.all([getT(), getTx()]);
+  return { title: t.forgot.title, description: tx("Primești pe email un link pentru a-ți reseta parola MentorMed.", "You receive an email with a link to reset your MentorMed password.") };
 }
 
 export default async function ForgotPage() {

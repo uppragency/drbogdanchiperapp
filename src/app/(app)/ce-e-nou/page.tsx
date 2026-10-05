@@ -8,7 +8,8 @@ import { getLocale, getTx, type Tx } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getTx())("Ce e nou", "What's new") };
+  const tx = await getTx();
+  return { title: tx("Ce e nou", "What's new"), description: tx("Ultimele îmbunătățiri ale platformei MentorMed, grupate pe teme.", "The latest improvements to the MentorMed platform, grouped by topic.") };
 }
 
 function Entry({ e, tx, locale, tag }: { e: ChangelogEntry; tx: Tx; locale: Locale; tag?: string }) {

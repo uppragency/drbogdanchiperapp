@@ -17,7 +17,8 @@ import { changelog } from "@/lib/changelog";
 import { PushToggle } from "@/app/(app)/profil/push-toggle";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getT()).profile.title };
+  const [t, tx] = await Promise.all([getT(), getTx()]);
+  return { title: t.profile.title, description: tx("Progresul tău, obiectivul săptămânal, favoritele, notițele și setările contului.", "Your progress, weekly goal, favourites, notes and account settings.") };
 }
 
 export default async function ProfilePage({ searchParams }: PageProps<"/profil">) {

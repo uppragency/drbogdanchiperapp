@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { COMPANY, LegalPage, P, Section, UL } from "../doc";
 
-export const metadata: Metadata = { title: "Politica de cookies" };
+export const metadata: Metadata = { title: "Politica de cookies", description: "Ce cookie-uri folosește platforma MentorMed și de ce." };
 
 // TODO inainte de lansare: text de lucru, de validat juridic. Daca se adauga analytics sau marketing, adauga bannerul de consimtamant si actualizeaza tabelul.
 const ROWS: [string, string, string, string][] = [

@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { AuthShell } from "@/components/auth-shell";
 import { LoginForm } from "./login-form";
 import { safeNext } from "@/lib/safe-next";
-import { getT } from "@/lib/i18n";
+import { getT, getTx } from "@/lib/i18n";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getT()).login.title };
+  const [t, tx] = await Promise.all([getT(), getTx()]);
+  return { title: t.login.title, description: tx("Intră în contul tău MentorMed cu emailul și parola.", "Sign in to your MentorMed account with your email and password.") };
 }
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {

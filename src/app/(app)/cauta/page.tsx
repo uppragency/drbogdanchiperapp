@@ -10,7 +10,8 @@ import { getLocale, getT, getTx, pick } from "@/lib/i18n";
 import { popularSearches } from "@/app/(app)/header-actions";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getTx())("Căutare", "Search") };
+  const tx = await getTx();
+  return { title: tx("Căutare", "Search"), description: tx("Caută în webinarii, cazuri și materiale MentorMed după titlu, descriere sau conținut.", "Search MentorMed webinars, cases and materials by title, description or content.") };
 }
 const ICON = { video: VideoCamera, pdf: FilePdf, text: TextAlignLeft, link: LinkIcon } as const;
 

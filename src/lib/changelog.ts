@@ -15,6 +15,15 @@ export type ChangelogEntry = { date: string; category: ChangelogCategory; title:
 export const changelog: ChangelogEntry[] = [
   {
     date: "2026-10-05",
+    category: "navigare",
+    title: { ro: "Roadmap, status sisteme și hartă site", en: "Roadmap, system status and sitemap" },
+    text: {
+      ro: "În subsol găsești ce urmează în platformă, starea sistemelor în timp real și lista tuturor paginilor.",
+      en: "In the footer you will find what is coming next, live system status and a list of all pages.",
+    },
+  },
+  {
+    date: "2026-10-05",
     category: "profil",
     title: { ro: "Săptămâna ta, în profil", en: "Your week, in your profile" },
     text: {

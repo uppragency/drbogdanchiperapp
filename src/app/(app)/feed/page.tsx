@@ -5,11 +5,21 @@ import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
 import { videoCovers } from "@/lib/video";
 import { coverUrl } from "@/lib/cover-url";
-import { getLocale, getT, pick } from "@/lib/i18n";
+import { getLocale, getT, getTx, pick } from "@/lib/i18n";
 import { FeedView, TYPES, SORTS, type Category, type Row } from "./feed-view";
 
-export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getT()).feed.title };
+export async function generateMetadata({ searchParams }: PageProps<"/feed">): Promise<Metadata> {
+  const [t, tx, locale, sp] = await Promise.all([getT(), getTx(), getLocale(), searchParams]);
+  const slug = typeof sp.categorie === "string" ? sp.categorie.slice(0, 80) : "";
+  if (slug) {
+    const supabase = await createClient();
+    const { data: c } = await supabase.from("categories").select("name,name_en").eq("slug", slug).maybeSingle();
+    if (c) {
+      const name = pick(locale, c.name, c.name_en);
+      return { title: name, description: tx(`Resurse din categoria ${name}: webinarii, cazuri și materiale pentru medicii din MentorMed.`, `Resources in ${name}: webinars, cases and materials for MentorMed doctors.`) };
+    }
+  }
+  return { title: t.feed.title, description: tx("Webinarii, cazuri și materiale pentru medicii din programul MentorMed, într-un singur loc.", "Webinars, cases and materials for doctors in the MentorMed program, in one place.") };
 }
 
 const PAGE = 12;

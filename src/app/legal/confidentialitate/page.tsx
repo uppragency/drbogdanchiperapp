@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { COMPANY, LegalPage, P, Section, UL } from "../doc";
 
-export const metadata: Metadata = { title: "Politica de confidențialitate" };
+export const metadata: Metadata = { title: "Politica de confidențialitate", description: "Cum prelucrează platforma MentorMed datele tale personale și ce drepturi ai." };
 
 // TODO inainte de lansare: text de lucru, de validat juridic.
 export default function Page() {

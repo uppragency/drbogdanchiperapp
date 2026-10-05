@@ -7,7 +7,8 @@ import { EmptyState } from "@/components/ui";
 import { getLocale, getTx, pick } from "@/lib/i18n";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getTx())("Colecții", "Collections") };
+  const tx = await getTx();
+  return { title: tx("Colecții", "Collections"), description: tx("Lecțiile MentorMed grupate în colecții, ca un curs pe care îl parcurgi în ordine.", "MentorMed lessons grouped into collections, like a course you follow in order.") };
 }
 
 export default async function CollectionsPage() {

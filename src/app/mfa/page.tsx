@@ -3,10 +3,11 @@ import { requireUser } from "@/lib/auth";
 import { AuthShell } from "@/components/auth-shell";
 import { MfaChallenge } from "./mfa-challenge";
 import { safeNext } from "@/lib/safe-next";
-import { getT } from "@/lib/i18n";
+import { getT, getTx } from "@/lib/i18n";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getT()).mfa.title };
+  const [t, tx] = await Promise.all([getT(), getTx()]);
+  return { title: t.mfa.title, description: tx("Introdu codul din aplicația de autentificare pentru a continua.", "Enter the code from your authenticator app to continue.") };
 }
 
 export default async function MfaPage({ searchParams }: PageProps<"/mfa">) {

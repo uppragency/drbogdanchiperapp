@@ -5,7 +5,7 @@ import { getTx } from "@/lib/i18n";
 import { EnvelopeSimple, MapPin, Phone } from "@phosphor-icons/react/dist/ssr";
 import { ContactForm } from "./contact-form";
 
-export const metadata: Metadata = { title: "Contact" };
+export const metadata: Metadata = { title: "Contact", description: "Scrie-ne sau sună-ne pentru ajutor cu contul, accesul sau resursele din platforma MentorMed." };
 
 const ADDRESS = "Primaverii Plaza, Bulevardul Primăverii 19-21, Sc. B, Et. 3, Ap. 34, 011972 București";
 const MAPS_URL = "https://share.google/JYABnbDtONOaQT2be";

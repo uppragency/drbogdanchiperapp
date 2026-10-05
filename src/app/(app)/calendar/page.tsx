@@ -7,7 +7,8 @@ import { formatDateTime } from "@/lib/format";
 import { getLocale, getTx, pick } from "@/lib/i18n";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getTx())("Calendar", "Calendar") };
+  const tx = await getTx();
+  return { title: tx("Calendar", "Calendar"), description: tx("Evenimentele MentorMed programate, cu dată și oră.", "Scheduled MentorMed events with date and time.") };
 }
 
 export default async function CalendarPage() {

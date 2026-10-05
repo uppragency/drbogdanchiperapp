@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { COMPANY, LegalPage, P, Section, UL } from "../doc";
 
-export const metadata: Metadata = { title: "Termeni și condiții" };
+export const metadata: Metadata = { title: "Termeni și condiții", description: "Termenii și condițiile de utilizare ale platformei MentorMed." };
 
 // TODO inainte de lansare: text de lucru, de validat juridic.
 export default function Page() {

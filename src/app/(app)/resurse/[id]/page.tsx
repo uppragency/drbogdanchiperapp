@@ -41,7 +41,10 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const r = await load(id);
   const locale = await getLocale();
   const t = await getT();
-  return { title: r ? pick(locale, r.title, r.title_en) : t.brand };
+  if (!r) return { title: t.brand };
+  const raw = pick(locale, r.description, r.description_en).replace(/\s+/g, " ").trim();
+  const description = raw.length > 155 ? `${raw.slice(0, 152).trimEnd()}...` : raw;
+  return { title: pick(locale, r.title, r.title_en), ...(description ? { description } : {}) };
 }
 
 export default async function ResourcePage({ params }: { params: Promise<Params> }) {

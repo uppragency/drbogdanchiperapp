@@ -5,7 +5,8 @@ import { FaqBrowser, type FaqEntry } from "./faq-browser";
 import { getLocale, getTx, pick } from "@/lib/i18n";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getTx())("Întrebări frecvente", "Frequently asked questions") };
+  const tx = await getTx();
+  return { title: tx("Întrebări frecvente", "Frequently asked questions"), description: tx("Răspunsuri despre cont, parolă, resurse, comentarii și acces în platforma MentorMed.", "Answers about your account, password, resources, comments and access in the MentorMed platform.") };
 }
 
 export default async function FaqPage() {

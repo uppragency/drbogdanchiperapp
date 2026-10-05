@@ -4,6 +4,7 @@ import "./globals.css";
 import { SiteFooter } from "@/components/site-footer";
 import { LocaleProvider } from "@/components/locale-provider";
 import { getLocale, getT, getTx } from "@/lib/i18n";
+import { env } from "@/lib/env";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -15,7 +16,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
   const tx = await getTx();
   return {
+  metadataBase: new URL(env.siteUrl),
   title: { default: t.platformName, template: `%s | ${t.brand}` },
+  openGraph: { siteName: t.brand, type: "website", locale: tx("ro_RO", "en_GB") },
   description: tx("Platforma de curs pentru medicii înscriși în programul MentorMed.", "The course platform for doctors enrolled in the MentorMed program."),
   robots: { index: false, follow: false },
   appleWebApp: { capable: true, title: "MentorMed", statusBarStyle: "default" },

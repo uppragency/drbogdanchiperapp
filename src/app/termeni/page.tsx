@@ -4,10 +4,11 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { AuthShell } from "@/components/auth-shell";
 import { TermsForm } from "./terms-form";
-import { getT } from "@/lib/i18n";
+import { getT, getTx } from "@/lib/i18n";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getT()).terms.title };
+  const [t, tx] = await Promise.all([getT(), getTx()]);
+  return { title: t.terms.title, description: tx("Citește și acceptă termenii și politica de confidențialitate pentru a folosi platforma.", "Read and accept the terms and privacy policy to use the platform.") };
 }
 
 export default async function TermsPage() {

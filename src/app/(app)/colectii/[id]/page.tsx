@@ -9,8 +9,16 @@ import { EmptyState, LinkButton } from "@/components/ui";
 import { categoryColor } from "@/lib/category-color";
 import { getLocale, getT, getTx, pick } from "@/lib/i18n";
 
-export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getTx())("Colecție", "Collection") };
+export async function generateMetadata({ params }: PageProps<"/colectii/[id]">): Promise<Metadata> {
+  const [tx, locale, { id }] = await Promise.all([getTx(), getLocale(), params]);
+  const fallback = tx("Colecție", "Collection");
+  if (!UUID.test(id)) return { title: fallback };
+  const supabase = await createClient();
+  const { data: c } = await supabase.from("collections").select("title,title_en,description,description_en").eq("id", id).maybeSingle();
+  if (!c) return { title: fallback };
+  const raw = pick(locale, c.description, c.description_en).replace(/\s+/g, " ").trim();
+  const description = raw.length > 155 ? `${raw.slice(0, 152).trimEnd()}...` : raw;
+  return { title: pick(locale, c.title, c.title_en), description: description || tx("Colecție de lecții MentorMed, în ordinea în care se parcurg.", "A MentorMed lesson collection, in the order to follow.") };
 }
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ICON = { video: VideoCamera, pdf: FilePdf, text: TextAlignLeft, link: LinkIcon } as const;

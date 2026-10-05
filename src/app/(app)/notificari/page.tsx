@@ -10,7 +10,8 @@ import { followedCategoryIds } from "@/lib/notifications";
 import { MarkSeen } from "./mark-seen";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getTx())("Notificări", "Notifications") };
+  const tx = await getTx();
+  return { title: tx("Notificări", "Notifications"), description: tx("Resursele noi, răspunsurile la comentarii și anunțurile din platformă.", "New resources, replies to your comments and announcements from the platform.") };
 }
 
 export default async function NotificationsPage() {

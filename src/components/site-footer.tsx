@@ -55,7 +55,14 @@ export async function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-white/10">
-        <p className="mx-auto w-full max-w-6xl px-4 py-5 text-xs text-white/70">© {new Date().getFullYear()} Dr. Bogdan Chiper. {t.footer.rights}</p>
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-5 text-xs text-white/70 sm:flex-row sm:items-center sm:justify-between">
+          <p>© {new Date().getFullYear()} Dr. Bogdan Chiper. {t.footer.rights}</p>
+          <ul className="flex flex-wrap items-center gap-x-5">
+            <li><Link href="/roadmap" className="inline-flex min-h-11 items-center transition-colors hover:text-white">Roadmap</Link></li>
+            <li><Link href="/status" className="inline-flex min-h-11 items-center transition-colors hover:text-white">{tx("Status sisteme", "System status")}</Link></li>
+            <li><Link href="/sitemap" className="inline-flex min-h-11 items-center transition-colors hover:text-white">{tx("Hartă site", "Sitemap")}</Link></li>
+          </ul>
+        </div>
       </div>
     </footer>
   );

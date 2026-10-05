@@ -19,7 +19,8 @@ const STEPS = [
 ] as const;
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getT()).brand };
+  const [t, tx] = await Promise.all([getT(), getTx()]);
+  return { title: t.platformName, description: tx("Intră în platforma MentorMed: webinarii, cazuri, resurse și o comunitate de medici.", "Sign in to the MentorMed platform: webinars, cases, resources and a community of doctors.") };
 }
 
 export default async function Home() {
