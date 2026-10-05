@@ -8,7 +8,7 @@ import { cn } from "@/components/ui";
 import { useTx } from "@/components/locale-provider";
 
 export type MegaItem = { href: string; label: string; slug?: string; icon?: React.ReactNode; count?: number; hint?: string };
-export type MegaGroup = { id: string; label: string; items: MegaItem[]; match: string[]; slugs?: string[]; columns?: 1 | 2 | 3 };
+export type MegaGroup = { id: string; label: string; items: MegaItem[]; match: string[]; slugs?: string[]; count?: number; columns?: 1 | 2 | 3 };
 export type MegaLink = { href: string; label: string; match: string[]; count?: number };
 
 const itemCls = "flex min-h-11 items-center gap-3 rounded-control px-3 py-2 text-sm font-semibold transition-colors hover:bg-surface2";
@@ -77,6 +77,7 @@ export function MegaNav({ groups, links }: { groups: MegaGroup[]; links: MegaLin
                 className={cn("relative flex h-11 items-center gap-1 whitespace-nowrap px-3 text-sm font-semibold transition-colors", groupActive(g) || open === g.id ? "text-ink" : "text-muted hover:text-ink")}
               >
                 {g.label}
+                {g.count ? <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[11px] font-bold leading-5 text-accent-ink">{g.count > 99 ? "99+" : g.count}</span> : null}
                 <CaretDown size={12} weight="bold" className={cn("transition-transform", open === g.id && "rotate-180")} />
                 <span aria-hidden className={cn("absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-accent transition-opacity", groupActive(g) ? "opacity-100" : "opacity-0")} />
               </button>
@@ -115,7 +116,7 @@ export function MegaNav({ groups, links }: { groups: MegaGroup[]; links: MegaLin
             {groups.map((g) => (
               <div key={g.id} className="border-b border-line last:border-0">
                 <button type="button" aria-expanded={mobileGroup === g.id} onClick={() => setMobileGroup(mobileGroup === g.id ? null : g.id)} className="flex min-h-12 w-full items-center justify-between text-base font-bold">
-                  {g.label}
+                  <span className="flex items-center gap-2">{g.label}<Badge n={g.count} /></span>
                   <CaretDown size={16} weight="bold" className={cn("transition-transform", mobileGroup === g.id && "rotate-180")} />
                 </button>
                 {mobileGroup === g.id && (

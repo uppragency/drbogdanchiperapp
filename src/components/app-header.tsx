@@ -20,7 +20,7 @@ export async function AppHeader({ viewerId, isAdmin, unread = 0, initials = "?",
   const catItem = (c: (typeof categories)[number]) => ({ href: `/feed?categorie=${c.slug}`, label: c.name, slug: c.slug, count: newByCategory[c.id] ?? 0 });
   const groups: MegaGroup[] = [
     {
-      id: "learn", label: tx("Învață", "Learn"), match: ["/colectii", "/recente"], slugs: LEARN, columns: 2,
+      id: "learn", label: tx("Învață", "Learn"), match: ["/colectii", "/recente"], slugs: LEARN, columns: 2, count: pick(LEARN).reduce((n, c) => n + (newByCategory[c.id] ?? 0), 0),
       items: [
         ...pick(LEARN).map(catItem),
         { href: "/colectii", label: tx("Colecții", "Collections"), icon: <Books size={18} />, hint: tx("Parcursuri ordonate de studiu", "Ordered study paths") },
@@ -38,7 +38,7 @@ export async function AppHeader({ viewerId, isAdmin, unread = 0, initials = "?",
     },
   ];
   const links: MegaLink[] = [
-    { href: "/ce-e-nou", label: tx("Ce e nou", "What's new"), match: ["/ce-e-nou"], count: newTotal },
+    { href: "/ce-e-nou", label: tx("Ce e nou", "What's new"), match: ["/ce-e-nou"] },
     ...(isAdmin ? [{ href: "/admin", label: t.nav.admin, match: ["/admin"] }] : []),
   ];
   return (
