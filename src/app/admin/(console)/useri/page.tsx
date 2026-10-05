@@ -19,13 +19,15 @@ export default async function UsersAdmin({ searchParams }: PageProps<"/admin/use
   const sp = await searchParams;
   const stare = STARI.find((s) => s.key === sp.stare)?.key ?? "";
   const q = (typeof sp.q === "string" ? sp.q : "").trim().slice(0, 80).replace(/[%,()]/g, " ");
+  const PAGE = 100;
+  const pagina = Math.max(1, Math.min(500, Number.parseInt(typeof sp.pagina === "string" ? sp.pagina : "1", 10) || 1));
   const tag = typeof sp.tag === "string" && /^[0-9a-f-]{36}$/.test(sp.tag) ? sp.tag : "";
 
   const supabase = await createClient();
   const { data: tags } = await supabase.from("tags").select("id,name").order("position");
 
-  const sel = `id,email,first_name,last_name,is_active,access_expires_at,last_login_at,deleted_at,user_tags${tag ? "!inner" : ""}(tag_id,tags(name,position)),invitations(sent_at,accepted_at)`;
-  let query = supabase.from("profiles").select(sel).eq("role", "user").order("created_at", { ascending: false }).limit(150);
+  const sel = `id,email,role,first_name,last_name,is_active,access_expires_at,last_login_at,deleted_at,user_tags${tag ? "!inner" : ""}(tag_id,tags(name,position)),invitations(sent_at,accepted_at)`;
+  let query = supabase.from("profiles").select(sel, { count: "exact" }).order("created_at", { ascending: false }).range((pagina - 1) * PAGE, pagina * PAGE - 1);
   query = stare === "sters" ? query.not("deleted_at", "is", null) : query.is("deleted_at", null);
   if (tag) query = query.eq("user_tags.tag_id", tag);
   if (q) query = query.or(`email.ilike.%${q}%,first_name.ilike.%${q}%,last_name.ilike.%${q}%`);
@@ -34,7 +36,9 @@ export default async function UsersAdmin({ searchParams }: PageProps<"/admin/use
   if (stare === "inactiv") query = query.eq("is_active", true).or(`last_login_at.is.null,last_login_at.lt.${new Date(now.getTime() - 30 * 86400000).toISOString()}`);
   if (stare === "neinvitati") query = query.is("invitations.sent_at", null);
   if (stare === "neacceptat") query = query.not("invitations.sent_at", "is", null).is("invitations.accepted_at", null);
-  const { data: raw } = await query;
+  const { data: raw, count } = await query;
+  const total = count ?? 0;
+  const pages = Math.max(1, Math.ceil(total / PAGE));
   const data = (raw ?? []) as unknown as Row[];
   // Embedded filters on invitations return the parent row with a null child, so drop those here.
   const rows = data.filter((r) => {
@@ -46,7 +50,7 @@ export default async function UsersAdmin({ searchParams }: PageProps<"/admin/use
 
   const href = (patch: Record<string, string>) => {
     const p = new URLSearchParams();
-    Object.entries({ q, tag, stare, ...patch }).forEach(([k, v]) => v && p.set(k, v));
+    Object.entries({ q, tag, stare, pagina: "", ...patch }).forEach(([k, v]) => v && p.set(k, v));
     const s = p.toString();
     return s ? `/admin/useri?${s}` : "/admin/useri";
   };
@@ -74,7 +78,7 @@ export default async function UsersAdmin({ searchParams }: PageProps<"/admin/use
           <Link key={s.key} href={href({ stare: s.key })} className={cn("rounded-full border px-4 py-2 text-sm font-semibold", stare === s.key ? "border-accent bg-accent text-accent-ink" : "border-line bg-surface text-muted hover:text-ink")}>{s.label}</Link>
         ))}
       </div>
-      <p className="text-sm text-muted">{rows.length} rezultate{rows.length === 150 ? " (primele 150)" : ""}</p>
+      <p className="text-sm text-muted">{total} rezultate{pages > 1 ? `, pagina ${pagina} din ${pages}` : ""}</p>
       <ul className="divide-y divide-line rounded-card border border-line bg-surface">
         {rows.map((r) => {
           const inv = invOf(r);
@@ -89,6 +93,7 @@ export default async function UsersAdmin({ searchParams }: PageProps<"/admin/use
                   <span className="text-sm text-muted">{names.join(", ") || "Fără grup"} · {r.last_login_at ? `ultima logare ${formatDate(r.last_login_at)}` : "nelogat"}</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  {r.role === "admin" && <Badge tone="accent">Admin</Badge>}
                   {!r.is_active && <Badge tone="warn">Pe pauză</Badge>}
                   {expired && <Badge tone="danger">Expirat</Badge>}
                   {inv && !inv.sent_at && <Badge>Neinvitat</Badge>}
@@ -100,6 +105,13 @@ export default async function UsersAdmin({ searchParams }: PageProps<"/admin/use
         })}
         {rows.length === 0 && <li className="p-6 text-sm text-muted">Niciun user.</li>}
       </ul>
+      {pages > 1 && (
+        <nav aria-label="Paginare" className="flex items-center justify-between gap-3">
+          {pagina > 1 ? <Link href={href({ pagina: String(pagina - 1) })} className="inline-flex h-11 items-center rounded-control border border-line bg-surface px-5 text-sm font-semibold hover:bg-surface2">Înapoi</Link> : <span />}
+          <span className="text-sm text-muted">Pagina {pagina} din {pages}</span>
+          {pagina < pages ? <Link href={href({ pagina: String(pagina + 1) })} className="inline-flex h-11 items-center rounded-control border border-line bg-surface px-5 text-sm font-semibold hover:bg-surface2">Înainte</Link> : <span />}
+        </nav>
+      )}
     </div>
   );
 }
@@ -108,6 +120,7 @@ type Inv = { sent_at: string | null; accepted_at: string | null };
 type Row = {
   id: string;
   email: string;
+  role: string;
   first_name: string;
   last_name: string;
   is_active: boolean;
