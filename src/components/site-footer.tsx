@@ -35,6 +35,7 @@ export async function SiteFooter() {
           <p className="text-xs font-semibold uppercase tracking-wider text-white/70">{t.footer.legal}</p>
           <Link href="/legal/termeni" className={link}>{t.terms.termsLink}</Link>
           <Link href="/legal/confidentialitate" className={link}>{t.terms.privacyLink}</Link>
+          <Link href="/legal/cookies" className={link}>{tx("Politica de cookies", "Cookie policy")}</Link>
         </nav>
         <div className="flex flex-col gap-3">
           <p className="text-xs font-semibold uppercase tracking-wider text-white/70">{t.footer.contact}</p>
