@@ -257,17 +257,20 @@ export async function duplicateResource(formData: FormData) {
 
 const bulkSchema = z.object({
   ids: z.array(z.string().uuid()).min(1, "Alege cel puțin o resursă.").max(200, "Maximum 200 de resurse odată."),
-  op: z.enum(["publish", "draft", "move", "trash"]),
+  op: z.enum(["publish", "draft", "move", "trash", "tags", "schedule"]),
   categoryId: z.string().uuid().optional(),
+  tagIds: z.array(z.string().uuid()).max(50).default([]),
+  tagMode: z.enum(["replace", "add"]).default("replace"),
+  publishAt: z.string().default(""),
 });
 
 // Bulk update for the resources list. Publishing skips resources without any group tag (same rule as the single form).
 export async function bulkResources(_: FormState, formData: FormData): Promise<FormState> {
   await requireStaff();
   const rawCat = String(formData.get("categoryId") ?? "");
-  const parsed = bulkSchema.safeParse({ ids: formData.getAll("ids").map(String), op: formData.get("op"), categoryId: rawCat || undefined });
+  const parsed = bulkSchema.safeParse({ ids: formData.getAll("ids").map(String), op: formData.get("op"), categoryId: rawCat || undefined, tagIds: formData.getAll("tagIds").map(String), tagMode: formData.get("tagMode") ?? "replace", publishAt: String(formData.get("publishAt") ?? "") });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Date invalide." };
-  const { ids, op, categoryId } = parsed.data;
+  const { ids, op, categoryId, tagIds, tagMode, publishAt } = parsed.data;
   const supabase = await createClient();
   let ok = "";
 
@@ -288,6 +291,28 @@ export async function bulkResources(_: FormState, formData: FormData): Promise<F
     const { error } = await supabase.from("resources").update({ status: "draft" }).in("id", ids).is("deleted_at", null);
     if (error) return { error: "Nu am putut retrage resursele." };
     ok = `${ids.length} retrase în draft.`;
+  } else if (op === "tags") {
+    if (!tagIds.length) return { error: "Alege cel puțin o grupă." };
+    if (tagMode === "replace") {
+      const { error: delErr } = await supabase.from("resource_tags").delete().in("resource_id", ids);
+      if (delErr) return { error: "Nu am putut schimba grupele." };
+    }
+    const rows = ids.flatMap((resource_id) => tagIds.map((tag_id) => ({ resource_id, tag_id })));
+    const { error } = await supabase.from("resource_tags").upsert(rows, { onConflict: "resource_id,tag_id", ignoreDuplicates: true });
+    if (error) return { error: "Nu am putut schimba grupele." };
+    ok = tagMode === "replace" ? `${ids.length} resurse au acum doar grupele alese.` : `Grupele au fost adăugate la ${ids.length} resurse.`;
+  } else if (op === "schedule") {
+    const iso = localInputToIso(publishAt);
+    if (!iso || new Date(iso).getTime() <= Date.now()) return { error: "Alege o dată și o oră din viitor." };
+    const { data: tagged } = await supabase.from("resource_tags").select("resource_id").in("resource_id", ids);
+    const withTag = new Set((tagged ?? []).map((t: { resource_id: string }) => t.resource_id));
+    const eligible = ids.filter((i) => withTag.has(i));
+    if (eligible.length) {
+      const { error } = await supabase.from("resources").update({ status: "published", publish_at: iso }).in("id", eligible).is("deleted_at", null);
+      if (error) return { error: "Nu am putut programa resursele." };
+    }
+    const skipped = ids.length - eligible.length;
+    ok = `${eligible.length} programate.` + (skipped ? ` ${skipped} sărite, nu au niciun grup MentorMed.` : "");
   } else if (op === "move") {
     if (!categoryId) return { error: "Alege categoria." };
     const { error } = await supabase.from("resources").update({ category_id: categoryId }).in("id", ids).is("deleted_at", null);

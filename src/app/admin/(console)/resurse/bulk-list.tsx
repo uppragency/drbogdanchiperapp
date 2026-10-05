@@ -8,7 +8,7 @@ import type { FormState } from "@/app/login/actions";
 
 export type BulkRow = { id: string; title: string; meta: string; updatedAt: string; pinned: boolean; state: "scheduled" | "draft" | "published" };
 
-export function BulkList({ rows, categories, selectable }: { rows: BulkRow[]; categories: { id: string; name: string }[]; selectable: boolean }) {
+export function BulkList({ rows, categories, tags, selectable }: { rows: BulkRow[]; categories: { id: string; name: string }[]; tags: { id: string; name: string }[]; selectable: boolean }) {
   const [selected, setSelected] = useState<string[]>([]);
   const [confirmTrash, setConfirmTrash] = useState(false);
   const [state, action] = useActionState<FormState, FormData>(async (prev, fd) => {
@@ -43,6 +43,35 @@ export function BulkList({ rows, categories, selectable }: { rows: BulkRow[]; ca
               </select>
               <button name="op" value="move" className={btn.secondary}>Mută în categoria</button>
               <button type="button" onClick={() => setConfirmTrash(true)} className={btn.danger}>Mută în coș</button>
+            </div>
+          )}
+          {!confirmTrash && (
+            <div className="flex flex-col gap-3 border-t border-line pt-3">
+              <details>
+                <summary className="min-h-11 cursor-pointer py-2 text-sm font-semibold">Schimbă grupa (ediția MentorMed)</summary>
+                <div className="flex flex-col gap-3 pt-2">
+                  <div className="flex flex-wrap gap-2">
+                    {tags.map((t) => (
+                      <label key={t.id} className="flex min-h-11 items-center gap-2 rounded-control border border-line px-3 text-sm">
+                        <input type="checkbox" name="tagIds" value={t.id} className="size-4 accent-[var(--accent)]" />
+                        {t.name}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3 text-sm">
+                    <label className="flex items-center gap-2"><input type="radio" name="tagMode" value="replace" defaultChecked className="accent-[var(--accent)]" />Înlocuiește grupele existente</label>
+                    <label className="flex items-center gap-2"><input type="radio" name="tagMode" value="add" className="accent-[var(--accent)]" />Adaugă la cele existente</label>
+                  </div>
+                  <div><button name="op" value="tags" className={btn.secondary}>Aplică grupele</button></div>
+                </div>
+              </details>
+              <details>
+                <summary className="min-h-11 cursor-pointer py-2 text-sm font-semibold">Programează publicarea</summary>
+                <div className="flex flex-wrap items-center gap-2 pt-2">
+                  <input type="datetime-local" name="publishAt" aria-label="Data și ora publicării" className="h-11 rounded-control border border-line bg-bg px-3 text-base focus:border-accent focus:outline-none" />
+                  <button name="op" value="schedule" className={btn.secondary}>Programează</button>
+                </div>
+              </details>
             </div>
           )}
         </div>

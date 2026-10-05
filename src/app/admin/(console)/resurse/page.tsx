@@ -96,6 +96,7 @@ export default async function ResourcesAdmin({ searchParams }: PageProps<"/admin
       <BulkList
         selectable={status !== "trash"}
         categories={categories ?? []}
+        tags={tags ?? []}
         rows={rows.map((r) => ({
           id: r.id,
           title: r.title,
