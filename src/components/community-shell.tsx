@@ -5,6 +5,7 @@ import { cn } from "@/components/ui";
 import { CategoryIcon } from "@/lib/category-icons";
 import { categoryColor } from "@/lib/category-color";
 import { getLocale, getT, getTx, pick } from "@/lib/i18n";
+import { PollCard } from "@/app/(app)/feed/poll-card";
 
 export const PROGRAM_URL = "https://drbogdanchiper.ro/produs/mentormed/";
 const LIVE_OP_URL = "https://drbogdanchiper.ro/mentormed-live-op-mentorship/";
@@ -86,6 +87,7 @@ export async function CommunityShell({ categories, activeSlug, newByCategory, ne
           </ul>
           <p className="mt-4 text-xs text-muted">{tx("Se achiziționează de pe site-ul principal, drbogdanchiper.ro.", "Available for purchase on the main website, drbogdanchiper.ro.")}</p>
         </div>
+        <PollCard />
       </aside>
     </div>
   );

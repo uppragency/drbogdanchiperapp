@@ -35,11 +35,10 @@ export async function PollCard() {
   const question = pick(locale, p.question, p.question_en);
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 pt-10">
-      <section aria-labelledby="sondaj" className="flex flex-col gap-4 rounded-card border border-line bg-surface p-6 shadow-card md:p-8">
+    <section aria-labelledby="sondaj" className="flex flex-col gap-4 rounded-card border border-line bg-surface p-6 shadow-card">
         <div className="flex flex-col gap-1">
           <p className="text-xs font-bold uppercase tracking-wider text-violet">{tx("Sondaj", "Poll")}</p>
-          <h2 id="sondaj" className="text-xl font-bold leading-snug tracking-tight md:text-2xl">{question}</h2>
+          <h2 id="sondaj" className="text-lg font-bold leading-snug tracking-tight">{question}</h2>
         </div>
 
         {results ? (
@@ -82,7 +81,6 @@ export async function PollCard() {
             <SubmitButton className="self-start">{tx("Votează", "Vote")}</SubmitButton>
           </form>
         )}
-      </section>
-    </div>
+    </section>
   );
 }

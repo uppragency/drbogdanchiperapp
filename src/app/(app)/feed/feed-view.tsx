@@ -13,7 +13,6 @@ import { greetingNow } from "@/lib/greeting";
 import { FeaturedRow } from "./featured-row";
 import { CommunityShell } from "@/components/community-shell";
 import { FollowButton } from "@/components/follow-button";
-import { PollCard } from "./poll-card";
 
 export const TYPES = ["video", "pdf", "text", "link"] as const;
 export const SORTS = ["noi", "vizionate", "alfabetic"] as const;
@@ -116,8 +115,6 @@ export async function FeedView(p: FeedViewProps) {
           />
         </div>
       )}
-
-      {!filtered && <PollCard />}
 
       {!filtered && p.featured.length > 0 && (
         <div className="mx-auto w-full max-w-6xl px-4 pt-10">

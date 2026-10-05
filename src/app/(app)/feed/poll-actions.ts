@@ -11,5 +11,5 @@ export async function votePoll(formData: FormData): Promise<void> {
   if (!parsed.success) return;
   const supabase = await createClient();
   await supabase.rpc("cast_vote", { p_poll: parsed.data.poll, p_option: parsed.data.option });
-  revalidatePath("/feed");
+  revalidatePath("/", "layout");
 }
