@@ -9,7 +9,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   if (viewer.role !== "admin") redirect("/feed");
   return (
     <>
-      <AppHeader isAdmin initials={((viewer.firstName?.[0] ?? "") + (viewer.lastName?.[0] ?? "")).toUpperCase() || viewer.email[0]?.toUpperCase() || "?"} name={fullName(viewer) || viewer.email} email={viewer.email} />
+      <AppHeader viewerId={viewer.id} isAdmin initials={((viewer.firstName?.[0] ?? "") + (viewer.lastName?.[0] ?? "")).toUpperCase() || viewer.email[0]?.toUpperCase() || "?"} name={fullName(viewer) || viewer.email} email={viewer.email} />
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-10">
         <AdminNav />
         {children}
