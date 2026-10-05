@@ -2,14 +2,19 @@ import Image from "next/image";
 import { t } from "@/lib/texts";
 
 export function BrandMark({ height = 28 }: { height?: number }) {
-  return <Image src="/brand/mark.png" alt="" width={Math.round(height * 0.64)} height={height} className="w-auto" style={{ height }} priority />;
+  const w = Math.round(height * 0.62);
+  return (
+    <>
+      <Image src="/brand/mark.png" alt="" width={w} height={height} className="w-auto dark:hidden" style={{ height }} priority />
+      <Image src="/brand/mark-dark.png" alt="" width={w} height={height} className="hidden w-auto dark:block" style={{ height }} priority />
+    </>
+  );
 }
 
 export function Wordmark({ className = "" }: { className?: string }) {
   return (
-    <span className={`inline-flex items-center gap-2.5 text-lg font-bold tracking-tight ${className}`}>
-      <BrandMark />
-      {t.brand}
+    <span role="img" aria-label={t.brand} className={`inline-flex items-center ${className}`}>
+      <BrandMark height={34} />
     </span>
   );
 }
