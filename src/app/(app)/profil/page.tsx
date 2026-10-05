@@ -249,7 +249,7 @@ export default async function ProfilePage({ searchParams }: PageProps<"/profil">
             <Card className="flex flex-col gap-4 md:p-6">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h2 className="text-lg font-bold">{tx("Activitate, ultimele 26 de săptămâni", "Activity, last 26 weeks")}</h2>
-                <span className="text-sm text-muted">{tx(`${dayList.length} zile active în total`, `${dayList.length} active days in total`)}</span>
+                <span className="text-sm text-muted">{tx(dayList.length === 1 ? "1 zi activă în total" : `${dayList.length} zile active în total`, `${dayList.length} active ${dayList.length === 1 ? "day" : "days"} in total`)}</span>
               </div>
               {dayList.length > 0 ? <ActivityMap days={dayList} today={today} label={dayLabel} /> : <p className="text-sm text-muted">{tx("Harta activității apare după prima resursă deschisă.", "Your activity map appears after you open your first resource.")}</p>}
             </Card>

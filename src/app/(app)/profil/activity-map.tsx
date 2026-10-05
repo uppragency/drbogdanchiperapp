@@ -10,9 +10,9 @@ export function ActivityMap({ days, today, label }: { days: string[]; today: str
   const cells = Array.from({ length: 26 * 7 }, (_, i) => addDays(start, i));
   return (
     <div className="no-scrollbar -mx-1 overflow-x-auto px-1 pb-1">
-      <ol aria-hidden className="grid w-max grid-flow-col grid-rows-7 gap-1">
+      <ol aria-hidden className="grid min-w-[560px] grid-flow-col grid-cols-[repeat(26,minmax(0,1fr))] grid-rows-[repeat(7,auto)] gap-1">
         {cells.map((d) => (
-          <li key={d} title={label(d)} className={cn("size-3.5 rounded-[4px]", d > today ? "opacity-0" : active.has(d) ? "bg-accent" : "bg-surface2")} />
+          <li key={d} title={label(d)} className={cn("aspect-square w-full rounded-[4px]", d > today ? "opacity-0" : active.has(d) ? "bg-accent" : "bg-surface2")} />
         ))}
       </ol>
     </div>
