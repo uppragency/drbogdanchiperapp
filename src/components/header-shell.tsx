@@ -35,7 +35,7 @@ export function HeaderShell({ children }: { children: React.ReactNode }) {
       data-scrolled={scrolled}
       data-hidden={hidden}
       onFocusCapture={() => setHidden(false)}
-      className="site-header sticky top-0 z-40"
+      className="site-header sticky top-0 z-40 print:hidden"
     >
       {children}
     </header>

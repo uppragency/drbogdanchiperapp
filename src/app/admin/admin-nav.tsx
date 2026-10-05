@@ -7,6 +7,7 @@ import { cn } from "@/components/ui";
 const items = [
   { href: "/admin", label: "Prezentare", exact: true },
   { href: "/admin/statistici", label: "Statistici" },
+  { href: "/admin/raport", label: "Raport" },
   { href: "/admin/resurse", label: "Resurse" },
   { href: "/admin/comentarii", label: "Comentarii" },
   { href: "/admin/useri", label: "Useri" },
@@ -28,7 +29,7 @@ const STAFF_ONLY = ["/admin/resurse", "/admin/comentarii", "/admin/securitate"];
 export function AdminNav({ role }: { role: "admin" | "moderator" }) {
   const path = usePathname();
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 print:hidden">
     {role === "admin" && <form action="/admin/cautare" role="search" className="relative">
       <MagnifyingGlass size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
       <input name="q" placeholder="Caută useri, resurse, mesaje" aria-label="Caută în administrare" className="h-11 w-full rounded-full border border-line bg-surface pl-11 pr-4 text-base placeholder:text-muted focus:border-accent focus:outline-none" />

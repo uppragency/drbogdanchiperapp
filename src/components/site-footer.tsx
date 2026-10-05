@@ -17,7 +17,7 @@ export async function SiteFooter() {
   const tx = await getTx();
   const link = "text-sm text-white/80 transition-colors hover:text-white";
   return (
-    <footer className="mt-24 bg-[#0d1c5c] text-white dark:bg-[#060a1f]">
+    <footer className="mt-24 print:hidden bg-[#0d1c5c] text-white dark:bg-[#060a1f]">
       <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-14 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div className="flex flex-col gap-3">
           <Wordmark className="text-xl" />
