@@ -11,7 +11,7 @@ import { Comments } from "@/components/comments";
 import { LinkButton } from "@/components/ui";
 import { VideoPlayer } from "@/components/video-player";
 import { CategoryIcon } from "@/lib/category-icons";
-import { formatDate, formatDateTime } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import { embedUrl, parseVideo, videoCovers } from "@/lib/video";
 import { coverUrl } from "@/lib/cover-url";
 import { FavoriteButton } from "../favorite-button";
@@ -123,13 +123,6 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
 
         {!embed && (r.type !== "text" || covers.length > 0) && (
           <Cover covers={covers} type={r.type} label={category?.name} title={title} slug={category?.slug} play={r.type === "video"} ratio="aspect-[5/2]" />
-        )}
-
-        {r.event_at && (
-          <div className="flex flex-wrap items-center gap-3 px-5 pt-2 md:px-8">
-            <span className="text-sm font-semibold text-muted">{tx("Eveniment", "Event")}: {formatDateTime(r.event_at, locale)}</span>
-            <a href={`/api/evenimente/${r.id}`} className="inline-flex h-11 items-center rounded-full border border-line bg-surface px-4 text-sm font-semibold hover:bg-surface2">{tx("Adaugă în calendar", "Add to calendar")}</a>
-          </div>
         )}
 
         {externalUrl && (

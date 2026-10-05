@@ -85,7 +85,6 @@ export function ResourceForm({ values, categories, tags }: { values: ResourceVal
         <Field label="Programează publicarea" name="publishAt" type="datetime-local" defaultValue={values.publishAt} help="Gol înseamnă imediat. Ora României." />
       </div>
       <Field label="Prezentator (opțional)" name="presenter" defaultValue={values.presenter} help="Apare pe card și se poate căuta. Ex: Dr. Bogdan Chiper." />
-      <Field label="Data evenimentului (webinar, opțional)" name="eventAt" type="datetime-local" defaultValue={values.eventAt} help="Dacă o completezi, resursa apare în Calendar. Ora României." />
       <label className="flex min-h-11 items-center gap-3 text-sm font-semibold">
         <input type="checkbox" name="isPinned" defaultChecked={values.isPinned} className="size-5 accent-[var(--accent)]" />
         Fixează în capul listei (apare și la „Începe de aici” în feed)
