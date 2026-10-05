@@ -5,11 +5,11 @@ import { Cover } from "@/components/cover";
 import { useTx } from "@/components/locale-provider";
 
 // Lazy embed: shows the cover first, loads the provider iframe only after a click.
-export function VideoPlayer({ title, embed, covers }: { title: string; embed: string; covers: string[] }) {
+export function VideoPlayer({ title, embed, covers, bare = false }: { title: string; embed: string; covers: string[]; bare?: boolean }) {
   const tx = useTx();
   const [playing, setPlaying] = useState(false);
   return (
-    <div className="aspect-video w-full overflow-hidden rounded-card border border-line bg-black shadow-card">
+    <div className={bare ? "aspect-video w-full overflow-hidden bg-black" : "aspect-video w-full overflow-hidden rounded-card border border-line bg-black shadow-card"}>
       {playing ? (
         <iframe
           src={embed}
@@ -23,8 +23,8 @@ export function VideoPlayer({ title, embed, covers }: { title: string; embed: st
         <button type="button" onClick={() => setPlaying(true)} className="group relative block size-full" aria-label={`${tx("Redă", "Play")}: ${title}`}>
           <Cover covers={covers} type="video" badge={false} ratio="aspect-auto" className="size-full" />
           <span className="absolute inset-0 flex items-center justify-center">
-            <span className="flex size-20 items-center justify-center rounded-full bg-white text-[#0d1c5c] shadow-xl transition group-hover:scale-110">
-              <Play size={32} weight="fill" />
+            <span className={bare ? "flex size-16 items-center justify-center rounded-full bg-white text-[#0d1c5c] shadow-xl transition group-hover:scale-110" : "flex size-20 items-center justify-center rounded-full bg-white text-[#0d1c5c] shadow-xl transition group-hover:scale-110"}>
+              <Play size={bare ? 26 : 32} weight="fill" />
             </span>
           </span>
         </button>

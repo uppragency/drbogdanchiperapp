@@ -4,6 +4,8 @@ import { cn, EmptyState } from "@/components/ui";
 import { categoryColor } from "@/lib/category-color";
 import { FeedToolbar } from "./feed-toolbar";
 import { Highlight } from "@/components/highlight";
+import { VideoPlayer } from "@/components/video-player";
+import { embedUrl, parseVideo } from "@/lib/video";
 import { Cover, type ResourceType } from "@/components/cover";
 import { CategoryIcon } from "@/lib/category-icons";
 import { getLocale, getT, getTx, type Tx } from "@/lib/i18n";
@@ -217,9 +219,12 @@ export async function FeedView(p: FeedViewProps) {
 function PostCard({ t, tx, r, category, isNew, done, date, covers, compact, q }: { t: Dict; tx: Tx; r: Row; category?: Category; isNew: boolean; done: boolean; date: string; covers: string[]; compact: boolean; q: string }) {
   const files = r.resource_attachments.length;
   const color = categoryColor(category?.slug, category?.name);
+  const video = r.type === "video" ? parseVideo(r.video_url) : null;
+  const embed = video ? embedUrl(video, true) : null;
   return (
-    <Link href={`/resurse/${r.id}`} className="group card-lift flex h-full flex-col overflow-hidden rounded-card border border-line bg-surface shadow-card">
-      <div className={cn("flex items-center gap-3 px-5", compact ? "pt-4" : "pt-5")}>
+    <article className="group card-lift relative flex h-full flex-col overflow-hidden rounded-card border border-line bg-surface shadow-card">
+      <Link href={`/resurse/${r.id}`} aria-label={r.title} className="absolute inset-0 z-0" />
+      <div className={cn("pointer-events-none relative flex items-center gap-3 px-5", compact ? "pt-4" : "pt-5")}>
         <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-violet-soft text-violet"><CategoryIcon slug={category?.slug} size={22} /></span>
         <span className="flex min-w-0 flex-1 flex-col">
           <span className="flex items-center gap-2 text-sm font-bold">
@@ -231,16 +236,20 @@ function PostCard({ t, tx, r, category, isNew, done, date, covers, compact, q }:
         {r.is_pinned && <PushPin size={18} weight="fill" className="text-accent" aria-label={tx("Fixată", "Pinned")} />}
         {done ? <CheckCircle size={22} weight="fill" className="text-ok" aria-label={tx("Terminat", "Completed")} /> : isNew && <span className="rounded-full bg-violet px-3 py-1 text-xs font-bold text-on-violet">{t.feed.new}</span>}
       </div>
-      <div className="flex flex-col gap-2 px-5 pb-4 pt-4">
+      <div className="pointer-events-none relative flex flex-col gap-2 px-5 pb-4 pt-4">
         <h3 className={cn("font-bold leading-snug tracking-tight", compact ? "line-clamp-2 text-lg" : "text-xl")}><Highlight text={r.title} q={q} /></h3>
         {r.description && <p className={cn("text-sm leading-relaxed text-muted", compact ? "line-clamp-2" : "line-clamp-3")}><Highlight text={r.description} q={q} /></p>}
       </div>
-      <Cover covers={covers} type={r.type} label={category?.name} title={r.title} slug={category?.slug} play={r.type === "video"} />
-      <div className="mt-auto flex items-center gap-4 px-5 py-4 text-sm font-semibold text-muted">
+      {embed ? (
+        <div className="relative z-10"><VideoPlayer bare title={r.title} embed={embed} covers={covers} /></div>
+      ) : (
+        <div className="pointer-events-none relative"><Cover covers={covers} type={r.type} label={category?.name} title={r.title} slug={category?.slug} play={r.type === "video"} /></div>
+      )}
+      <div className="pointer-events-none relative mt-auto flex items-center gap-4 px-5 py-4 text-sm font-semibold text-muted">
         <span className="inline-flex items-center gap-2"><TypeIcon type={r.type} /> {t.feed.types[r.type]}</span>
         {files > 0 && <span className="inline-flex items-center gap-2"><Paperclip size={18} /> {files}</span>}
         <span className="ml-auto inline-flex items-center gap-1 text-accent">{t.resource.open} <ArrowUpRight size={16} weight="bold" /></span>
       </div>
-    </Link>
+    </article>
   );
 }
