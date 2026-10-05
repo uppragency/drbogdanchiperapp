@@ -8,11 +8,14 @@ import { UserForm } from "../user-form";
 import { pauseUser, resumeUser, purgeUser, resendInvite, resetSessions, restoreUser, sendResetLink, trashUser, updateUser, validateAccount } from "../actions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PasswordForm } from "../password-form";
+import { AccountForms } from "../account-form";
+import { requireUser } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Editează userul" };
 
 export default async function EditUser({ params }: PageProps<"/admin/useri/[id]">) {
   const { id } = await params;
+  const me = await requireUser();
   const supabase = await createClient();
   const [{ data: p }, { data: tags }, { data: ut }, { data: inv }, { data: sessions }] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", id).maybeSingle(),
@@ -57,6 +60,13 @@ export default async function EditUser({ params }: PageProps<"/admin/useri/[id]"
           }}
         />
       </Card>
+
+      {!trashed && (
+        <Card className="flex flex-col gap-4">
+          <h2 className="text-lg font-bold">Email și rol</h2>
+          <AccountForms id={p.id} email={p.email} role={isAdminAccount ? "admin" : "user"} isSelf={me.id === p.id} />
+        </Card>
+      )}
 
       <Card className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">

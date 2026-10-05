@@ -268,3 +268,47 @@ export async function bulkTags(formData: FormData) {
   revalidatePath("/admin/useri");
   redirect(`/admin/useri/tag-uri?ok=${ids.length}`);
 }
+
+// Email change: updates the sign in address and the profile together, with no confirmation mail (the admin vouches for it).
+export async function changeEmail(_: FormState, formData: FormData): Promise<FormState> {
+  await requireAdmin();
+  const id = uuid.safeParse(formData.get("id"));
+  const email = z.string().trim().toLowerCase().email().max(200).safeParse(formData.get("email"));
+  if (!id.success || !email.success) return { error: "Adresa de email nu este validă." };
+  const admin = createAdminClient();
+  const { data: cur } = await admin.from("profiles").select("email").eq("id", id.data).maybeSingle();
+  if (!cur) return { error: "Userul nu există." };
+  if (cur.email.toLowerCase() === email.data) return { error: "Este deja adresa curentă." };
+  const { data: taken } = await admin.from("profiles").select("id").ilike("email", email.data).maybeSingle();
+  if (taken) return { error: "Există deja un cont cu acest email." };
+  const { error: authErr } = await admin.auth.admin.updateUserById(id.data, { email: email.data, email_confirm: true });
+  if (authErr) return { error: "Nu am putut schimba emailul." };
+  const { error } = await admin.from("profiles").update({ email: email.data }).eq("id", id.data);
+  if (error) {
+    await admin.auth.admin.updateUserById(id.data, { email: cur.email, email_confirm: true });
+    return { error: "Nu am putut schimba emailul." };
+  }
+  revalidatePath("/admin/useri");
+  revalidatePath(`/admin/useri/${id.data}`);
+  return { ok: "Emailul a fost schimbat. Userul se loghează de acum cu noua adresă." };
+}
+
+// Role change. An administrator cannot change their own role, so the platform always keeps at least one admin.
+export async function changeRole(_: FormState, formData: FormData): Promise<FormState> {
+  const me = await requireAdmin();
+  const id = uuid.safeParse(formData.get("id"));
+  const role = z.enum(["user", "admin"]).safeParse(formData.get("role"));
+  if (!id.success || !role.success) return { error: "Date invalide." };
+  if (id.data === me.id) return { error: "Nu îți poți schimba propriul rol." };
+  const admin = createAdminClient();
+  const { data: target } = await admin.from("profiles").select("role,deleted_at").eq("id", id.data).maybeSingle();
+  if (!target) return { error: "Userul nu există." };
+  if (target.deleted_at) return { error: "Contul este șters. Restaurează-l mai întâi." };
+  if (target.role === role.data) return { error: "Rolul este deja acesta." };
+  const { error } = await admin.from("profiles").update({ role: role.data, ...(role.data === "admin" ? { is_active: true, access_expires_at: null } : {}) }).eq("id", id.data);
+  if (error) return { error: "Nu am putut schimba rolul." };
+  await admin.rpc("reset_user_sessions", { p_user: id.data });
+  revalidatePath("/admin/useri");
+  revalidatePath(`/admin/useri/${id.data}`);
+  return { ok: role.data === "admin" ? "Userul este acum administrator. S-a deconectat de pe dispozitive și trebuie să se logheze din nou." : "Administratorul este acum membru obișnuit. S-a deconectat de pe dispozitive." };
+}
