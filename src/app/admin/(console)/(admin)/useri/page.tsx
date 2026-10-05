@@ -30,7 +30,8 @@ export default async function UsersAdmin({ searchParams }: PageProps<"/admin/use
 
   const sel = `id,email,role,first_name,last_name,is_active,access_expires_at,last_login_at,deleted_at,user_tags${tag ? "!inner" : ""}(tag_id,tags(name,position)),invitations(sent_at,accepted_at)`;
   let query = supabase.from("profiles").select(sel, { count: "exact" }).order("created_at", { ascending: false }).range((pagina - 1) * PAGE, pagina * PAGE - 1);
-  query = stare === "admini" ? query.in("role", ["admin", "moderator"]) : query.eq("role", "user");
+  // Members and moderators show in the default list and in search; admins only under "Echipă".
+  query = stare === "admini" ? query.in("role", ["admin", "moderator"]) : stare === "" || q ? query.in("role", ["user", "moderator"]) : query.eq("role", "user");
   query = stare === "sters" ? query.not("deleted_at", "is", null) : query.is("deleted_at", null);
   if (tag) query = query.eq("user_tags.tag_id", tag);
   if (q) query = query.or(`email.ilike.%${q}%,first_name.ilike.%${q}%,last_name.ilike.%${q}%`);
