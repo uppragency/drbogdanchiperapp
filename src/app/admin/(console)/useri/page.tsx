@@ -13,13 +13,15 @@ const STARI = [
   { key: "expira", label: "Expiră curând" },
   { key: "inactiv", label: "Fără logare 30 zile" },
   { key: "sters", label: "Șterși" },
+  { key: "admini", label: "Admini" },
 ];
 
 export default async function UsersAdmin({ searchParams }: PageProps<"/admin/useri">) {
   const sp = await searchParams;
   const stare = STARI.find((s) => s.key === sp.stare)?.key ?? "";
   const q = (typeof sp.q === "string" ? sp.q : "").trim().slice(0, 80).replace(/[%,()]/g, " ");
-  const PAGE = 100;
+  const PE = [50, 100, 200, 500];
+  const PAGE = PE.includes(Number(sp.pe)) ? Number(sp.pe) : 100;
   const pagina = Math.max(1, Math.min(500, Number.parseInt(typeof sp.pagina === "string" ? sp.pagina : "1", 10) || 1));
   const tag = typeof sp.tag === "string" && /^[0-9a-f-]{36}$/.test(sp.tag) ? sp.tag : "";
 
@@ -28,6 +30,7 @@ export default async function UsersAdmin({ searchParams }: PageProps<"/admin/use
 
   const sel = `id,email,role,first_name,last_name,is_active,access_expires_at,last_login_at,deleted_at,user_tags${tag ? "!inner" : ""}(tag_id,tags(name,position)),invitations(sent_at,accepted_at)`;
   let query = supabase.from("profiles").select(sel, { count: "exact" }).order("created_at", { ascending: false }).range((pagina - 1) * PAGE, pagina * PAGE - 1);
+  query = stare === "admini" ? query.eq("role", "admin") : query.eq("role", "user");
   query = stare === "sters" ? query.not("deleted_at", "is", null) : query.is("deleted_at", null);
   if (tag) query = query.eq("user_tags.tag_id", tag);
   if (q) query = query.or(`email.ilike.%${q}%,first_name.ilike.%${q}%,last_name.ilike.%${q}%`);
@@ -50,7 +53,7 @@ export default async function UsersAdmin({ searchParams }: PageProps<"/admin/use
 
   const href = (patch: Record<string, string>) => {
     const p = new URLSearchParams();
-    Object.entries({ q, tag, stare, pagina: "", ...patch }).forEach(([k, v]) => v && p.set(k, v));
+    Object.entries({ q, tag, stare, pe: PAGE === 100 ? "" : String(PAGE), pagina: "", ...patch }).forEach(([k, v]) => v && p.set(k, v));
     const s = p.toString();
     return s ? `/admin/useri?${s}` : "/admin/useri";
   };
@@ -65,6 +68,7 @@ export default async function UsersAdmin({ searchParams }: PageProps<"/admin/use
         </div>
       </PageTitle>
       <form className="grid gap-3 sm:grid-cols-[1fr_200px_auto]">
+        {PAGE !== 100 && <input type="hidden" name="pe" value={PAGE} />}
         {stare && <input type="hidden" name="stare" value={stare} />}
         <input name="q" defaultValue={q} placeholder="Caută după nume sau email" aria-label="Caută după nume sau email" className="h-11 rounded-control border border-line bg-surface px-4 text-base focus:border-accent focus:outline-none" />
         <select name="tag" defaultValue={tag} aria-label="Grup" className="h-11 rounded-control border border-line bg-surface px-3 text-base focus:border-accent focus:outline-none">
@@ -78,7 +82,15 @@ export default async function UsersAdmin({ searchParams }: PageProps<"/admin/use
           <Link key={s.key} href={href({ stare: s.key })} className={cn("rounded-full border px-4 py-2 text-sm font-semibold", stare === s.key ? "border-accent bg-accent text-accent-ink" : "border-line bg-surface text-muted hover:text-ink")}>{s.label}</Link>
         ))}
       </div>
-      <p className="text-sm text-muted">{total} rezultate{pages > 1 ? `, pagina ${pagina} din ${pages}` : ""}</p>
+      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted">
+        <p>{total} rezultate{pages > 1 ? `, pagina ${pagina} din ${pages}` : ""}</p>
+        <p className="flex items-center gap-2">
+          Pe pagină:
+          {PE.map((n) => (
+            <Link key={n} href={href({ pe: n === 100 ? "" : String(n) })} className={cn("rounded-full border px-3 py-1 font-semibold", PAGE === n ? "border-accent bg-accent text-accent-ink" : "border-line bg-surface hover:text-ink")}>{n}</Link>
+          ))}
+        </p>
+      </div>
       <ul className="divide-y divide-line rounded-card border border-line bg-surface">
         {rows.map((r) => {
           const inv = invOf(r);

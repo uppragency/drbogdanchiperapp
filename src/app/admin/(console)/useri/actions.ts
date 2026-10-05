@@ -72,16 +72,19 @@ export async function updateUser(_: FormState, formData: FormData): Promise<Form
   if (!id.success || !parsed.success) return { error: "Date invalide." };
   const admin = createAdminClient();
   const d = parsed.data;
+  // An administrator can be edited, but never paused or given an expiry date, so nobody locks themselves out.
+  const { data: target } = await admin.from("profiles").select("role").eq("id", id.data).maybeSingle();
+  const isAdminTarget = target?.role === "admin";
   const { error } = await admin
     .from("profiles")
     .update({
       first_name: d.firstName,
       last_name: d.lastName,
-      access_expires_at: toExpiry(d.accessExpires),
+      access_expires_at: isAdminTarget ? null : toExpiry(d.accessExpires),
       paid_at: d.paidAt || null,
       paid_note: d.paidNote || null,
       admin_note: d.adminNote || null,
-      is_active: formData.get("isActive") === "on",
+      is_active: isAdminTarget ? true : formData.get("isActive") === "on",
     })
     .eq("id", id.data);
   if (error) return { error: "Nu am putut salva." };
