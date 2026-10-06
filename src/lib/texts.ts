@@ -57,7 +57,7 @@ const ro = {
     search: "Caută în resurse",
     all: "Toate",
     new: "Nou",
-    types: { video: "Video", pdf: "PDF", text: "Text", link: "Link" },
+    types: { video: "Video", pdf: "PDF", text: "Text", link: "Link", photo: "Foto" },
   },
   resource: {
     attachments: "Materiale atașate",
@@ -175,7 +175,7 @@ const en: Dict = {
     search: "Search resources",
     all: "All",
     new: "New",
-    types: { video: "Video", pdf: "PDF", text: "Text", link: "Link" },
+    types: { video: "Video", pdf: "PDF", text: "Text", link: "Link", photo: "Photos" },
   },
   resource: {
     attachments: "Attached materials",

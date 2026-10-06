@@ -20,6 +20,8 @@ import { CompleteButton } from "../complete-button";
 import { NoteBox } from "../note-box";
 import { PdfPreview } from "../pdf-preview";
 import { CinemaFrame } from "@/components/cinema-frame";
+import { PhotoGallery, type GalleryPhoto } from "@/components/photo-gallery";
+import { PHOTO_BUCKET } from "@/lib/photos";
 import { FocusToggle } from "@/components/focus-toggle";
 import { getLocale, getT, getTx, pick } from "@/lib/i18n";
 
@@ -31,7 +33,7 @@ async function load(id: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("resources")
-    .select("id,title,title_en,description,description_en,presenter,type,body,body_en,video_url,status,publish_at,created_at,category_id,cover_path,event_at,comments_enabled,categories(name,name_en,slug),resource_attachments(id,kind,label,url,file_path,position)")
+    .select("id,title,title_en,description,description_en,presenter,type,body,body_en,video_url,status,publish_at,created_at,category_id,cover_path,event_at,comments_enabled,download_enabled,categories(name,name_en,slug),resource_attachments(id,kind,label,url,file_path,position)")
     .eq("id", id)
     .is("deleted_at", null)
     .maybeSingle();
@@ -84,6 +86,29 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
     supabaseFav.from("resource_views").select("completed").eq("user_id", viewer.id).eq("resource_id", r.id).maybeSingle(),
     supabaseFav.from("resource_notes").select("body").eq("user_id", viewer.id).eq("resource_id", r.id).maybeSingle(),
   ]);
+  let gallery: GalleryPhoto[] = [];
+  if (r.type === "photo") {
+    const { data: imgs } = await supabaseFav.from("resource_images").select("id,file_path,thumb_path,width,height,caption,caption_en").eq("resource_id", r.id).order("position").order("created_at");
+    const list = imgs ?? [];
+    if (list.length) {
+      const bucket = supabaseFav.storage.from(PHOTO_BUCKET);
+      const slug = (title.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "") || "foto").slice(0, 50);
+      const [thumbs, fulls, downloads] = await Promise.all([
+        bucket.createSignedUrls(list.map((i) => i.thumb_path), 3600),
+        bucket.createSignedUrls(list.map((i) => i.file_path), 3600),
+        r.download_enabled ? Promise.all(list.map((i, n) => bucket.createSignedUrl(i.file_path, 3600, { download: `${slug}-${n + 1}.jpg` }))) : Promise.resolve(null),
+      ]);
+      gallery = list.map((i, n) => ({
+        id: i.id,
+        thumb: thumbs.data?.[n]?.signedUrl ?? "",
+        full: fulls.data?.[n]?.signedUrl ?? "",
+        download: downloads?.[n]?.data?.signedUrl,
+        width: i.width,
+        height: i.height,
+        caption: pick(locale, i.caption ?? "", i.caption_en ?? ""),
+      })).filter((g) => g.thumb && g.full);
+    }
+  }
   const attachments = [...(r.resource_attachments ?? [])].sort((a: { position: number }, b: { position: number }) => a.position - b.position);
   const paragraphs = pick(locale, r.body, r.body_en).split(/\n{2,}/).filter((p: string) => p.trim());
   const externalUrl = r.type === "link" || (r.type === "video" && !embed) ? r.video_url : null;
@@ -128,8 +153,14 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
           </div>
         )}
 
-        {!embed && (r.type !== "text" || covers.length > 0) && (
+        {!embed && r.type !== "photo" && (r.type !== "text" || covers.length > 0) && (
           <Cover covers={covers} type={r.type} label={category?.name} title={title} slug={category?.slug} play={r.type === "video"} ratio="aspect-[5/2]" />
+        )}
+
+        {r.type === "photo" && (
+          <div className="px-5 pb-4 md:px-8">
+            {gallery.length > 0 ? <PhotoGallery photos={gallery} title={title} /> : <p className="text-sm text-muted">{tx("Galeria nu are încă poze.", "This gallery has no photos yet.")}</p>}
+          </div>
         )}
 
         {externalUrl && (

@@ -11,6 +11,7 @@ const TIPURI = [
   { key: "pdf", label: "PDF" },
   { key: "text", label: "Text" },
   { key: "link", label: "Link" },
+  { key: "photo", label: "Foto" },
 ];
 const SORTARI = [
   { key: "", label: "Modificate recent" },

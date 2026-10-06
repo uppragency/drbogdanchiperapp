@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, CheckCircle, FilePdf, Heart, Link as LinkIcon, MagnifyingGlass, PushPin, TextAlignLeft, VideoCamera, Paperclip } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight, CheckCircle, FilePdf, Heart, Link as LinkIcon, MagnifyingGlass, PushPin, TextAlignLeft, VideoCamera, Paperclip, Images } from "@phosphor-icons/react/dist/ssr";
 import { cn, EmptyState } from "@/components/ui";
 import { categoryColor } from "@/lib/category-color";
 import { FeedToolbar } from "./feed-toolbar";
@@ -16,7 +16,7 @@ import { FeaturedRow } from "./featured-row";
 import { CommunityShell } from "@/components/community-shell";
 import { FollowButton } from "@/components/follow-button";
 
-export const TYPES = ["video", "pdf", "text", "link"] as const;
+export const TYPES = ["video", "pdf", "text", "link", "photo"] as const;
 export const SORTS = ["noi", "vizionate", "alfabetic"] as const;
 const SORT_LABEL = { noi: ["Cele mai noi", "Newest"], vizionate: ["Cele mai vizionate", "Most viewed"], alfabetic: ["Alfabetic", "Alphabetical"] } as const;
 function TypeIcon({ type }: { type: ResourceType }) {
@@ -24,6 +24,7 @@ function TypeIcon({ type }: { type: ResourceType }) {
   if (type === "video") return <VideoCamera {...props} />;
   if (type === "pdf") return <FilePdf {...props} />;
   if (type === "text") return <TextAlignLeft {...props} />;
+  if (type === "photo") return <Images {...props} />;
   return <LinkIcon {...props} />;
 }
 
@@ -67,6 +68,7 @@ export type FeedViewProps = {
   newIds: string[];
   dates: Record<string, string>;
   covers: Record<string, string[]>;
+  photos: Record<string, { urls: string[]; total: number }>;
   heroRows: Row[];
   resume: { id: string; title: string; category: string } | null;
   announcements: Row[];
@@ -192,7 +194,7 @@ export async function FeedView(p: FeedViewProps) {
               <ul className={cn("gap-6", p.view === "grila" ? "grid sm:grid-cols-2" : "flex flex-col")}>
                 {shown.map((r) => (
                   <li key={r.id}>
-                    <PostCard t={t} tx={tx} r={r} category={catById.get(r.category_id)} isNew={isNew(r)} done={doneSet.has(r.id)} date={dateOf(r)} covers={covers.get(r.id) ?? []} compact={p.view === "grila"} q={q} />
+                    <PostCard t={t} tx={tx} r={r} category={catById.get(r.category_id)} isNew={isNew(r)} done={doneSet.has(r.id)} date={dateOf(r)} covers={covers.get(r.id) ?? []} photos={p.photos[r.id]} compact={p.view === "grila"} q={q} />
                   </li>
                 ))}
               </ul>
@@ -216,7 +218,7 @@ export async function FeedView(p: FeedViewProps) {
   );
 }
 
-function PostCard({ t, tx, r, category, isNew, done, date, covers, compact, q }: { t: Dict; tx: Tx; r: Row; category?: Category; isNew: boolean; done: boolean; date: string; covers: string[]; compact: boolean; q: string }) {
+function PostCard({ t, tx, r, category, isNew, done, date, covers, photos, compact, q }: { t: Dict; tx: Tx; r: Row; category?: Category; isNew: boolean; done: boolean; date: string; covers: string[]; photos?: { urls: string[]; total: number }; compact: boolean; q: string }) {
   const files = r.resource_attachments.length;
   const color = categoryColor(category?.slug, category?.name);
   const video = r.type === "video" ? parseVideo(r.video_url) : null;
@@ -240,7 +242,9 @@ function PostCard({ t, tx, r, category, isNew, done, date, covers, compact, q }:
         <h3 className={cn("font-bold leading-snug tracking-tight", compact ? "line-clamp-2 text-lg" : "text-xl")}><Highlight text={r.title} q={q} /></h3>
         {r.description && <p className={cn("text-sm leading-relaxed text-muted [overflow-wrap:anywhere]", compact ? "line-clamp-2" : "line-clamp-3")}><Highlight text={r.description} q={q} /></p>}
       </div>
-      {embed ? (
+      {r.type === "photo" && photos ? (
+        <PhotoGrid urls={photos.urls} total={photos.total} />
+      ) : embed ? (
         <div className="relative z-10"><VideoPlayer bare title={r.title} embed={embed} covers={covers} /></div>
       ) : (
         <div className="pointer-events-none relative"><Cover covers={covers} type={r.type} label={category?.name} title={r.title} slug={category?.slug} play={r.type === "video"} /></div>
@@ -251,5 +255,22 @@ function PostCard({ t, tx, r, category, isNew, done, date, covers, compact, q }:
         <span className="ml-auto inline-flex items-center gap-1 text-accent">{t.resource.open} <ArrowUpRight size={16} weight="bold" /></span>
       </div>
     </article>
+  );
+}
+
+// Up to four thumbnails in a tight grid; the fourth carries "+N" when the gallery has more.
+function PhotoGrid({ urls, total }: { urls: string[]; total: number }) {
+  const more = total - urls.length;
+  const cols = urls.length === 1 ? "grid-cols-1" : "grid-cols-2";
+  return (
+    <div className={cn("pointer-events-none relative grid gap-0.5 bg-surface2", cols)}>
+      {urls.map((u, i) => (
+        <div key={u} className={cn("relative overflow-hidden", urls.length === 1 ? "aspect-[4/3]" : "aspect-square")}>
+          {/* eslint-disable-next-line @next/next/no-img-element -- short-lived signed URLs */}
+          <img src={u} alt="" loading="lazy" className="size-full object-cover" />
+          {i === urls.length - 1 && more > 0 && <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-2xl font-bold text-white">+{more}</span>}
+        </div>
+      ))}
+    </div>
   );
 }

@@ -5,7 +5,7 @@ import { formatDate } from "@/lib/format";
 import { getLocale, getTx, pick } from "@/lib/i18n";
 import { followedCategoryIds } from "@/lib/notifications";
 
-export type SearchHit = { id: string; title: string; category: string; type: "video" | "pdf" | "text" | "link" };
+export type SearchHit = { id: string; title: string; category: string; type: "video" | "pdf" | "text" | "link" | "photo" };
 export type NoticeItem = { key: string; kind: "reply" | "new"; text: string; sub: string; href: string; unread: boolean };
 
 export async function searchPreview(q: string): Promise<SearchHit[]> {

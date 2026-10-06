@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight, CheckCircle, FilePdf, Link as LinkIcon, Stack, TextAlignLeft, VideoCamera } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, ArrowRight, CheckCircle, FilePdf, Link as LinkIcon, Stack, TextAlignLeft, VideoCamera, Images } from "@phosphor-icons/react/dist/ssr";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: PageProps<"/colectii/[id]">):
   return { title: pick(locale, c.title, c.title_en), description: description || tx("Colecție de lecții MentorMed, în ordinea în care se parcurg.", "A MentorMed lesson collection, in the order to follow.") };
 }
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const ICON = { video: VideoCamera, pdf: FilePdf, text: TextAlignLeft, link: LinkIcon } as const;
+const ICON = { video: VideoCamera, pdf: FilePdf, text: TextAlignLeft, link: LinkIcon, photo: Images } as const;
 
 export default async function CollectionPage({ params }: PageProps<"/colectii/[id]">) {
   const viewer = await requireUser();

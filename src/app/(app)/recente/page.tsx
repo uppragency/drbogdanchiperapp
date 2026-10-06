@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, CheckCircle, ClockCounterClockwise, FilePdf, Link as LinkIcon, TextAlignLeft, VideoCamera } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight, CheckCircle, ClockCounterClockwise, FilePdf, Link as LinkIcon, TextAlignLeft, VideoCamera, Images } from "@phosphor-icons/react/dist/ssr";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const tx = await getTx();
   return { title: tx("Văzute recent", "Recently viewed"), description: tx("Resursele pe care le-ai deschis recent, ca să continui de unde ai rămas.", "The resources you opened recently, so you can continue where you left off.") };
 }
-const ICON = { video: VideoCamera, pdf: FilePdf, text: TextAlignLeft, link: LinkIcon } as const;
+const ICON = { video: VideoCamera, pdf: FilePdf, text: TextAlignLeft, link: LinkIcon, photo: Images } as const;
 type Cat = { name: string; name_en: string | null; slug: string };
 type Row = { last_viewed_at: string; completed: boolean; resources: { id: string; title: string; title_en: string | null; type: keyof typeof ICON; categories: Cat | Cat[] | null } | null };
 

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, FilePdf, Link as LinkIcon, MagnifyingGlass, TextAlignLeft, VideoCamera } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight, FilePdf, Link as LinkIcon, MagnifyingGlass, TextAlignLeft, VideoCamera, Images } from "@phosphor-icons/react/dist/ssr";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { EmptyState } from "@/components/ui";
@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const tx = await getTx();
   return { title: tx("Căutare", "Search"), description: tx("Caută în webinarii, cazuri și materiale MentorMed după titlu, descriere sau conținut.", "Search MentorMed webinars, cases and materials by title, description or content.") };
 }
-const ICON = { video: VideoCamera, pdf: FilePdf, text: TextAlignLeft, link: LinkIcon } as const;
+const ICON = { video: VideoCamera, pdf: FilePdf, text: TextAlignLeft, link: LinkIcon, photo: Images } as const;
 
 type Cat = { name: string; name_en: string | null; slug: string };
 type Hit = { id: string; title: string; title_en: string | null; description: string; description_en: string | null; type: keyof typeof ICON; categories: Cat | Cat[] | null };

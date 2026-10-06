@@ -1,14 +1,14 @@
 "use client";
 import { useState } from "react";
-import { FilePdf, Link as LinkIcon, Play, TextAlignLeft, VideoCamera } from "@phosphor-icons/react/dist/ssr";
+import { FilePdf, Link as LinkIcon, Play, TextAlignLeft, VideoCamera, Images } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "@/components/ui";
 import { categoryColor } from "@/lib/category-color";
 import { useTx } from "@/components/locale-provider";
 
-const TYPE_ICON = { video: VideoCamera, pdf: FilePdf, text: TextAlignLeft, link: LinkIcon } as const;
+const TYPE_ICON = { video: VideoCamera, pdf: FilePdf, text: TextAlignLeft, link: LinkIcon, photo: Images } as const;
 export type ResourceType = keyof typeof TYPE_ICON;
 
-const TYPE_LABEL = { video: ["Video", "Video"], pdf: ["Document", "Document"], text: ["Articol", "Article"], link: ["Link", "Link"] } as const;
+const TYPE_LABEL = { video: ["Video", "Video"], pdf: ["Document", "Document"], text: ["Articol", "Article"], link: ["Link", "Link"], photo: ["Foto", "Photos"] } as const;
 
 // Generated cover for resources without an image: category colour, category name and title on a quiet gradient.
 export function GeneratedCover({ type, label, title, slug, className }: { type: ResourceType; label?: string; title?: string; slug?: string; className?: string }) {

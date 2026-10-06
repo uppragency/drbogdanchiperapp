@@ -19,7 +19,7 @@ const schema = z.object({
   titleEn: z.string().trim().max(200).default(""),
   descriptionEn: z.string().trim().max(500).default(""),
   bodyEn: z.string().max(50000).default(""),
-  type: z.enum(["video", "pdf", "text", "link"]),
+  type: z.enum(["video", "pdf", "text", "link", "photo"]),
   categoryId: z.string().uuid("Alege o categorie"),
   body: z.string().max(50000).default(""),
   videoUrl: z.string().trim().default(""),
@@ -28,6 +28,7 @@ const schema = z.object({
   eventAt: z.string().default(""),
   isPinned: z.boolean(),
   commentsEnabled: z.boolean(),
+  downloadEnabled: z.boolean(),
   tagIds: z.array(z.string().uuid()),
 });
 
@@ -37,11 +38,14 @@ type PublishDraft = z.infer<typeof schema>;
 async function publishWarnings(supabase: Awaited<ReturnType<typeof createClient>>, id: string, d: PublishDraft): Promise<string[]> {
   const warnings: string[] = [];
   if (id) {
-    const [{ data: cur }, { count }] = await Promise.all([
+    const [{ data: cur }, { count }, { count: photos }] = await Promise.all([
       supabase.from("resources").select("cover_path").eq("id", id).maybeSingle(),
       supabase.from("resource_attachments").select("id", { count: "exact", head: true }).eq("resource_id", id),
+      supabase.from("resource_images").select("id", { count: "exact", head: true }).eq("resource_id", id),
     ]);
-    if (!cur?.cover_path && d.type !== "video") warnings.push("Resursa nu are imagine de copertă.");
+    if (d.type === "photo") {
+      if ((photos ?? 0) === 0) warnings.push("Resursa de tip Foto nu are nicio poză încărcată.");
+    } else if (!cur?.cover_path && d.type !== "video") warnings.push("Resursa nu are imagine de copertă.");
     if (d.type === "pdf" && (count ?? 0) === 0) warnings.push("Resursa de tip PDF nu are niciun material atașat.");
   }
   return warnings;
@@ -66,6 +70,7 @@ export async function saveResource(_: FormState, formData: FormData): Promise<Fo
     eventAt: formData.get("eventAt") ?? "",
     isPinned: formData.get("isPinned") === "on",
     commentsEnabled: formData.get("commentsEnabled") === "on",
+    downloadEnabled: formData.get("downloadEnabled") === "on",
     tagIds: formData.getAll("tagIds").map(String),
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Date invalide." };
@@ -100,6 +105,7 @@ export async function saveResource(_: FormState, formData: FormData): Promise<Fo
     event_at: localInputToIso(d.eventAt),
     is_pinned: d.isPinned,
     comments_enabled: d.commentsEnabled,
+    download_enabled: d.type === "photo" && d.downloadEnabled,
   };
 
   let resourceId = id;
@@ -158,6 +164,9 @@ export async function purgeResource(formData: FormData) {
   const { data: files } = await supabase.from("resource_attachments").select("file_path").eq("resource_id", id).not("file_path", "is", null);
   const paths = (files ?? []).map((f) => f.file_path).filter((p): p is string => Boolean(p));
   if (paths.length) await supabase.storage.from("resources").remove(paths);
+  const { data: imgs } = await supabase.from("resource_images").select("file_path,thumb_path").eq("resource_id", id);
+  const photoPaths = (imgs ?? []).flatMap((i: { file_path: string; thumb_path: string }) => [i.file_path, i.thumb_path]);
+  if (photoPaths.length) await supabase.storage.from("resource-photos").remove(photoPaths);
   await supabase.from("resources").delete().eq("id", id);
   revalidatePath("/admin/resurse");
   redirect("/admin/resurse?status=trash");
@@ -220,12 +229,80 @@ export async function setCover(resourceId: string, path: string | null): Promise
   return { ok: path ? "Coperta a fost salvată." : "Coperta a fost ștearsă." };
 }
 
+const PHOTO_PATH = /^[0-9a-f-]{36}\/[0-9a-f-]{36}(-t)?\.jpg$/;
+const MAX_PHOTOS = 30;
+
+// Called after the browser uploaded the resized photo and its thumbnail to the private resource-photos bucket.
+export async function registerPhoto(input: { resourceId: string; key: string; width: number; height: number }): Promise<FormState & { id?: string }> {
+  await requireStaff();
+  const parsed = z.object({ resourceId: z.string().uuid(), key: z.string().uuid(), width: z.number().int().min(1).max(10000), height: z.number().int().min(1).max(10000) }).safeParse(input);
+  if (!parsed.success) return { error: "Date invalide." };
+  const { resourceId, key, width, height } = parsed.data;
+  const file = `${resourceId}/${key}.jpg`;
+  const thumb = `${resourceId}/${key}-t.jpg`;
+  if (!PHOTO_PATH.test(file) || !PHOTO_PATH.test(thumb)) return { error: "Date invalide." };
+  const supabase = await createClient();
+  const { data: last, count } = await supabase.from("resource_images").select("position", { count: "exact" }).eq("resource_id", resourceId).order("position", { ascending: false }).limit(1);
+  if ((count ?? 0) >= MAX_PHOTOS) {
+    await supabase.storage.from("resource-photos").remove([file, thumb]);
+    return { error: `Maximum ${MAX_PHOTOS} de poze per resursă.` };
+  }
+  const position = (last?.[0]?.position ?? 0) + 1;
+  const { data, error } = await supabase.from("resource_images").insert({ resource_id: resourceId, file_path: file, thumb_path: thumb, width, height, position }).select("id").single();
+  if (error || !data) return { error: "Nu am putut salva poza." };
+  revalidatePath(`/admin/resurse/${resourceId}`);
+  revalidatePath("/feed");
+  return { ok: "ok", id: data.id };
+}
+
+export async function savePhotoCaption(formData: FormData): Promise<FormState> {
+  await requireStaff();
+  const parsed = z.object({ id: z.string().uuid(), caption: z.string().trim().max(500), captionEn: z.string().trim().max(500) }).safeParse({ id: formData.get("id"), caption: formData.get("caption") ?? "", captionEn: formData.get("captionEn") ?? "" });
+  if (!parsed.success) return { error: "Descrierea poate avea maximum 500 de caractere." };
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("resource_images").update({ caption: parsed.data.caption || null, caption_en: parsed.data.captionEn || null }).eq("id", parsed.data.id).select("resource_id").maybeSingle();
+  if (error || !data) return { error: "Nu am putut salva descrierea." };
+  revalidatePath(`/admin/resurse/${data.resource_id}`);
+  return { ok: "Descrierea a fost salvată." };
+}
+
+// Swaps the photo with its neighbour; position 1 is the cover shown in lists.
+export async function movePhoto(formData: FormData) {
+  await requireStaff();
+  const parsed = z.object({ id: z.string().uuid(), dir: z.enum(["up", "down"]) }).safeParse({ id: formData.get("id"), dir: formData.get("dir") });
+  if (!parsed.success) return;
+  const supabase = await createClient();
+  const { data: cur } = await supabase.from("resource_images").select("resource_id").eq("id", parsed.data.id).maybeSingle();
+  if (!cur) return;
+  const { data: all } = await supabase.from("resource_images").select("id").eq("resource_id", cur.resource_id).order("position").order("created_at");
+  const ids = (all ?? []).map((x: { id: string }) => x.id);
+  const i = ids.indexOf(parsed.data.id);
+  const j = parsed.data.dir === "up" ? i - 1 : i + 1;
+  if (i < 0 || j < 0 || j >= ids.length) return;
+  [ids[i], ids[j]] = [ids[j], ids[i]];
+  await Promise.all(ids.map((id, n) => supabase.from("resource_images").update({ position: n + 1 }).eq("id", id)));
+  revalidatePath(`/admin/resurse/${cur.resource_id}`);
+  revalidatePath("/feed");
+}
+
+export async function deletePhoto(formData: FormData) {
+  await requireStaff();
+  const id = z.string().uuid().parse(formData.get("id"));
+  const supabase = await createClient();
+  const { data } = await supabase.from("resource_images").select("file_path,thumb_path,resource_id").eq("id", id).maybeSingle();
+  if (!data) return;
+  await supabase.storage.from("resource-photos").remove([data.file_path, data.thumb_path]);
+  await supabase.from("resource_images").delete().eq("id", id);
+  revalidatePath(`/admin/resurse/${data.resource_id}`);
+  revalidatePath("/feed");
+}
+
 // Copies the resource as a draft: text, group, presenter, link attachments and uploaded files (copied inside Storage).
 export async function duplicateResource(formData: FormData) {
   const admin = await requireStaff();
   const id = z.string().uuid().parse(formData.get("id"));
   const supabase = await createClient();
-  const { data: r } = await supabase.from("resources").select("title,description,presenter,type,category_id,body,video_url,comments_enabled,title_en,description_en,body_en").eq("id", id).maybeSingle();
+  const { data: r } = await supabase.from("resources").select("title,description,presenter,type,category_id,body,video_url,comments_enabled,download_enabled,title_en,description_en,body_en").eq("id", id).maybeSingle();
   if (!r) redirect("/admin/resurse");
   const { data: copy } = await supabase.from("resources").insert({ ...r, title: `${r.title} (copie)`.slice(0, 200), is_pinned: false, status: "draft", created_by: admin.id }).select("id").single();
   if (!copy) redirect("/admin/resurse");
@@ -248,6 +325,20 @@ export async function duplicateResource(formData: FormData) {
     }
   }
   if (rows.length) await supabase.from("resource_attachments").insert(rows);
+  const { data: imgs } = await supabase.from("resource_images").select("file_path,thumb_path,width,height,position,caption,caption_en").eq("resource_id", id).order("position");
+  if (imgs?.length) {
+    const photos = createAdminClient().storage.from("resource-photos");
+    const imgRows: { resource_id: string; file_path: string; thumb_path: string; width: number; height: number; position: number; caption: string | null; caption_en: string | null }[] = [];
+    for (const i of imgs as { file_path: string; thumb_path: string; width: number; height: number; position: number; caption: string | null; caption_en: string | null }[]) {
+      const key = crypto.randomUUID();
+      const file = `${copy.id}/${key}.jpg`;
+      const thumb = `${copy.id}/${key}-t.jpg`;
+      const [a, b] = await Promise.all([photos.copy(i.file_path, file), photos.copy(i.thumb_path, thumb)]);
+      if (a.error || b.error) continue;
+      imgRows.push({ resource_id: copy.id, file_path: file, thumb_path: thumb, width: i.width, height: i.height, position: i.position, caption: i.caption, caption_en: i.caption_en });
+    }
+    if (imgRows.length) await supabase.from("resource_images").insert(imgRows);
+  }
   revalidatePath("/admin/resurse");
   redirect(`/admin/resurse/${copy.id}?nou=1`);
 }

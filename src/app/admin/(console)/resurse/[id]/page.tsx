@@ -8,6 +8,7 @@ import { ResourceForm } from "../resource-form";
 import { FileUploader, LinkAttachmentForm } from "../attachments";
 import { deleteAttachment, duplicateResource, purgeResource, restoreResource, trashResource } from "../actions";
 import { CoverUpload } from "../cover-upload";
+import { PhotoRow, PhotoUploader } from "../photos";
 
 export const metadata: Metadata = { title: "Editează resursa" };
 
@@ -15,15 +16,19 @@ export default async function EditResource({ params, searchParams }: PageProps<"
   const { id } = await params;
   const sp = await searchParams;
   const supabase = await createClient();
-  const [{ data: r }, { data: categories }, { data: tags }, { data: rt }, { data: attachments }] = await Promise.all([
+  const [{ data: r }, { data: categories }, { data: tags }, { data: rt }, { data: attachments }, { data: images }] = await Promise.all([
     supabase.from("resources").select("*").eq("id", id).maybeSingle(),
     supabase.from("categories").select("id,name").order("position"),
     supabase.from("tags").select("id,name").order("position"),
     supabase.from("resource_tags").select("tag_id").eq("resource_id", id),
     supabase.from("resource_attachments").select("id,kind,label,file_path,url").eq("resource_id", id).order("position"),
+    supabase.from("resource_images").select("id,thumb_path,caption,caption_en").eq("resource_id", id).order("position").order("created_at"),
   ]);
   if (!r) notFound();
   const trashed = Boolean(r.deleted_at);
+  const imgs = images ?? [];
+  const { data: signed } = imgs.length ? await supabase.storage.from("resource-photos").createSignedUrls(imgs.map((i) => i.thumb_path), 3600) : { data: [] };
+  const photos = imgs.map((i, n) => ({ id: i.id, thumbUrl: signed?.[n]?.signedUrl ?? "", caption: i.caption ?? "", captionEn: i.caption_en ?? "" }));
 
   return (
     <div className="flex flex-col gap-6">
@@ -53,6 +58,7 @@ export default async function EditResource({ params, searchParams }: PageProps<"
             eventAt: isoToLocalInput(r.event_at),
             isPinned: r.is_pinned,
             commentsEnabled: r.comments_enabled,
+            downloadEnabled: r.download_enabled,
             presenter: r.presenter ?? "",
             titleEn: r.title_en ?? "",
             descriptionEn: r.description_en ?? "",
@@ -62,10 +68,21 @@ export default async function EditResource({ params, searchParams }: PageProps<"
         />
       </Card>
 
-      <Card className="flex flex-col gap-4">
-        <h2 className="text-lg font-bold">Copertă</h2>
-        <CoverUpload resourceId={r.id} current={r.cover_path} />
-      </Card>
+      {r.type === "photo" ? (
+        <Card className="flex flex-col gap-4">
+          <h2 className="text-lg font-bold">Poze ({photos.length} din 30)</h2>
+          <ul className="divide-y divide-line">
+            {photos.map((p, n) => <PhotoRow key={p.id} photo={p} index={n} total={photos.length} />)}
+            {photos.length === 0 && <li className="py-3 text-sm text-muted">Nicio poză încărcată.</li>}
+          </ul>
+          <PhotoUploader resourceId={r.id} count={photos.length} />
+        </Card>
+      ) : (
+        <Card className="flex flex-col gap-4">
+          <h2 className="text-lg font-bold">Copertă</h2>
+          <CoverUpload resourceId={r.id} current={r.cover_path} />
+        </Card>
+      )}
 
       <Card className="flex flex-col gap-5">
         <h2 className="text-lg font-bold">Materiale atașate</h2>

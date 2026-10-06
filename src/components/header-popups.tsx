@@ -2,14 +2,14 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, ChatsCircle, FilePdf, Link as LinkIcon, MagnifyingGlass, Sparkle, TextAlignLeft, VideoCamera, X } from "@phosphor-icons/react";
+import { Bell, ChatsCircle, FilePdf, Link as LinkIcon, MagnifyingGlass, Sparkle, TextAlignLeft, VideoCamera, Images, X } from "@phosphor-icons/react";
 import { useTx } from "@/components/locale-provider";
 import { Highlight } from "@/components/highlight";
 import { notificationsPreview, popularSearches, searchPreview, type NoticeItem, type SearchHit } from "@/app/(app)/header-actions";
 import { markNotificationsSeen } from "@/app/(app)/notificari/actions";
 
 const iconBtn = "relative flex size-11 items-center justify-center rounded-control text-muted transition-colors hover:bg-surface2 hover:text-ink";
-const TYPE_ICON = { video: VideoCamera, pdf: FilePdf, text: TextAlignLeft, link: LinkIcon } as const;
+const TYPE_ICON = { video: VideoCamera, pdf: FilePdf, text: TextAlignLeft, link: LinkIcon, photo: Images } as const;
 // Keep normal link behaviour for new-tab clicks; open the popup otherwise.
 const plain = (e: React.MouseEvent) => !(e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0);
 

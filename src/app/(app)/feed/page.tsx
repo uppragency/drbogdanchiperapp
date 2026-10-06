@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
 import { videoCovers } from "@/lib/video";
 import { coverUrl } from "@/lib/cover-url";
+import { photoPreviews } from "@/lib/photos";
 import { getLocale, getT, getTx, pick } from "@/lib/i18n";
 import { FeedView, TYPES, SORTS, type Category, type Row } from "./feed-view";
 
@@ -130,6 +131,8 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
   const coverIds = new Set([...heroRows, ...shown, ...featuredRows, ...startHere].map((r) => r.id));
   const coverEntries = await Promise.all(all.filter((r) => coverIds.has(r.id) && (r.type === "video" || r.cover_path)).map(async (r) => [r.id, [...(r.cover_path ? [coverUrl(r.cover_path)] : []), ...(r.type === "video" ? await videoCovers(r.video_url) : [])]] as [string, string[]]));
   const covers = new Map(coverEntries);
+  const photos = await photoPreviews(supabase, all.filter((r) => coverIds.has(r.id) && r.type === "photo").map((r) => r.id));
+  photos.forEach((v, id) => covers.set(id, [v.urls[0]]));
 
   return (
     <FeedView
@@ -156,6 +159,7 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
       newIds={all.filter(isNew).map((r) => r.id)}
       dates={Object.fromEntries(all.map((r) => [r.id, dateOf(r)]))}
       covers={Object.fromEntries(covers)}
+      photos={Object.fromEntries(photos)}
       heroRows={heroRows}
       resume={resumeRow ? { id: resumeRow.id, title: resumeRow.title, category: catById.get(resumeRow.category_id)?.name ?? "" } : null}
       announcements={announcements}

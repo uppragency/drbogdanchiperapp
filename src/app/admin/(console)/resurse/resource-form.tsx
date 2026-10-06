@@ -12,7 +12,7 @@ export type ResourceValues = {
   titleEn: string;
   descriptionEn: string;
   bodyEn: string;
-  type: "video" | "pdf" | "text" | "link";
+  type: "video" | "pdf" | "text" | "link" | "photo";
   categoryId: string;
   body: string;
   videoUrl: string;
@@ -21,6 +21,7 @@ export type ResourceValues = {
   eventAt: string;
   isPinned: boolean;
   commentsEnabled: boolean;
+  downloadEnabled: boolean;
   presenter: string;
   tagIds: string[];
 };
@@ -57,6 +58,7 @@ export function ResourceForm({ values, categories, tags }: { values: ResourceVal
             <option value="pdf">PDF</option>
             <option value="text">Text</option>
             <option value="link">Link</option>
+            <option value="photo">Foto</option>
           </select>
         </div>
         <Select label="Categorie" name="categoryId" defaultValue={values.categoryId} required>
@@ -102,6 +104,12 @@ export function ResourceForm({ values, categories, tags }: { values: ResourceVal
         <input type="checkbox" name="commentsEnabled" defaultChecked={values.commentsEnabled} className="size-5 accent-[var(--accent)]" />
         Permite comentarii
       </label>
+      {type === "photo" && (
+        <label className="flex min-h-11 items-center gap-3 text-sm font-semibold">
+          <input type="checkbox" name="downloadEnabled" defaultChecked={values.downloadEnabled} className="size-5 accent-[var(--accent)]" />
+          Permite descărcarea pozelor de către membri (implicit oprită)
+        </label>
+      )}
 
       {state.error && <Alert>{state.error}</Alert>}
       {state.ok && <Alert kind="ok">{state.ok}</Alert>}
