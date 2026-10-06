@@ -118,7 +118,7 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
 
         <div className="flex flex-col gap-3 px-5 pb-8 pt-6 md:px-8">
           <h1 className="text-[28px] font-bold leading-tight tracking-tight md:text-4xl">{title}</h1>
-          {description && <p className="max-w-[65ch] text-lg font-normal leading-[1.6] text-muted">{description}</p>}
+          {description && <p className="max-w-[65ch] text-lg font-normal leading-[1.6] text-muted [overflow-wrap:anywhere]"><LinkifiedText text={description} /></p>}
         </div>
 
         {embed && (

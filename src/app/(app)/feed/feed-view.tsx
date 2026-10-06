@@ -238,7 +238,7 @@ function PostCard({ t, tx, r, category, isNew, done, date, covers, compact, q }:
       </div>
       <div className="pointer-events-none relative flex flex-col gap-2 px-5 pb-4 pt-4">
         <h3 className={cn("font-bold leading-snug tracking-tight", compact ? "line-clamp-2 text-lg" : "text-xl")}><Highlight text={r.title} q={q} /></h3>
-        {r.description && <p className={cn("text-sm leading-relaxed text-muted", compact ? "line-clamp-2" : "line-clamp-3")}><Highlight text={r.description} q={q} /></p>}
+        {r.description && <p className={cn("text-sm leading-relaxed text-muted [overflow-wrap:anywhere]", compact ? "line-clamp-2" : "line-clamp-3")}><Highlight text={r.description} q={q} /></p>}
       </div>
       {embed ? (
         <div className="relative z-10"><VideoPlayer bare title={r.title} embed={embed} covers={covers} /></div>

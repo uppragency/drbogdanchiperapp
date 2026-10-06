@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { LinkifiedText } from "@/components/linkified-text";
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -33,7 +34,7 @@ export default async function CommentsAdmin({ searchParams }: PageProps<"/admin/
           <li key={r.id} className="flex flex-col gap-2 p-4 md:flex-row md:items-start md:justify-between">
             <div className="flex min-w-0 flex-col gap-1">
               <p className="text-sm"><span className="font-semibold">{r.author_name || "Membru"}</span> <span className="text-muted">· {formatDateTime(r.created_at)}{r.parent_id ? " · răspuns" : ""}</span></p>
-              <p className="max-w-[70ch] whitespace-pre-line break-words">{r.body}</p>
+              <p className="max-w-[70ch] whitespace-pre-line break-words"><LinkifiedText text={r.body} /></p>
               <Link href={`/resurse/${r.resource_id}`} className="text-sm font-semibold text-accent hover:underline">{titleOf(r)}</Link>
             </div>
             <form action={removeComment}>

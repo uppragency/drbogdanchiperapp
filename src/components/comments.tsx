@@ -1,4 +1,5 @@
 import { ChatsCircle } from "@phosphor-icons/react/dist/ssr";
+import { LinkifiedText } from "@/components/linkified-text";
 import { createClient } from "@/lib/supabase/server";
 import { Alert, EmptyState } from "@/components/ui";
 import { formatDateTime } from "@/lib/format";
@@ -29,7 +30,7 @@ export async function Comments({ resourceId, viewerId, isAdmin, enabled = true }
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <p className="text-sm"><span className="font-bold">{c.author_name || tx("Membru", "Member")}</span> <span className="text-muted">· {formatDateTime(c.created_at, locale)}</span></p>
         {meta.get(c.user_id) && <p className="-mt-0.5 text-xs text-muted">{meta.get(c.user_id)}</p>}
-        <p className="max-w-[65ch] whitespace-pre-line break-words leading-relaxed">{c.body}</p>
+        <p className="max-w-[65ch] whitespace-pre-line break-words leading-relaxed"><LinkifiedText text={c.body} /></p>
         <div className="flex items-center gap-4">
           {!reply && (
             <details className="group">
