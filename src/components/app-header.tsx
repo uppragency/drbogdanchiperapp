@@ -7,15 +7,15 @@ import { HeaderShell } from "@/components/header-shell";
 import { NotificationsPopup, SearchPopup } from "@/components/header-popups";
 import { MegaNav, type MegaGroup, type MegaLink } from "@/components/mega-nav";
 import { loadCommunity } from "@/lib/community";
-import { Books, Question as QuestionIcon, EnvelopeSimple, GraduationCap, SquaresFour, CalendarBlank, BookOpen, UsersThree } from "@phosphor-icons/react/dist/ssr";
+import { Question as QuestionIcon, EnvelopeSimple, GraduationCap, SquaresFour, CalendarBlank, BookOpen, UsersThree } from "@phosphor-icons/react/dist/ssr";
 
 
 export async function AppHeader({ viewerId, isAdmin, unread = 0, initials = "?", name = "", email = "" }: { viewerId: string; isAdmin: boolean; unread?: number; initials?: string; name?: string; email?: string }) {
   const t = await getT();
   const tx = await getTx();
   const { categories, newByCategory, newTotal } = await loadCommunity(viewerId, isAdmin);
-  const LEARN = ["webinarii", "studyclub-studii-de-caz", "resurse-si-formulare"];
-  const COMMUNITY = ["discutii-generale", "intrebari-si-raspunsuri", "prezinta-te", "anunturi", "bookclub", "aventura-pe-munte"];
+  const LEARN = ["webinarii", "studyclub-studii-de-caz", "resurse-si-formulare", "bookclub"];
+  const COMMUNITY = ["discutii-generale", "intrebari-si-raspunsuri", "prezinta-te", "anunturi", "aventura-pe-munte"];
   const pick = (slugs: string[]) => slugs.map((s) => categories.find((c) => c.slug === s)).filter((c): c is NonNullable<typeof c> => Boolean(c));
   const HINTS: Record<string, [string, string]> = {
     "discutii-generale": ["Discuții generale și subiecte libere", "General discussions and open topics"],
@@ -34,7 +34,6 @@ export async function AppHeader({ viewerId, isAdmin, unread = 0, initials = "?",
       id: "learn", label: tx("Învață", "Learn"), match: ["/colectii", "/recente", "/cursuri"], slugs: LEARN, columns: 2, count: pick(LEARN).reduce((n, c) => n + (newByCategory[c.id] ?? 0), 0),
       items: [
         ...pick(LEARN).map(catItem),
-        { href: "/colectii", label: tx("Colecții", "Collections"), icon: <Books size={18} />, hint: tx("Parcursuri ordonate de studiu", "Ordered study paths") },
         { href: "/feed", label: tx("Toate resursele", "All resources"), icon: <SquaresFour size={18} />, count: newTotal },
         { href: "/cursuri", label: tx("Cursuri premium", "Premium courses"), icon: <GraduationCap size={18} />, hint: tx("Cursuri avansate, cu reducere pentru membri", "Advanced courses, member discount") },
       ],
