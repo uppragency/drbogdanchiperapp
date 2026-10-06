@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { requireUser, fullName } from "@/lib/auth";
+import { requireUser, fullName, isStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Badge, Card, LinkButton, btn, cn } from "@/components/ui";
 import { ProfileForm } from "./profile-form";
@@ -12,6 +12,7 @@ import { bucharestToday, computeStreaks } from "@/lib/streak";
 import { ActivityMap } from "./activity-map";
 import { GoalForm } from "./goal-form";
 import { EmailRequest } from "./email-request";
+import { YearRecap, type YearRecapData } from "./year-recap";
 import { FollowButton } from "@/components/follow-button";
 import { changelog } from "@/lib/changelog";
 import { PushToggle } from "@/app/(app)/profil/push-toggle";
@@ -125,6 +126,31 @@ export default async function ProfilePage({ searchParams }: PageProps<"/profil">
     .filter((r) => bucharestToday(new Date(r.publish_at ?? r.created_at)) >= prevStart && !seenIds.has(r.id))
     .sort((a, b) => +new Date(b.publish_at ?? b.created_at) - +new Date(a.publish_at ?? a.created_at));
   const newChanges = changelog.filter((c) => c.date >= prevStart);
+  // "Anul tău în MentorMed": December only. Staff can preview it any time with ?recap=1.
+  const year = today.slice(0, 4);
+  const showRecap = today.slice(5, 7) === "12" || (isStaff(viewer.role) && sp.recap === "1");
+  let recap: YearRecapData | null = null;
+  if (showRecap) {
+    const inYear = (iso: string) => bucharestToday(new Date(iso)).startsWith(year);
+    const yearViews = viewList.filter((v) => visibleById.has(v.resource_id) && inYear(v.last_viewed_at));
+    const perCat = new Map<string, number>();
+    yearViews.forEach((v) => {
+      const r = visibleById.get(v.resource_id);
+      if (r) perCat.set(r.category_id, (perCat.get(r.category_id) ?? 0) + 1);
+    });
+    const top = [...perCat.entries()].sort((a, b) => b[1] - a[1])[0];
+    const { count: yearComments } = await supabase.from("comments").select("id", { count: "exact", head: true }).eq("user_id", viewer.id).gte("created_at", `${year}-01-01T00:00:00+02:00`);
+    const yearDays = dayList.filter((d) => d.startsWith(year));
+    recap = {
+      year,
+      activeDays: yearDays.length,
+      completed: yearViews.filter((v) => v.completed).length,
+      opened: yearViews.length,
+      comments: yearComments ?? 0,
+      longestStreak: computeStreaks(yearDays).longest,
+      topCategory: top ? catName.get(top[0]) ?? null : null,
+    };
+  }
   const goal = goalRow?.weekly_goal ?? 0;
   const goalPct = goal > 0 ? Math.min(100, Math.round((openedThisWeek / goal) * 100)) : 0;
   const totalVisible = visible.length;
@@ -214,6 +240,8 @@ export default async function ProfilePage({ searchParams }: PageProps<"/profil">
                 </div>
               ))}
             </dl>
+
+            {recap && <YearRecap data={recap} tx={tx} />}
 
             {isMonday && (
               <Card className="flex flex-col gap-5 border-accent/40 md:p-6">

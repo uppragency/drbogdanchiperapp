@@ -14,6 +14,33 @@ export type ChangelogEntry = { date: string; category: ChangelogCategory; title:
 // Newest first. Dates are ISO (YYYY-MM-DD).
 export const changelog: ChangelogEntry[] = [
   {
+    date: "2026-10-06",
+    category: "invatare",
+    title: { ro: "Atașamentele PDF se citesc în pagină", en: "PDF attachments open in the page" },
+    text: {
+      ro: "Apasă Previzualizează sub un PDF și îl citești direct în pagină, fără să-l descarci.",
+      en: "Press Preview under a PDF and read it right in the page, without downloading it.",
+    },
+  },
+  {
+    date: "2026-10-06",
+    category: "invatare",
+    title: { ro: "Căutare mai iertătoare", en: "A more forgiving search" },
+    text: {
+      ro: "Căutarea găsește rezultate și dacă greșești un cuvânt, scrii fără diacritice sau folosești un termen echivalent.",
+      en: "Search finds results even if you misspell a word, skip the diacritics or use an equivalent term.",
+    },
+  },
+  {
+    date: "2026-10-06",
+    category: "profil",
+    title: { ro: "Anul tău în MentorMed", en: "Your year in MentorMed" },
+    text: {
+      ro: "În decembrie, profilul îți arată o recapitulare a anului: zile active, resurse terminate și categoria preferată.",
+      en: "In December your profile shows a recap of the year: active days, completed resources and your favourite category.",
+    },
+  },
+  {
     date: "2026-10-05",
     category: "navigare",
     title: { ro: "Roadmap, status sisteme și hartă site", en: "Roadmap, system status and sitemap" },

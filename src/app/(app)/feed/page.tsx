@@ -85,9 +85,7 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
   let matchIds: Set<string> | null = null;
   if (q) {
     const needle = q.replace(/[%,()*\\]/g, " ").trim();
-    const { data: hits } = needle
-      ? await supabase.from("resources").select("id").eq("status", "published").is("deleted_at", null).or(`title.ilike.%${needle}%,description.ilike.%${needle}%,presenter.ilike.%${needle}%,body.ilike.%${needle}%${locale === "en" ? `,title_en.ilike.%${needle}%,description_en.ilike.%${needle}%,body_en.ilike.%${needle}%` : ""}`).limit(200)
-      : { data: [] };
+    const { data: hits } = needle ? await supabase.rpc("search_resources", { p_q: needle, p_en: locale === "en" }) : { data: [] };
     matchIds = new Set((hits ?? []).map((h: { id: string }) => h.id));
   }
   // View counts feed both the popular videos row and the "most viewed" sort.

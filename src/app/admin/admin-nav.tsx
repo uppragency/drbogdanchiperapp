@@ -19,6 +19,7 @@ const items = [
   { href: "/admin/sondaje", label: "Sondaje" },
   { href: "/admin/linkuri", label: "Linkuri" },
   { href: "/admin/faq", label: "FAQ" },
+  { href: "/admin/sinonime", label: "Sinonime" },
   { href: "/admin/mesaje", label: "Mesaje" },
   { href: "/admin/cos", label: "Coș" },
   { href: "/admin/securitate", label: "Securitate" },

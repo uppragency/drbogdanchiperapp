@@ -30,6 +30,22 @@ export default async function EditUser({ params }: PageProps<"/admin/useri/[id]"
   const emailConfirmed = Boolean(authUser?.user?.email_confirmed_at);
   const validated = emailConfirmed && p.is_active && !trashed;
   const isAdminAccount = p.role !== "user";
+  const { data: events } = await supabase.from("access_events").select("id,kind,detail,actor,created_at").eq("user_id", id).order("created_at", { ascending: false }).limit(100);
+  const actorIds = [...new Set((events ?? []).map((e: { actor: string | null }) => e.actor).filter((a): a is string => Boolean(a)))];
+  const { data: actors } = actorIds.length ? await supabase.from("profiles").select("id,first_name,last_name,email").in("id", actorIds) : { data: [] };
+  const actorName = new Map((actors ?? []).map((a: { id: string; first_name: string; last_name: string; email: string }) => [a.id, `${a.first_name} ${a.last_name}`.trim() || a.email]));
+  const EVENT_LABEL: Record<string, string> = {
+    inscris: "Înscris în platformă",
+    grupa_adaugata: "Grupă adăugată",
+    grupa_scoasa: "Grupă scoasă",
+    pauza: "Cont pus pe pauză",
+    reactivare: "Cont reactivat",
+    expirare_setata: "Acces până la",
+    expirare_scoasa: "Expirare scoasă (era la)",
+    sters: "Cont șters",
+    restaurat: "Cont restaurat",
+    rol: "Rol schimbat în",
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -123,6 +139,20 @@ export default async function EditUser({ params }: PageProps<"/admin/useri/[id]"
             )}
           </div>
         )}
+      </Card>
+
+      <Card className="flex flex-col gap-4">
+        <h2 className="text-lg font-bold">Istoric acces</h2>
+        <ul className="divide-y divide-line text-sm">
+          {(events ?? []).map((e: { id: string; kind: string; detail: string | null; actor: string | null; created_at: string }) => (
+            <li key={e.id} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-2.5">
+              <span className="font-semibold">{EVENT_LABEL[e.kind] ?? e.kind}{e.detail ? `: ${e.detail}` : ""}</span>
+              <span className="text-muted">{formatDateTime(e.created_at)}{e.actor ? ` · ${actorName.get(e.actor) ?? "echipă"}` : ""}</span>
+            </li>
+          ))}
+          {(events ?? []).length === 0 && <li className="py-2 text-muted">Nicio schimbare înregistrată.</li>}
+        </ul>
+        <p className="text-xs text-muted">Se înregistrează din 6 octombrie 2026. Schimbările de grupă și pauzele de dinainte nu sunt în istoric.</p>
       </Card>
 
       {!isAdminAccount && (

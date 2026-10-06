@@ -22,6 +22,11 @@ export const roadmap: RoadmapItem[] = [
   },
   {
     stage: "next",
+    title: { ro: "Anul tău în MentorMed", en: "Your year in MentorMed" },
+    text: { ro: "Apare în profil în decembrie, cu zile active, resurse terminate și categoria preferată.", en: "Appears in your profile in December, with active days, completed resources and your favourite category." },
+  },
+  {
+    stage: "next",
     title: { ro: "Notificări și pentru resursele programate", en: "Notifications for scheduled resources too" },
     text: { ro: "Primești notificare și când o resursă programată se publică, nu doar la publicarea imediată.", en: "You get a notification when a scheduled resource goes live, not only for immediate publishing." },
   },

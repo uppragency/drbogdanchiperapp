@@ -35,15 +35,20 @@ export default async function SearchPage({ searchParams }: PageProps<"/cauta">) 
   const popular = !q ? await popularSearches("").catch(() => [] as string[]) : [];
   if (needle.length >= 2) {
     const nowIso = new Date().toISOString();
-    const { data } = await supabase
-      .from("resources")
-      .select("id,title,title_en,description,description_en,type,categories(name,name_en,slug)")
-      .eq("status", "published")
-      .is("deleted_at", null)
-      .or(`publish_at.is.null,publish_at.lte.${nowIso}`)
-      .or(`title.ilike.%${needle}%,description.ilike.%${needle}%,presenter.ilike.%${needle}%,body.ilike.%${needle}%${locale === "en" ? `,title_en.ilike.%${needle}%,description_en.ilike.%${needle}%,body_en.ilike.%${needle}%` : ""}`)
-      .order("created_at", { ascending: false })
-      .limit(60);
+    // Matches titles, text, synonyms set by the team and close misspellings.
+    const { data: found } = await supabase.rpc("search_resources", { p_q: needle, p_en: locale === "en" });
+    const ranked = ((found ?? []) as { id: string; score: number }[]).slice(0, 60);
+    const order = new Map(ranked.map((f, i) => [f.id, i]));
+    const { data } = ranked.length
+      ? await supabase
+          .from("resources")
+          .select("id,title,title_en,description,description_en,type,categories(name,name_en,slug)")
+          .in("id", ranked.map((f) => f.id))
+          .eq("status", "published")
+          .is("deleted_at", null)
+          .or(`publish_at.is.null,publish_at.lte.${nowIso}`)
+      : { data: [] };
+    (data ?? []).sort((x: { id: string }, y: { id: string }) => (order.get(x.id) ?? 0) - (order.get(y.id) ?? 0));
     hits = (data ?? []) as unknown as Hit[];
   }
   const cat = (h: Hit) => (Array.isArray(h.categories) ? h.categories[0] : h.categories);

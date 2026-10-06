@@ -17,6 +17,7 @@ import { coverUrl } from "@/lib/cover-url";
 import { FavoriteButton } from "../favorite-button";
 import { CompleteButton } from "../complete-button";
 import { NoteBox } from "../note-box";
+import { PdfPreview } from "../pdf-preview";
 import { CinemaFrame } from "@/components/cinema-frame";
 import { FocusToggle } from "@/components/focus-toggle";
 import { getLocale, getT, getTx, pick } from "@/lib/i18n";
@@ -151,20 +152,23 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
             <h2 className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-muted"><Paperclip size={18} /> {t.resource.attachments}</h2>
             <ul className="flex flex-col gap-3">
               {attachments.map((a: { id: string; kind: string; label: string; url: string | null; file_path: string | null }) => (
-                <li key={a.id} className="flex items-center gap-4 rounded-control border border-line p-4">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-violet-soft text-violet">
-                    {a.kind === "pdf" ? <FilePdf size={20} /> : <LinkIcon size={20} />}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate font-semibold">{a.label}</span>
-                  {a.file_path ? (
-                    <LinkButton href={`/fisiere/${a.id}`} variant="secondary" prefetch={false} className="rounded-full">
-                      <DownloadSimple size={18} /> {t.resource.download}
-                    </LinkButton>
-                  ) : (
-                    <LinkButton href={a.url ?? "#"} variant="secondary" target="_blank" rel="noopener noreferrer" className="rounded-full">
-                      <ArrowSquareOut size={18} /> {t.resource.open}
-                    </LinkButton>
-                  )}
+                <li key={a.id} className="flex flex-col gap-3 rounded-control border border-line p-4">
+                  <div className="flex items-center gap-4">
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-violet-soft text-violet">
+                      {a.kind === "pdf" ? <FilePdf size={20} /> : <LinkIcon size={20} />}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate font-semibold">{a.label}</span>
+                    {a.file_path ? (
+                      <LinkButton href={`/fisiere/${a.id}`} variant="secondary" prefetch={false} className="rounded-full">
+                        <DownloadSimple size={18} /> {t.resource.download}
+                      </LinkButton>
+                    ) : (
+                      <LinkButton href={a.url ?? "#"} variant="secondary" target="_blank" rel="noopener noreferrer" className="rounded-full">
+                        <ArrowSquareOut size={18} /> {t.resource.open}
+                      </LinkButton>
+                    )}
+                  </div>
+                  {a.file_path && a.kind === "pdf" && <PdfPreview id={a.id} label={a.label} />}
                 </li>
               ))}
             </ul>
