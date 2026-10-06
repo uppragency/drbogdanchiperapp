@@ -28,6 +28,7 @@ export async function AppHeader({ viewerId, isAdmin, unread = 0, initials = "?",
         { href: "/cursuri", label: tx("Cursuri premium", "Premium courses"), icon: <GraduationCap size={18} />, hint: tx("Cursuri avansate, cu reducere pentru membri", "Advanced courses, member discount") },
       ],
     },
+    { id: "community", label: tx("Comunitate", "Community"), match: [], slugs: COMMUNITY, columns: 2, items: pick(COMMUNITY).map(catItem) },
     {
       id: "events", label: tx("Evenimente", "Events"), match: ["/evenimente", "/eveniment"], columns: 1,
       items: [
@@ -36,7 +37,6 @@ export async function AppHeader({ viewerId, isAdmin, unread = 0, initials = "?",
         { href: "/evenimente/mentormed", label: tx("Evenimente MentorMed", "MentorMed events"), icon: <UsersThree size={18} />, hint: tx("Întâlniri fizice, precum SuperBootcamp", "In-person meetings, such as the SuperBootcamp") },
       ],
     },
-    { id: "community", label: tx("Comunitate", "Community"), match: [], slugs: COMMUNITY, columns: 2, items: pick(COMMUNITY).map(catItem) },
     {
       id: "help", label: tx("Ajutor", "Help"), match: ["/faq", "/contact"], columns: 1,
       items: [
