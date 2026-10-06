@@ -25,8 +25,8 @@ function Row({ it, onPick }: { it: MegaItem; onPick: () => void }) {
         {it.slug ? <CategoryIcon slug={it.slug} size={18} /> : it.icon}
       </span>
       <span className="flex min-w-0 flex-col">
-        <span className="truncate">{it.label}</span>
-        {it.hint && <span className="truncate text-xs font-normal text-muted">{it.hint}</span>}
+        <span className="truncate leading-snug">{it.label}</span>
+        {it.hint && <span className="line-clamp-2 text-xs font-normal leading-snug text-muted">{it.hint}</span>}
       </span>
       <Badge n={it.count} />
     </Link>

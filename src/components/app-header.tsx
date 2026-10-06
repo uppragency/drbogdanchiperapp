@@ -17,7 +17,18 @@ export async function AppHeader({ viewerId, isAdmin, unread = 0, initials = "?",
   const LEARN = ["webinarii", "studyclub-studii-de-caz", "resurse-si-formulare"];
   const COMMUNITY = ["discutii-generale", "intrebari-si-raspunsuri", "prezinta-te", "anunturi", "bookclub", "aventura-pe-munte"];
   const pick = (slugs: string[]) => slugs.map((s) => categories.find((c) => c.slug === s)).filter((c): c is NonNullable<typeof c> => Boolean(c));
-  const catItem = (c: (typeof categories)[number]) => ({ href: `/feed?categorie=${c.slug}`, label: c.name, slug: c.slug, count: newByCategory[c.id] ?? 0 });
+  const HINTS: Record<string, [string, string]> = {
+    "discutii-generale": ["Discuții generale și subiecte libere", "General discussions and open topics"],
+    "anunturi": ["Noutăți și info oficiale", "News and official information"],
+    "prezinta-te": ["Spune-ne cine ești", "Tell us who you are"],
+    "intrebari-si-raspunsuri": ["Întreabă. Primește răspunsuri", "Ask. Get answers"],
+    "webinarii": ["Înregistrările webinariilor, link-uri, idei și discuții", "Webinar recordings, links, ideas and discussions"],
+    "studyclub-studii-de-caz": ["Cazuri reale. Lecții aplicate", "Real cases. Applied lessons"],
+    "bookclub": ["Recomandări de lectură", "Reading recommendations"],
+    "resurse-si-formulare": ["Documente utile și formulare pregătite de echipa MentorMed", "Useful documents and forms prepared by the MentorMed team"],
+    "aventura-pe-munte": ["Ieși din cotidian, reconectează-te cu natura și cucerește noi vârfuri", "Break the routine, reconnect with nature and conquer new peaks"],
+  };
+  const catItem = (c: (typeof categories)[number]) => ({ href: `/feed?categorie=${c.slug}`, label: c.name, slug: c.slug, count: newByCategory[c.id] ?? 0, hint: HINTS[c.slug] ? tx(HINTS[c.slug][0], HINTS[c.slug][1]) : undefined });
   const groups: MegaGroup[] = [
     {
       id: "learn", label: tx("Învață", "Learn"), match: ["/colectii", "/recente", "/cursuri"], slugs: LEARN, columns: 2, count: pick(LEARN).reduce((n, c) => n + (newByCategory[c.id] ?? 0), 0),
