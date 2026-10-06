@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { LinkifiedText } from "@/components/linkified-text";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
@@ -77,7 +78,7 @@ export default async function EventPage({ params }: PageProps<"/eveniment/[slug]
           {paragraphs.length > 0 && (
             <section className="flex flex-col gap-3 lg:col-span-2">
               <h2 className="text-xl font-bold tracking-tight">{tx("Despre eveniment", "About the event")}</h2>
-              {paragraphs.map((p, i) => <p key={i} className="max-w-[65ch] leading-relaxed text-muted">{p}</p>)}
+              {paragraphs.map((p, i) => <p key={i} className="max-w-[65ch] leading-relaxed text-muted [overflow-wrap:anywhere]"><LinkifiedText text={p} /></p>)}
             </section>
           )}
           {mentors.length > 0 && (

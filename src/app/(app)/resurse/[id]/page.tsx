@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { LinkifiedText } from "@/components/linkified-text";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowSquareOut, DownloadSimple, FilePdf, Link as LinkIcon, Paperclip } from "@phosphor-icons/react/dist/ssr";
@@ -140,9 +141,9 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
         )}
 
         {paragraphs.length > 0 && (
-          <div className="flex max-w-[65ch] flex-col gap-5 px-5 py-6 text-[17px] font-normal leading-[1.6] md:px-8">
+          <div className="flex min-w-0 max-w-[65ch] flex-col gap-5 px-5 py-6 text-[17px] font-normal leading-[1.6] md:px-8">
             {paragraphs.map((p: string, i: number) => (
-              <p key={i} className="whitespace-pre-line">{p}</p>
+              <p key={i} className="whitespace-pre-line [overflow-wrap:anywhere]"><LinkifiedText text={p} /></p>
             ))}
           </div>
         )}
