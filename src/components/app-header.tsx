@@ -46,7 +46,6 @@ export async function AppHeader({ viewerId, isAdmin, unread = 0, initials = "?",
     },
   ];
   const links: MegaLink[] = [
-    { href: "/ce-e-nou", label: tx("Ce e nou", "What's new"), match: ["/ce-e-nou"] },
     ...(isAdmin ? [{ href: "/admin", label: t.nav.admin, match: ["/admin"] }] : []),
   ];
   return (
