@@ -14,6 +14,7 @@ const items = [
   { href: "/admin/invitatii", label: "Invitații" },
   { href: "/admin/cereri", label: "Cereri acces" },
   { href: "/admin/colectii", label: "Colecții" },
+  { href: "/admin/cursuri-premium", label: "Cursuri premium" },
   { href: "/admin/grupuri", label: "Grupuri" },
   { href: "/admin/bannere", label: "Bannere" },
   { href: "/admin/sondaje", label: "Sondaje" },

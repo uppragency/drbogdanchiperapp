@@ -18,6 +18,7 @@ export default async function SitemapPage() {
       items: [
         { href: "/feed", label: tx("Resurse", "Resources"), member: true },
         { href: "/colectii", label: tx("Colecții", "Collections"), member: true },
+        { href: "/cursuri", label: tx("Cursuri premium", "Premium courses"), member: true },
         { href: "/recente", label: tx("Văzute recent", "Recently viewed"), member: true },
         { href: "/cauta", label: tx("Căutare", "Search"), member: true },
       ],

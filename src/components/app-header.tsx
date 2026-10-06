@@ -7,7 +7,7 @@ import { HeaderShell } from "@/components/header-shell";
 import { NotificationsPopup, SearchPopup } from "@/components/header-popups";
 import { MegaNav, type MegaGroup, type MegaLink } from "@/components/mega-nav";
 import { loadCommunity } from "@/lib/community";
-import { Books, Question as QuestionIcon, EnvelopeSimple, Stack as StackIcon, SquaresFour } from "@phosphor-icons/react/dist/ssr";
+import { Books, Question as QuestionIcon, EnvelopeSimple, GraduationCap, SquaresFour } from "@phosphor-icons/react/dist/ssr";
 
 
 export async function AppHeader({ viewerId, isAdmin, unread = 0, initials = "?", name = "", email = "" }: { viewerId: string; isAdmin: boolean; unread?: number; initials?: string; name?: string; email?: string }) {
@@ -20,12 +20,12 @@ export async function AppHeader({ viewerId, isAdmin, unread = 0, initials = "?",
   const catItem = (c: (typeof categories)[number]) => ({ href: `/feed?categorie=${c.slug}`, label: c.name, slug: c.slug, count: newByCategory[c.id] ?? 0 });
   const groups: MegaGroup[] = [
     {
-      id: "learn", label: tx("Învață", "Learn"), match: ["/colectii", "/recente"], slugs: LEARN, columns: 2, count: pick(LEARN).reduce((n, c) => n + (newByCategory[c.id] ?? 0), 0),
+      id: "learn", label: tx("Învață", "Learn"), match: ["/colectii", "/recente", "/cursuri"], slugs: LEARN, columns: 2, count: pick(LEARN).reduce((n, c) => n + (newByCategory[c.id] ?? 0), 0),
       items: [
         ...pick(LEARN).map(catItem),
         { href: "/colectii", label: tx("Colecții", "Collections"), icon: <Books size={18} />, hint: tx("Parcursuri ordonate de studiu", "Ordered study paths") },
         { href: "/feed", label: tx("Toate resursele", "All resources"), icon: <SquaresFour size={18} />, count: newTotal },
-        { href: "/recente", label: tx("Continuă de unde ai rămas", "Pick up where you left off"), icon: <StackIcon size={18} /> },
+        { href: "/cursuri", label: tx("Cursuri premium", "Premium courses"), icon: <GraduationCap size={18} />, hint: tx("Cursuri avansate, cu reducere pentru membri", "Advanced courses, member discount") },
       ],
     },
     { id: "community", label: tx("Comunitate", "Community"), match: [], slugs: COMMUNITY, columns: 2, items: pick(COMMUNITY).map(catItem) },

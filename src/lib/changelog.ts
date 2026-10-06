@@ -9,10 +9,20 @@ export const CHANGELOG_CATEGORIES: { key: ChangelogCategory; ro: string; en: str
   { key: "aspect", ro: "Aspect și limbă", en: "Look and language" },
 ];
 
-export type ChangelogEntry = { date: string; category: ChangelogCategory; title: { ro: string; en: string }; text: { ro: string; en: string } };
+export type ChangelogEntry = { date: string; category: ChangelogCategory; title: { ro: string; en: string }; text: { ro: string; en: string }; href?: string };
 
 // Newest first. Dates are ISO (YYYY-MM-DD).
 export const changelog: ChangelogEntry[] = [
+  {
+    date: "2026-10-06",
+    category: "invatare",
+    title: { ro: "Cursuri premium", en: "Premium courses" },
+    text: {
+      ro: "Ai o secțiune nouă, Cursuri premium, în meniul Învață. Ca membru MentorMed ai 20% reducere, deja inclusă în prețul afișat.",
+      en: "There is a new Premium courses section in the Learn menu. As a MentorMed member you get 20% off, already included in the displayed price.",
+    },
+    href: "/cursuri",
+  },
   {
     date: "2026-10-06",
     category: "invatare",

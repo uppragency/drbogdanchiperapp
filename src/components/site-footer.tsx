@@ -27,6 +27,7 @@ export async function SiteFooter() {
           <p className="text-xs font-semibold uppercase tracking-wider text-white/70">{t.footer.platform}</p>
           <Link href="/feed" className={link}>{t.nav.feed}</Link>
           <Link href="/colectii" className={link}>{tx("Colecții", "Collections")}</Link>
+          <Link href="/cursuri" className={link}>{tx("Cursuri premium", "Premium courses")}</Link>
           <Link href="/faq" className={link}>{tx("Întrebări frecvente", "FAQ")}</Link>
           <Link href="/ce-e-nou" className={link}>{tx("Ce e nou", "What's new")}</Link>
           <Link href="/contact" className={link}>Contact</Link>

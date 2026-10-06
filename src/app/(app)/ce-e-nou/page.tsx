@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
-import { CHANGELOG_CATEGORIES, changelog, type ChangelogEntry } from "@/lib/changelog";
+import { createClient } from "@/lib/supabase/server";
+import { CHANGELOG_CATEGORIES, changelog as baseLog, type ChangelogEntry } from "@/lib/changelog";
 import { cn } from "@/components/ui";
 import { formatDate } from "@/lib/format";
 import { getLocale, getTx, type Tx } from "@/lib/i18n";
@@ -21,6 +22,7 @@ function Entry({ e, tx, locale, tag }: { e: ChangelogEntry; tx: Tx; locale: Loca
       </div>
       <h3 className="text-lg font-bold leading-snug">{tx(e.title.ro, e.title.en)}</h3>
       <p className="max-w-[65ch] leading-relaxed text-muted">{tx(e.text.ro, e.text.en)}</p>
+      {e.href && <Link href={e.href} className="inline-flex min-h-11 w-fit items-center text-sm font-semibold text-accent hover:underline">{tx("Vezi", "View")}</Link>}
     </li>
   );
 }
@@ -29,6 +31,18 @@ export default async function WhatsNewPage({ searchParams }: PageProps<"/ce-e-no
   await requireUser();
   const sp = await searchParams;
   const [tx, locale] = await Promise.all([getTx(), getLocale()]);
+  const supabase = await createClient();
+  const { data: newCourses } = await supabase.from("premium_courses").select("slug,title,title_en,short_description,short_description_en,published_at").eq("is_published", true).eq("announce", true).not("published_at", "is", null);
+  const changelog: ChangelogEntry[] = [
+    ...baseLog,
+    ...(newCourses ?? []).map((c): ChangelogEntry => ({
+      date: new Date(c.published_at as string).toLocaleDateString("sv-SE", { timeZone: "Europe/Bucharest" }),
+      category: "invatare",
+      title: { ro: `Curs nou: ${c.title}`, en: `New course: ${c.title_en || c.title}` },
+      text: { ro: c.short_description, en: c.short_description_en || c.short_description },
+      href: `/cursuri/${c.slug}`,
+    })),
+  ].sort((a, b) => b.date.localeCompare(a.date));
   const active = CHANGELOG_CATEGORIES.find((c) => c.key === sp.categorie)?.key;
   const label = (k: string) => { const c = CHANGELOG_CATEGORIES.find((x) => x.key === k)!; return tx(c.ro, c.en); };
   const latestDate = changelog[0]?.date;
