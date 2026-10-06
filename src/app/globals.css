@@ -254,3 +254,14 @@ h1, h2, h3 {
   stroke-dasharray: 26;
   stroke-dashoffset: 0;
 }
+
+/* Sticks just under the header and slides up when the header hides on scroll. */
+.under-header {
+  position: sticky;
+  top: 53px;
+  z-index: 30;
+  transition: top 0.2s ease;
+}
+body:has(.site-header[data-hidden="true"]) .under-header {
+  top: 0;
+}

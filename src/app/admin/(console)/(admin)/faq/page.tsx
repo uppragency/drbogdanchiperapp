@@ -9,6 +9,13 @@ export const metadata: Metadata = { title: "FAQ" };
 export default async function FaqAdmin() {
   const supabase = await createClient();
   const { data } = await supabase.from("faq_items").select("*").order("position").order("created_at");
+  const { data: fb } = await supabase.from("faq_feedback").select("faq_id,helpful");
+  const votes = new Map<string, { yes: number; no: number }>();
+  (fb ?? []).forEach((v) => {
+    const c = votes.get(v.faq_id as string) ?? { yes: 0, no: 0 };
+    if (v.helpful) c.yes += 1; else c.no += 1;
+    votes.set(v.faq_id as string, c);
+  });
   return (
     <div className="flex flex-col gap-6">
       <PageTitle title="Întrebări frecvente" />
@@ -30,6 +37,7 @@ export default async function FaqAdmin() {
         <Card key={f.id}>
           <form action={saveFaq} className="flex flex-col gap-4">
             <input type="hidden" name="id" value={f.id} />
+            <p className="text-sm text-muted">Ți-a fost de folos: {votes.get(f.id)?.yes ?? 0} da, {votes.get(f.id)?.no ?? 0} nu.</p>
             <Field label="Întrebare (română)" name={`question`} defaultValue={f.question} required />
             <Field label="Întrebare (engleză)" name="questionEn" defaultValue={f.question_en ?? ""} />
             <TextArea label="Răspuns (română)" name="answer" defaultValue={f.answer} rows={4} />

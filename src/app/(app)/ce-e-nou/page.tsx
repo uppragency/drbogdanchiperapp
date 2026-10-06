@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { CHANGELOG_CATEGORIES, changelog as baseLog, type ChangelogEntry } from "@/lib/changelog";
+import { CHANGELOG_CATEGORIES, type ChangelogEntry } from "@/lib/changelog";
+import { loadChangelog } from "@/lib/changelog-feed";
 import { cn } from "@/components/ui";
 import { formatDate } from "@/lib/format";
 import { getLocale, getTx, type Tx } from "@/lib/i18n";
@@ -32,25 +33,7 @@ export default async function WhatsNewPage({ searchParams }: PageProps<"/ce-e-no
   const sp = await searchParams;
   const [tx, locale] = await Promise.all([getTx(), getLocale()]);
   const supabase = await createClient();
-  const { data: newCourses } = await supabase.from("premium_courses").select("slug,title,title_en,short_description,short_description_en,published_at").eq("is_published", true).eq("announce", true).not("published_at", "is", null);
-  const { data: newEvents } = await supabase.from("events").select("slug,title,title_en,short_description,short_description_en,published_at").eq("is_published", true).eq("announce", true).not("published_at", "is", null).gt("starts_at", new Date().toISOString());
-  const changelog: ChangelogEntry[] = [
-    ...baseLog,
-    ...(newEvents ?? []).map((c): ChangelogEntry => ({
-      date: new Date(c.published_at as string).toLocaleDateString("sv-SE", { timeZone: "Europe/Bucharest" }),
-      category: "comunitate",
-      title: { ro: `Eveniment nou: ${c.title}`, en: `New event: ${c.title_en || c.title}` },
-      text: { ro: c.short_description, en: c.short_description_en || c.short_description },
-      href: `/eveniment/${c.slug}`,
-    })),
-    ...(newCourses ?? []).map((c): ChangelogEntry => ({
-      date: new Date(c.published_at as string).toLocaleDateString("sv-SE", { timeZone: "Europe/Bucharest" }),
-      category: "invatare",
-      title: { ro: `Curs nou: ${c.title}`, en: `New course: ${c.title_en || c.title}` },
-      text: { ro: c.short_description, en: c.short_description_en || c.short_description },
-      href: `/cursuri/${c.slug}`,
-    })),
-  ].sort((a, b) => b.date.localeCompare(a.date));
+  const changelog = await loadChangelog(supabase);
   const active = CHANGELOG_CATEGORIES.find((c) => c.key === sp.categorie)?.key;
   const label = (k: string) => { const c = CHANGELOG_CATEGORIES.find((x) => x.key === k)!; return tx(c.ro, c.en); };
   const latestDate = changelog[0]?.date;
