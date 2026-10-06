@@ -6,13 +6,9 @@ import { CategoryIcon } from "@/lib/category-icons";
 import { categoryColor } from "@/lib/category-color";
 import { getLocale, getT, getTx, pick } from "@/lib/i18n";
 import { PollCard } from "@/app/(app)/feed/poll-card";
+import { createClient } from "@/lib/supabase/server";
 
 export const PROGRAM_URL = "https://drbogdanchiper.ro/produs/mentormed/";
-const LIVE_OP_URL = "https://drbogdanchiper.ro/mentormed-live-op-mentorship/";
-const LIVE_OP_COURSES = [
-  { title: "Inserare Implant cu Ghid Chirurgical în Zona Estetică + GBR de Contur + Augmentare de Țesuturi", url: "https://drbogdanchiper.ro/produs/inserare-implant-cu-ghid-chirurgical-in-zona-estetica-gbr-de-contur-augmentare-de-tesuturi/" },
-  { title: "Stackable All-on-4: Protocol Full-Arch Ghidat (Mandibulă)", url: "https://drbogdanchiper.ro/produs/stackable-all-on-4-protocol-full-arch-ghidat-mandibula/" },
-];
 
 export type ShellCategory = { id: string; name: string; name_en?: string | null; slug: string };
 export type ShellLink = { id: string; title: string; date: string };
@@ -32,6 +28,8 @@ type Props = {
 // Shared three column layout: categories on the left, content in the middle, announcements and the program card on the right.
 export async function CommunityShell({ categories, activeSlug, newByCategory, newTotal, announcements, related = [], categoryHref = (s) => (s ? `/feed?categorie=${s}` : "/feed"), className, children }: Props) {
   const [t, tx, locale] = await Promise.all([getT(), getTx(), getLocale()]);
+  const supabase = await createClient();
+  const { data: courseRows } = await supabase.from("premium_courses").select("slug,title,title_en").eq("is_published", true).order("position").limit(6);
   const nameOf = (c: ShellCategory) => pick(locale, c.name, c.name_en);
   const active = categories.find((c) => c.slug === activeSlug);
   const rail = (
@@ -71,22 +69,19 @@ export async function CommunityShell({ categories, activeSlug, newByCategory, ne
             {t.home.nextProgramCta} <ArrowUpRight size={16} weight="bold" />
           </a>
         </div>
-        <div className="rounded-card border border-line bg-surface p-6 shadow-card">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted">{tx("Cursuri video", "Video courses")}</p>
-          <a href={LIVE_OP_URL} target="_blank" rel="noopener noreferrer" className="mt-3 flex items-start justify-between gap-3 text-lg font-bold leading-snug hover:text-accent">
-            MentorMed Live OP Mentorship <ArrowUpRight size={18} weight="bold" className="mt-1 shrink-0" />
-          </a>
-          <ul className="mt-3 flex flex-col divide-y divide-line">
-            {LIVE_OP_COURSES.map((c) => (
-              <li key={c.url} className="py-3 first:pt-0 last:pb-0">
-                <a href={c.url} target="_blank" rel="noopener noreferrer" className="flex items-start justify-between gap-3 text-sm font-semibold leading-snug hover:text-accent">
-                  {c.title} <ArrowUpRight size={16} className="mt-0.5 shrink-0 text-muted" />
-                </a>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-4 text-xs text-muted">{tx("Se achiziționează de pe site-ul principal, drbogdanchiper.ro.", "Available for purchase on the main website, drbogdanchiper.ro.")}</p>
-        </div>
+        {(courseRows ?? []).length > 0 && (
+          <div className="rounded-card border border-line bg-surface p-6 shadow-card">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-muted">{tx("Cursuri premium", "Premium courses")}</h3>
+            <ul className="mt-4 flex flex-col divide-y divide-line">
+              {(courseRows ?? []).map((c) => (
+                <li key={c.slug} className="pb-3 pt-[5px] first:pt-0 last:pb-0">
+                  <Link href={`/cursuri/${c.slug}`} className="text-sm font-semibold leading-snug hover:text-accent">{pick(locale, c.title as string, c.title_en as string)}</Link>
+                </li>
+              ))}
+            </ul>
+            <Link href="/cursuri" className="mt-4 inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-accent hover:underline">{tx("Toate cursurile", "All courses")} <ArrowUpRight size={14} weight="bold" /></Link>
+          </div>
+        )}
         <PollCard />
       </aside>
     </div>
