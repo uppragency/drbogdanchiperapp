@@ -23,8 +23,8 @@ const schema = z.object({
   includes: text(4000), includesEn: text(4000),
   details: text(3000), detailsEn: text(3000),
   presenter: text(160), presenterBio: text(3000), presenterBioEn: text(3000),
-  netPrice: money,
-  offerNetPrice: optMoney,
+  price: money,
+  offerPrice: optMoney,
   memberDiscount: z.coerce.number().int().min(0).max(90),
   memberCode: text(60),
   shopUrl: url,
@@ -45,20 +45,20 @@ export async function saveCourse(_: FormState, formData: FormData): Promise<Form
     includes: g(formData, "includes"), includesEn: g(formData, "includesEn"),
     details: g(formData, "details"), detailsEn: g(formData, "detailsEn"),
     presenter: g(formData, "presenter"), presenterBio: g(formData, "presenterBio"), presenterBioEn: g(formData, "presenterBioEn"),
-    netPrice: g(formData, "netPrice"), offerNetPrice: g(formData, "offerNetPrice"),
+    price: g(formData, "price"), offerPrice: g(formData, "offerPrice"),
     memberDiscount: g(formData, "memberDiscount") || "20", memberCode: g(formData, "memberCode"),
     shopUrl: g(formData, "shopUrl"), buttonLabel: g(formData, "buttonLabel"), buttonLabelEn: g(formData, "buttonLabelEn"),
     coverUrl: g(formData, "coverUrl"), position: g(formData, "position") || "100",
   });
   if (!p.success) {
     const f = p.error.issues[0]?.path[0];
-    const msg: Record<string, string> = { title: "Titlul are minimum 2 caractere.", netPrice: "Prețul fără TVA e invalid (ex: 302,50).", offerNetPrice: "Prețul de ofertă e invalid.", shopUrl: "Linkul din magazin trebuie să înceapă cu https://.", coverUrl: "Linkul imaginii e invalid.", memberDiscount: "Reducerea este între 0 și 90." };
+    const msg: Record<string, string> = { title: "Titlul are minimum 2 caractere.", price: "Prețul e invalid (ex: 302,50).", offerPrice: "Prețul de ofertă e invalid.", shopUrl: "Linkul din magazin trebuie să înceapă cu https://.", coverUrl: "Linkul imaginii e invalid.", memberDiscount: "Reducerea este între 0 și 90." };
     return { error: msg[String(f)] ?? "Verifică datele introduse." };
   }
   const d = p.data;
   const offerUntil = localInputToIso(g(formData, "offerUntil"));
-  if ((d.offerNetPrice == null) !== (offerUntil == null)) return { error: "Oferta are nevoie de preț și de dată de final, ambele sau niciuna." };
-  if (d.offerNetPrice != null && d.offerNetPrice >= d.netPrice) return { error: "Prețul de ofertă trebuie să fie mai mic decât prețul obișnuit." };
+  if ((d.offerPrice == null) !== (offerUntil == null)) return { error: "Oferta are nevoie de preț și de dată de final, ambele sau niciuna." };
+  if (d.offerPrice != null && d.offerPrice >= d.price) return { error: "Prețul de ofertă trebuie să fie mai mic decât prețul obișnuit." };
   const slug = slugify(d.slug || d.title);
   if (!slug) return { error: "Adresa (slug) e invalidă." };
   const publish = formData.get("isPublished") === "on";
@@ -76,7 +76,7 @@ export async function saveCourse(_: FormState, formData: FormData): Promise<Form
     benefits: d.benefits, benefits_en: d.benefitsEn, includes: d.includes, includes_en: d.includesEn,
     details: d.details, details_en: d.detailsEn,
     presenter: d.presenter, presenter_bio: d.presenterBio, presenter_bio_en: d.presenterBioEn,
-    net_price: d.netPrice, offer_net_price: d.offerNetPrice, offer_until: offerUntil,
+    price: d.price, offer_price: d.offerPrice, offer_until: offerUntil,
     member_discount: d.memberDiscount, member_code: d.memberCode || "mentormeduser20",
     shop_url: d.shopUrl, button_label: d.buttonLabel || "Vezi cursul în magazin", button_label_en: d.buttonLabelEn,
     cover_url: d.coverUrl || null, position: d.position,

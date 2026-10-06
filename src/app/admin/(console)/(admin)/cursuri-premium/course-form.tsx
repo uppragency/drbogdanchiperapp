@@ -3,7 +3,7 @@ import { useActionState, useState } from "react";
 import { Alert, Card, Field, TextArea } from "@/components/ui";
 import { SubmitButton } from "@/components/submit-button";
 import { isoToLocalInput } from "@/lib/format";
-import { VAT, formatLei, type Course } from "@/lib/courses";
+import { formatLei, type Course } from "@/lib/courses";
 import { saveCourse } from "./actions";
 import type { FormState } from "@/app/login/actions";
 
@@ -12,11 +12,11 @@ const num = (v: string) => Number(v.replace(/\s/g, "").replace(",", "."));
 
 export function CourseForm({ course }: { course: Course | null }) {
   const [state, action] = useActionState<FormState, FormData>(saveCourse, {});
-  const [net, setNet] = useState(course ? String(course.net_price).replace(".", ",") : "");
+  const [net, setNet] = useState(course ? String(course.price).replace(".", ",") : "");
   const [disc, setDisc] = useState(String(course?.member_discount ?? 20));
   const n = num(net);
   const d = num(disc);
-  const preview = Number.isFinite(n) && n > 0 ? { gross: Math.round(n * VAT), member: Math.round(n * VAT * (1 - (Number.isFinite(d) ? d : 0) / 100)) } : null;
+  const preview = Number.isFinite(n) && n > 0 ? { member: Math.round(n * (1 - (Number.isFinite(d) ? d : 0) / 100) * 100) / 100 } : null;
   return (
     <form action={action} className="flex flex-col gap-6">
       {course && <input type="hidden" name="id" value={course.id} />}
@@ -33,9 +33,9 @@ export function CourseForm({ course }: { course: Course | null }) {
       <Card className="flex flex-col gap-4">
         <h2 className="text-lg font-bold">Preț</h2>
         <div className="flex flex-col gap-2">
-          <label htmlFor="netPrice" className="text-sm font-semibold">Preț fără TVA (lei)</label>
-          <input id="netPrice" name="netPrice" required value={net} onChange={(e) => setNet(e.target.value)} inputMode="decimal" className={inp} />
-          <p className="text-sm text-muted">Prețul din magazin, fără TVA. Platforma adaugă 21% și rotunjește la lei întregi.</p>
+          <label htmlFor="price" className="text-sm font-semibold">Preț cu TVA (lei)</label>
+          <input id="price" name="price" required value={net} onChange={(e) => setNet(e.target.value)} inputMode="decimal" className={inp} />
+          <p className="text-sm text-muted">Prețul exact din magazin, cu TVA inclus (ex: 302,50).</p>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-2">
@@ -46,12 +46,12 @@ export function CourseForm({ course }: { course: Course | null }) {
         </div>
         {preview && (
           <p className="rounded-control bg-surface2 px-4 py-3 text-sm">
-            Cu TVA: <strong>{formatLei(preview.gross)}</strong>. Preț afișat membrilor: <strong>{formatLei(preview.member)}</strong>.
+            Preț afișat membrilor, cu TVA: <strong>{formatLei(preview.member)}</strong>.
           </p>
         )}
         <h3 className="pt-2 text-base font-bold">Ofertă (opțional)</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Preț ofertă fără TVA (lei)" name="offerNetPrice" defaultValue={course?.offer_net_price != null ? String(course.offer_net_price).replace(".", ",") : ""} />
+          <Field label="Preț ofertă cu TVA (lei)" name="offerPrice" defaultValue={course?.offer_price != null ? String(course.offer_price).replace(".", ",") : ""} />
           <div className="flex flex-col gap-2">
             <label htmlFor="offerUntil" className="text-sm font-semibold">Ofertă valabilă până la</label>
             <input id="offerUntil" name="offerUntil" type="datetime-local" defaultValue={isoToLocalInput(course?.offer_until)} className="h-11 rounded-control border border-line bg-bg px-4 text-base focus:border-accent focus:outline-none" />
