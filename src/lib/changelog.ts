@@ -15,6 +15,16 @@ export type ChangelogEntry = { date: string; category: ChangelogCategory; title:
 export const changelog: ChangelogEntry[] = [
   {
     date: "2026-10-06",
+    category: "comunitate",
+    title: { ro: "Secțiunea Evenimente", en: "Events section" },
+    text: {
+      ro: "Găsești StudyClub, BookClub și evenimentele MentorMed în meniul Evenimente: cele următoare, cu data, locul și butonul de înscriere, și cele anterioare. Poți adăuga o întâlnire direct în calendar.",
+      en: "Find StudyClub, BookClub and MentorMed events in the Events menu: upcoming ones with date, place and registration button, and past ones. You can add a meeting straight to your calendar.",
+    },
+    href: "/evenimente",
+  },
+  {
+    date: "2026-10-06",
     category: "invatare",
     title: { ro: "Cursuri premium", en: "Premium courses" },
     text: {

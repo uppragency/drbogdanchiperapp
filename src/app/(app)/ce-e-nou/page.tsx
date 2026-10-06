@@ -33,8 +33,16 @@ export default async function WhatsNewPage({ searchParams }: PageProps<"/ce-e-no
   const [tx, locale] = await Promise.all([getTx(), getLocale()]);
   const supabase = await createClient();
   const { data: newCourses } = await supabase.from("premium_courses").select("slug,title,title_en,short_description,short_description_en,published_at").eq("is_published", true).eq("announce", true).not("published_at", "is", null);
+  const { data: newEvents } = await supabase.from("events").select("slug,title,title_en,short_description,short_description_en,published_at").eq("is_published", true).eq("announce", true).not("published_at", "is", null).gt("starts_at", new Date().toISOString());
   const changelog: ChangelogEntry[] = [
     ...baseLog,
+    ...(newEvents ?? []).map((c): ChangelogEntry => ({
+      date: new Date(c.published_at as string).toLocaleDateString("sv-SE", { timeZone: "Europe/Bucharest" }),
+      category: "comunitate",
+      title: { ro: `Eveniment nou: ${c.title}`, en: `New event: ${c.title_en || c.title}` },
+      text: { ro: c.short_description, en: c.short_description_en || c.short_description },
+      href: `/eveniment/${c.slug}`,
+    })),
     ...(newCourses ?? []).map((c): ChangelogEntry => ({
       date: new Date(c.published_at as string).toLocaleDateString("sv-SE", { timeZone: "Europe/Bucharest" }),
       category: "invatare",

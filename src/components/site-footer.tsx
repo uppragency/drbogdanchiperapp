@@ -28,6 +28,7 @@ export async function SiteFooter() {
           <Link href="/feed" className={link}>{t.nav.feed}</Link>
           <Link href="/colectii" className={link}>{tx("Colecții", "Collections")}</Link>
           <Link href="/cursuri" className={link}>{tx("Cursuri premium", "Premium courses")}</Link>
+          <Link href="/evenimente" className={link}>{tx("Evenimente", "Events")}</Link>
           <Link href="/faq" className={link}>{tx("Întrebări frecvente", "FAQ")}</Link>
           <Link href="/contact" className={link}>Contact</Link>
         </nav>
