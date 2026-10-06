@@ -1,7 +1,6 @@
 "use client";
-import { useActionState, useState } from "react";
+import { useActionState, useState, useTransition } from "react";
 import { Alert, Field, Select, TextArea, btn } from "@/components/ui";
-import { SubmitButton } from "@/components/submit-button";
 import { saveResource } from "./actions";
 import type { FormState } from "@/app/login/actions";
 
@@ -28,13 +27,23 @@ export type ResourceValues = {
 
 export function ResourceForm({ values, categories, tags }: { values: ResourceValues; categories: Option[]; tags: Option[] }) {
   const [state, action] = useActionState<FormState, FormData>(saveResource, {});
+  const [pending, start] = useTransition();
+  // Submitted manually so React does not reset the fields after the action (a reset turned "Publicat" back into "Draft" after the pre-publish check).
+  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget, (e.nativeEvent as SubmitEvent).submitter);
+    start(() => action(fd));
+  };
+  const submit = (label: string, name?: string, value?: string) => (
+    <button type="submit" name={name} value={value} disabled={pending} aria-busy={pending} className={btn.primary}>{pending ? "Se procesează" : label}</button>
+  );
   const [type, setType] = useState(values.type);
   const [selected, setSelected] = useState<string[]>(values.tagIds);
   const allSelected = selected.length === tags.length;
   const toggle = (id: string) => setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
 
   return (
-    <form action={action} className="flex flex-col gap-6">
+    <form onSubmit={onSubmit} className="flex flex-col gap-6">
       {values.id && <input type="hidden" name="id" value={values.id} />}
       <Field label="Titlu (română)" name="title" defaultValue={values.title} required />
       <Field label="Titlu (engleză)" name="titleEn" defaultValue={values.titleEn} help="Opțional. Dacă rămâne gol, membrii care aleg engleza văd titlul în română." />
@@ -103,12 +112,12 @@ export function ResourceForm({ values, categories, tags }: { values: ResourceVal
             {state.warnings.map((w) => <li key={w}>{w}</li>)}
           </ul>
           <div className="mt-3 flex flex-wrap gap-2">
-            <SubmitButton name="confirm" value="1">Publică oricum</SubmitButton>
+            {submit("Publică oricum", "confirm", "1")}
             <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className={btn.secondary}>Revin să completez</button>
           </div>
         </Alert>
       )}
-      <div><SubmitButton>Salvează resursa</SubmitButton></div>
+      <div>{submit("Salvează resursa")}</div>
     </form>
   );
 }

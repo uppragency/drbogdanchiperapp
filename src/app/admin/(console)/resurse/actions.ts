@@ -44,9 +44,6 @@ async function publishWarnings(supabase: Awaited<ReturnType<typeof createClient>
     if (!cur?.cover_path && d.type !== "video") warnings.push("Resursa nu are imagine de copertă.");
     if (d.type === "pdf" && (count ?? 0) === 0) warnings.push("Resursa de tip PDF nu are niciun material atașat.");
   }
-  if (!d.description) warnings.push("Descrierea scurtă este goală.");
-  if (!d.titleEn) warnings.push("Lipsește titlul în engleză.");
-  if (d.body && !d.bodyEn) warnings.push("Textul în engleză lipsește, deși există text în română.");
   return warnings;
 }
 
