@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { LocaleProvider } from "@/components/locale-provider";
 import { getLocale, getT, getTx } from "@/lib/i18n";
 import { env } from "@/lib/env";
+import { Analytics } from "@vercel/analytics/next";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -49,6 +50,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           {children}
           <SiteFooter />
         </LocaleProvider>
+        <Analytics />
       </body>
     </html>
   );
