@@ -14,6 +14,16 @@ export type ChangelogEntry = { date: string; category: ChangelogCategory; title:
 // Newest first. Dates are ISO (YYYY-MM-DD).
 export const changelog: ChangelogEntry[] = [
   {
+    date: "2026-10-08",
+    category: "invatare",
+    title: { ro: "Like-uri pe resurse", en: "Likes on resources" },
+    text: {
+      ro: "Poți aprecia resursele din meniul Învață cu inimioara din colțul din stânga jos al cardului. Favoritele au acum un semn de carte, în loc de inimioară.",
+      en: "You can like resources in the Learn menu with the heart at the bottom left of the card. Favourites now use a bookmark instead of a heart.",
+    },
+    href: "/feed",
+  },
+  {
     date: "2026-10-06",
     category: "comunitate",
     title: { ro: "Secțiunea Evenimente", en: "Events section" },

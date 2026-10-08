@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useId, useState } from "react";
-import { Heart, MagnifyingGlass, SlidersHorizontal, X } from "@phosphor-icons/react";
+import { BookmarkSimple, MagnifyingGlass, SlidersHorizontal, X } from "@phosphor-icons/react";
 import { cn } from "@/components/ui";
 import { useTx } from "@/components/locale-provider";
 import { SortSelect, ViewToggle } from "./feed-controls";
@@ -72,7 +72,7 @@ export function FeedToolbar(props: {
           <div className="flex flex-wrap items-end gap-4">
             <SortSelect value={props.sort.value} options={props.sort.options} />
             <Link href={props.fav.href} scroll={false} aria-pressed={props.fav.on} className={cn("inline-flex h-11 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition-colors", props.fav.on ? "border-accent bg-accent text-accent-ink" : "border-line text-muted hover:text-ink")}>
-              <Heart size={18} weight={props.fav.on ? "fill" : "regular"} /> {tx("Doar favorite", "Favorites only")}
+              <BookmarkSimple size={18} weight={props.fav.on ? "fill" : "regular"} /> {tx("Doar favorite", "Favorites only")}
             </Link>
             <div className="sm:hidden">
               <ViewToggle {...props.view} />

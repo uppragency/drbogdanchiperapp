@@ -16,6 +16,8 @@ import { formatDate } from "@/lib/format";
 import { embedUrl, parseVideo, videoCovers } from "@/lib/video";
 import { coverUrl } from "@/lib/cover-url";
 import { FavoriteButton } from "../favorite-button";
+import { LikeButton } from "../like-button";
+import { canLike } from "@/lib/likes";
 import { CompleteButton } from "../complete-button";
 import { NoteBox } from "../note-box";
 import { PdfPreview } from "../pdf-preview";
@@ -81,11 +83,15 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
   const older = at >= 0 && at < siblings.length - 1 ? siblings[at + 1] : null;
   const covers = [...(r.cover_path ? [coverUrl(r.cover_path)] : []), ...(r.type === "video" ? await videoCovers(r.video_url) : [])];
   const supabaseFav = await createClient();
-  const [{ data: favRow }, { data: viewRow }, { data: noteRow }] = await Promise.all([
+  const likeable = canLike(category?.slug);
+  const [{ data: favRow }, { data: viewRow }, { data: noteRow }, { data: likeCountRows }, { data: myLikeRow }] = await Promise.all([
     supabaseFav.from("favorites").select("resource_id").eq("user_id", viewer.id).eq("resource_id", r.id).maybeSingle(),
     supabaseFav.from("resource_views").select("completed").eq("user_id", viewer.id).eq("resource_id", r.id).maybeSingle(),
     supabaseFav.from("resource_notes").select("body").eq("user_id", viewer.id).eq("resource_id", r.id).maybeSingle(),
+    likeable ? supabaseFav.rpc("resource_like_counts", { p_ids: [r.id] }) : Promise.resolve({ data: [] }),
+    likeable ? supabaseFav.from("resource_likes").select("resource_id").eq("user_id", viewer.id).eq("resource_id", r.id).maybeSingle() : Promise.resolve({ data: null }),
   ]);
+  const likeCount = Number((likeCountRows as { n: number }[] | null)?.[0]?.n ?? 0);
   let gallery: GalleryPhoto[] = [];
   if (r.type === "photo") {
     const { data: imgs } = await supabaseFav.from("resource_images").select("id,file_path,thumb_path,width,height,caption,caption_en").eq("resource_id", r.id).order("position").order("created_at");
@@ -138,6 +144,7 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
             <span className="text-xs text-muted">{formatDate(r.publish_at ?? r.created_at, locale)} · {t.feed.types[r.type as keyof typeof t.feed.types]}{r.presenter ? ` · ${r.presenter}` : ""}</span>
           </span>
           {r.status === "draft" && <span className="rounded-full bg-danger-bg px-3 py-1 text-xs font-bold text-danger">{tx("Ciornă", "Draft")}</span>}
+          {likeable && <LikeButton resourceId={r.id} initialLiked={Boolean(myLikeRow)} initialCount={likeCount} className="-ml-0" />}
           <FavoriteButton resourceId={r.id} initial={Boolean(favRow)} compact />
         </header>
 

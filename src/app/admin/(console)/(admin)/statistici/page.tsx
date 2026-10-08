@@ -57,13 +57,15 @@ export default async function StatsPage({ searchParams }: PageProps<"/admin/stat
   const maxCat = Math.max(1, ...byCat.map((c) => c.views));
   const pct = (a: number, b: number) => (b ? `${Math.round((a / b) * 100)}%` : "0%");
 
-  const [{ data: onlineRaw }, { data: topRaw }, { data: dailyRaw }, { data: weeklyRaw }, { data: actRaw }] = await Promise.all([
+  const [{ data: onlineRaw }, { data: topRaw }, { data: dailyRaw }, { data: weeklyRaw }, { data: actRaw }, { data: likedRaw }] = await Promise.all([
     supabase.rpc("admin_online_now", { p_minutes: 15 }),
     supabase.rpc("admin_top_users", { p_days: period.days, p_limit: 10 }),
     supabase.rpc("admin_daily_active", { p_days: 30 }),
     supabase.rpc("admin_weekly_retention", { p_weeks: 8 }),
     supabase.rpc("admin_activation"),
+    supabase.rpc("admin_top_liked", { p_limit: 10 }),
   ]);
+  const liked = (likedRaw ?? []) as { resource_id: string; title: string; likes: number }[];
   const online = (onlineRaw ?? []) as OnlineUser[];
   const topUsers = (topRaw ?? []) as TopUser[];
   const daily = ((dailyRaw ?? []) as { day: string; active: number }[]).map((d) => ({ day: d.day, active: Number(d.active) }));
@@ -192,6 +194,20 @@ export default async function StatsPage({ searchParams }: PageProps<"/admin/stat
               </li>
             ))}
             {top.length === 0 && <li className="py-3 text-sm text-muted">Nicio resursă deschisă de membri încă. Vizualizările adminului nu se numără. „Unici” sunt membrii care au deschis resursa, „revin” cei care au deschis-o de mai multe ori.</li>}
+          </ol>
+        </Card>
+
+        <Card className="flex flex-col gap-4">
+          <h2 className="text-lg font-bold">Cele mai apreciate resurse</h2>
+          <ol className="divide-y divide-line">
+            {liked.map((r, i) => (
+              <li key={r.resource_id} className="flex items-center gap-3 py-3">
+                <span className="w-6 text-sm font-bold text-muted">{i + 1}</span>
+                <Link href={`/admin/resurse/${r.resource_id}`} className="min-w-0 flex-1 truncate font-semibold hover:text-accent">{r.title}</Link>
+                <span className="text-right text-sm text-muted">{Number(r.likes)} like-uri</span>
+              </li>
+            ))}
+            {liked.length === 0 && <li className="py-3 text-sm text-muted">Niciun like încă. Se dau doar pe resursele din meniul Învață.</li>}
           </ol>
         </Card>
 

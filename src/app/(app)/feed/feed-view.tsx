@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, CheckCircle, FilePdf, Heart, Link as LinkIcon, MagnifyingGlass, PushPin, TextAlignLeft, VideoCamera, Paperclip, Images } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight, CheckCircle, BookmarkSimple, FilePdf, Link as LinkIcon, MagnifyingGlass, PushPin, TextAlignLeft, VideoCamera, Paperclip, Images } from "@phosphor-icons/react/dist/ssr";
 import { cn, EmptyState } from "@/components/ui";
 import { categoryColor } from "@/lib/category-color";
 import { FeedToolbar } from "./feed-toolbar";
@@ -14,6 +14,7 @@ import { Hero, type HeroCard } from "./hero";
 import { greetingNow } from "@/lib/greeting";
 import { FeaturedRow } from "./featured-row";
 import { CommunityShell } from "@/components/community-shell";
+import { LikeButton } from "../resurse/like-button";
 import { FollowButton } from "@/components/follow-button";
 
 export const TYPES = ["video", "pdf", "text", "link", "photo"] as const;
@@ -56,6 +57,7 @@ export type FeedViewProps = {
   sort: (typeof SORTS)[number];
   view: "lista" | "grila";
   completedIds: string[];
+  likes: Record<string, { n: number; mine: boolean }>;
   startHere: Row[];
   welcomes: { name: string; message: string }[];
   featured: Row[];
@@ -194,7 +196,7 @@ export async function FeedView(p: FeedViewProps) {
               <ul className={cn("gap-6", p.view === "grila" ? "grid sm:grid-cols-2" : "flex flex-col")}>
                 {shown.map((r) => (
                   <li key={r.id}>
-                    <PostCard t={t} tx={tx} r={r} category={catById.get(r.category_id)} isNew={isNew(r)} done={doneSet.has(r.id)} date={dateOf(r)} covers={covers.get(r.id) ?? []} photos={p.photos[r.id]} compact={p.view === "grila"} q={q} />
+                    <PostCard t={t} tx={tx} r={r} category={catById.get(r.category_id)} isNew={isNew(r)} done={doneSet.has(r.id)} date={dateOf(r)} covers={covers.get(r.id) ?? []} photos={p.photos[r.id]} like={p.likes[r.id]} compact={p.view === "grila"} q={q} />
                   </li>
                 ))}
               </ul>
@@ -206,7 +208,7 @@ export async function FeedView(p: FeedViewProps) {
             </>
           ) : (
             <EmptyState
-              icon={p.fav ? Heart : MagnifyingGlass}
+              icon={p.fav ? BookmarkSimple : MagnifyingGlass}
               title={p.fav && !q ? tx("Nu ai resurse favorite încă", "You have no favorite resources yet") : filtered ? tx("Nu am găsit nicio resursă", "No resources found") : t.feed.empty}
               text={p.fav && !q ? tx("Apasă inima de pe o resursă ca să o găsești rapid aici.", "Tap the heart on a resource to find it quickly here.") : filtered ? t.feed.emptyFiltered : undefined}
               action={filtered ? <Link href="/feed" className="inline-flex h-11 items-center rounded-full border border-line bg-surface px-5 text-sm font-semibold transition-colors hover:bg-surface2">{tx("Șterge filtrele", "Clear filters")}</Link> : undefined}
@@ -218,7 +220,7 @@ export async function FeedView(p: FeedViewProps) {
   );
 }
 
-function PostCard({ t, tx, r, category, isNew, done, date, covers, photos, compact, q }: { t: Dict; tx: Tx; r: Row; category?: Category; isNew: boolean; done: boolean; date: string; covers: string[]; photos?: { urls: string[]; total: number }; compact: boolean; q: string }) {
+function PostCard({ t, tx, r, category, isNew, done, date, covers, photos, like, compact, q }: { t: Dict; tx: Tx; r: Row; category?: Category; isNew: boolean; done: boolean; date: string; covers: string[]; photos?: { urls: string[]; total: number }; like?: { n: number; mine: boolean }; compact: boolean; q: string }) {
   const files = r.resource_attachments.length;
   const color = categoryColor(category?.slug, category?.name);
   const video = r.type === "video" ? parseVideo(r.video_url) : null;
@@ -250,6 +252,7 @@ function PostCard({ t, tx, r, category, isNew, done, date, covers, photos, compa
         <div className="pointer-events-none relative"><Cover covers={covers} type={r.type} label={category?.name} title={r.title} slug={category?.slug} play={r.type === "video"} /></div>
       )}
       <div className="pointer-events-none relative mt-auto flex items-center gap-4 px-5 py-4 text-sm font-semibold text-muted">
+        {like && <LikeButton resourceId={r.id} initialLiked={like.mine} initialCount={like.n} />}
         <span className="inline-flex items-center gap-2"><TypeIcon type={r.type} /> {t.feed.types[r.type]}</span>
         {files > 0 && <span className="inline-flex items-center gap-2"><Paperclip size={18} /> {files}</span>}
         <span className="ml-auto inline-flex items-center gap-1 text-accent">{t.resource.open} <ArrowUpRight size={16} weight="bold" /></span>

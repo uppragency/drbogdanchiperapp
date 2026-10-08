@@ -1,3 +1,4 @@
+import { canLike } from "@/lib/likes";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { isStaff, requireUser } from "@/lib/auth";
@@ -131,6 +132,14 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
   const coverIds = new Set([...heroRows, ...shown, ...featuredRows, ...startHere].map((r) => r.id));
   const coverEntries = await Promise.all(all.filter((r) => coverIds.has(r.id) && (r.type === "video" || r.cover_path)).map(async (r) => [r.id, [...(r.cover_path ? [coverUrl(r.cover_path)] : []), ...(r.type === "video" ? await videoCovers(r.video_url) : [])]] as [string, string[]]));
   const covers = new Map(coverEntries);
+  // Like-urile apar doar pe resursele din Învață: numărul total și dacă le-am apreciat noi.
+  const likeIds = shown.filter((r) => canLike(catById.get(r.category_id)?.slug)).map((r) => r.id);
+  const [{ data: likeCounts }, { data: myLikes }] = likeIds.length
+    ? await Promise.all([supabase.rpc("resource_like_counts", { p_ids: likeIds }), supabase.from("resource_likes").select("resource_id").eq("user_id", viewer.id).in("resource_id", likeIds)])
+    : [{ data: [] }, { data: [] }];
+  const likeCountMap = new Map(((likeCounts ?? []) as { resource_id: string; n: number }[]).map((l) => [l.resource_id, Number(l.n)]));
+  const myLikeSet = new Set(((myLikes ?? []) as { resource_id: string }[]).map((l) => l.resource_id));
+  const likes: Record<string, { n: number; mine: boolean }> = Object.fromEntries(likeIds.map((id) => [id, { n: likeCountMap.get(id) ?? 0, mine: myLikeSet.has(id) }]));
   const photos = await photoPreviews(supabase, all.filter((r) => coverIds.has(r.id) && r.type === "photo").map((r) => r.id));
   photos.forEach((v, id) => covers.set(id, [v.urls[0]]));
 
@@ -147,6 +156,7 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
       sort={sort}
       view={view}
       completedIds={completedIds}
+      likes={likes}
       startHere={startHere}
       welcomes={welcomes}
       featured={featuredRows}
