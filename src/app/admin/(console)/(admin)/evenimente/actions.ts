@@ -66,7 +66,8 @@ export async function saveEvent(_: FormState, formData: FormData): Promise<FormS
   revalidatePath("/evenimente", "layout");
   revalidatePath("/eveniment", "layout");
   revalidatePath("/ce-e-nou");
-  revalidatePath("/admin/evenimente");
+  // Layout, nu doar lista: pagina de editare trebuie să primească valorile noi, altfel formularul revine la cele vechi după salvare.
+  revalidatePath("/admin/evenimente", "layout");
   if (!id.success) redirect(`/admin/evenimente/${data.id}?creat=1`);
   return { ok: "Salvat." };
 }
