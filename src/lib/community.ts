@@ -19,13 +19,13 @@ export async function loadCommunity(viewerId: string, isAdmin: boolean, current?
       .eq("status", "published")
       .is("deleted_at", null)
       .or(`publish_at.is.null,publish_at.lte.${nowIso}`)
-      .order("publish_at", { ascending: false, nullsFirst: false })
+      .order("publish_at", { ascending: false, nullsFirst: true })
       .order("created_at", { ascending: false })
       .limit(200),
     supabase.from("resource_views").select("resource_id").eq("user_id", viewerId),
   ]);
   const categories = ((cats ?? []) as ShellCategory[]).map((c) => ({ ...c, name: pick(locale, c.name, c.name_en) }));
-  const rows = (rowsRaw ?? []) as Row[];
+  const rows = ((rowsRaw ?? []) as Row[]).sort((a, b) => +new Date(b.publish_at ?? b.created_at) - +new Date(a.publish_at ?? a.created_at));
   const seen = new Set((views ?? []).map((v: { resource_id: string }) => v.resource_id));
   const weekAgo = new Date(nowIso).getTime() - 7 * 86400000;
   const isNew = (r: Row) => (isAdmin ? new Date(r.publish_at ?? r.created_at).getTime() > weekAgo : !seen.has(r.id));

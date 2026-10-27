@@ -76,8 +76,8 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
   const category = category0 ? { ...category0, name: pick(locale, category0.name, category0.name_en) } : category0;
   const video = r.type === "video" ? parseVideo(r.video_url) : null;
   const embed = video ? embedUrl(video, true) : null;
-  const { data: sib } = await supabase0.from("resources").select("id,title,title_en,publish_at,created_at").eq("category_id", r.category_id).eq("status", "published").is("deleted_at", null).order("publish_at", { ascending: false, nullsFirst: false }).order("created_at", { ascending: false }).limit(200);
-  const siblings = ((sib ?? []) as { id: string; title: string; title_en: string | null }[]).map((x) => ({ id: x.id, title: pick(locale, x.title, x.title_en) }));
+  const { data: sib } = await supabase0.from("resources").select("id,title,title_en,publish_at,created_at").eq("category_id", r.category_id).eq("status", "published").is("deleted_at", null).order("publish_at", { ascending: false, nullsFirst: true }).order("created_at", { ascending: false }).limit(200);
+  const siblings = [...((sib ?? []) as { id: string; title: string; title_en: string | null; publish_at: string | null; created_at: string }[])].sort((a, b) => +new Date(b.publish_at ?? b.created_at) - +new Date(a.publish_at ?? a.created_at)).map((x) => ({ id: x.id, title: pick(locale, x.title, x.title_en) }));
   const at = siblings.findIndex((x) => x.id === r.id);
   const newer = at > 0 ? siblings[at - 1] : null;
   const older = at >= 0 && at < siblings.length - 1 ? siblings[at + 1] : null;

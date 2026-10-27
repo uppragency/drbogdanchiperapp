@@ -101,7 +101,8 @@ export async function saveResource(_: FormState, formData: FormData): Promise<Fo
     body: d.body,
     video_url: d.type === "video" || d.type === "link" ? d.videoUrl : null,
     status: d.status,
-    publish_at: localInputToIso(d.publishAt),
+    // Publicată fără dată aleasă: se păstrează momentul publicării, ca să urce în feed ca cea mai nouă.
+    publish_at: localInputToIso(d.publishAt) ?? (d.status === "published" ? new Date().toISOString() : null),
     event_at: localInputToIso(d.eventAt),
     is_pinned: d.isPinned,
     comments_enabled: d.commentsEnabled,

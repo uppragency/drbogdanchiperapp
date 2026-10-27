@@ -29,7 +29,7 @@ export default async function PreviewUser({ params }: PageProps<"/admin/useri/[i
       .is("deleted_at", null)
       .or(`publish_at.is.null,publish_at.lte.${new Date().toISOString()}`)
       .in("resource_tags.tag_id", tagIds)
-      .order("publish_at", { ascending: false, nullsFirst: false })
+      .order("publish_at", { ascending: false, nullsFirst: true })
       .limit(300);
     rows = (data ?? []) as Row[];
   }

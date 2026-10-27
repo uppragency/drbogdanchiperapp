@@ -51,7 +51,7 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
       .is("deleted_at", null)
       .or(`publish_at.is.null,publish_at.lte.${nowIso}`)
       .order("is_pinned", { ascending: false })
-      .order("publish_at", { ascending: false, nullsFirst: false })
+      .order("publish_at", { ascending: false, nullsFirst: true })
       .order("created_at", { ascending: false })
       .limit(200),
     supabase.from("resource_views").select("resource_id,last_viewed_at,completed").eq("user_id", viewer.id).order("last_viewed_at", { ascending: false }),
@@ -62,6 +62,9 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
   // Content is localized once here (English falls back to Romanian when empty), so every view downstream just displays it.
   const categories = ((cats ?? []) as Category[]).map((c) => ({ ...c, name: pick(locale, c.name, c.name_en) }));
   const all = ((rowsRaw ?? []) as unknown as (Row & { title_en: string | null; description_en: string | null })[]).map((r) => ({ ...r, title: pick(locale, r.title, r.title_en), description: pick(locale, r.description, r.description_en) })) as Row[];
+  // Fixate primele, apoi cele mai noi primele. Resursele fără dată de publicare folosesc data creării, altfel ar ajunge la coadă.
+  const effective = (r: Row) => new Date(r.publish_at ?? r.created_at).getTime();
+  all.sort((a, b) => Number(b.is_pinned) - Number(a.is_pinned) || effective(b) - effective(a));
   const catById = new Map(categories.map((c) => [c.id, c]));
   const seen = new Set((views ?? []).map((v: { resource_id: string }) => v.resource_id));
   const weekAgo = new Date(nowIso).getTime() - 7 * 86400000;
