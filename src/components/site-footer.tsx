@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getT, getTx } from "@/lib/i18n";
 import { Wordmark } from "@/components/brand";
 import { FacebookLogo, InstagramLogo, WhatsappLogo, YoutubeLogo } from "@phosphor-icons/react/dist/ssr";
@@ -10,6 +11,7 @@ const SOCIAL = [
   { href: "https://api.whatsapp.com/send?phone=0746020724", label: "WhatsApp", Icon: WhatsappLogo },
 ];
 
+const SBC_URL = "https://drbogdanchiper.ro/produs/superbootcamp-mentormed-2026-22-25-ianuarie/";
 const PROGRAM_URL = "https://drbogdanchiper.ro/produs/mentormed/";
 
 export async function SiteFooter() {
@@ -22,6 +24,16 @@ export async function SiteFooter() {
         <div className="flex flex-col gap-3">
           <Wordmark className="text-xl" />
           <p className="max-w-xs text-sm leading-relaxed text-white/80">{t.footer.tagline}</p>
+          <a href={SBC_URL} target="_blank" rel="noopener noreferrer" className="mt-2 block max-w-xs overflow-hidden rounded-[18px] transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2">
+            <Image
+              src="/brand/superbootcamp-2027.webp"
+              alt={tx("SuperBootCamp MentorMed, ediția a 6-a, 21 până la 24 ianuarie 2027, Hotel Alpin, Poiana Brașov. Rezervă locul.", "SuperBootCamp MentorMed, 6th edition, 21 to 24 January 2027, Hotel Alpin, Poiana Brasov. Reserve your seat.")}
+              width={960}
+              height={540}
+              sizes="320px"
+              className="h-auto w-full"
+            />
+          </a>
         </div>
         <nav aria-label={t.footer.platform} className="flex flex-col gap-3">
           <p className="text-xs font-semibold uppercase tracking-wider text-white/70">{t.footer.platform}</p>
