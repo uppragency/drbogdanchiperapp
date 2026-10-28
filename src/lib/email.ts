@@ -7,7 +7,7 @@ function esc(s: string) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
-export function renderEmail(opts: { title: string; body: string; ctaLabel: string; ctaUrl: string; items?: { title: string; url: string; meta?: string }[]; unsubscribeUrl?: string }) {
+export function renderEmail(opts: { title: string; body: string; ctaLabel: string; ctaUrl: string; items?: { title: string; url: string; meta?: string }[]; unsubscribeUrl?: string; note?: string }) {
   const list = (opts.items ?? []).map((i) => `<tr><td style="padding:12px 0;border-top:1px solid #e3e5f0"><a href="${esc(i.url)}" style="color:#0D1C5C;font-weight:700;font-size:15px;text-decoration:none">${esc(i.title)}</a>${i.meta ? `<br><span style="font-size:12px;color:#6b7194">${esc(i.meta)}</span>` : ""}</td></tr>`).join("");
   return `<!doctype html><html lang="ro"><body style="margin:0;background:#f4f5f9;font-family:Montserrat,Arial,sans-serif;color:#0f1535">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5f9;padding:32px 16px"><tr><td align="center">
@@ -18,7 +18,7 @@ export function renderEmail(opts: { title: string; body: string; ctaLabel: strin
 <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#3b4266">${esc(opts.body)}</p>
 ${list ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px">${list}</table>` : ""}
 <a href="${esc(opts.ctaUrl)}" style="display:inline-block;background:#313885;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:14px 28px;border-radius:12px">${esc(opts.ctaLabel)}</a>
-<p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#6b7194">Dacă butonul nu funcționează, copiază acest link în browser:<br><span style="word-break:break-all">${esc(opts.ctaUrl)}</span></p>
+<p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#6b7194">${opts.note ? `${esc(opts.note)}<br><br>` : ""}Dacă butonul nu funcționează, copiază acest link în browser:<br><span style="word-break:break-all">${esc(opts.ctaUrl)}</span></p>
 </td></tr>
 <tr><td style="padding:0 32px 28px;font-size:12px;color:#6b7194">${esc(t.email.footer)}${opts.unsubscribeUrl ? `<br><a href="${esc(opts.unsubscribeUrl)}" style="color:#6b7194">Nu mai vreau emailuri cu noutăți</a>` : ""}</td></tr>
 </table></td></tr></table></body></html>`;
@@ -40,7 +40,8 @@ export async function sendEmails(items: OutgoingEmail[]): Promise<{ sent: number
   return { sent, failed };
 }
 
-export function inviteEmail(to: string, link: string): OutgoingEmail {
+export function inviteEmail(to: string, link: string, reminder = false): OutgoingEmail {
+  if (reminder) return { to, subject: t.email.remindSubject, html: renderEmail({ title: t.email.remindTitle, body: t.email.remindBody, ctaLabel: t.email.remindCta, ctaUrl: link, note: t.email.remindNote }) };
   return { to, subject: t.email.inviteSubject, html: renderEmail({ title: t.email.inviteTitle, body: t.email.inviteBody, ctaLabel: t.email.inviteCta, ctaUrl: link }) };
 }
 
@@ -51,4 +52,9 @@ export function resetEmail(to: string, link: string): OutgoingEmail {
 // Builds a one time sign in link (token hash flow) for invitations and password resets.
 export function confirmLink(tokenHash: string, next: string) {
   return `${env.siteUrl}/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}&type=recovery&next=${encodeURIComponent(next)}`;
+}
+
+// Permanent invitation link: the token is looked up on click and a fresh sign in token is generated then, so the link never expires.
+export function invitationLink(token: string) {
+  return `${env.siteUrl}/auth/invitatie?t=${encodeURIComponent(token)}`;
 }

@@ -206,7 +206,7 @@ export async function sendNextInvitations(formData: FormData) {
   else query = query.not("sent_at", "is", null).lt("last_reminder_at", new Date(Date.now() - 3 * 86400000).toISOString());
   const { data } = await query;
   const ids = (data ?? []).map((r: { user_id: string }) => r.user_id);
-  const res = await sendInvitations(admin, ids);
+  const res = await sendInvitations(admin, ids, mode === "reminder");
   revalidatePath("/admin/invitatii");
   redirect(`/admin/invitatii?trimise=${res.sent}&esuate=${res.failed.length}`);
 }

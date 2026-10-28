@@ -1,7 +1,7 @@
 import "server-only";
 import { randomBytes } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { confirmLink, inviteEmail, sendEmails } from "@/lib/email";
+import { invitationLink, inviteEmail, sendEmails } from "@/lib/email";
 
 type Admin = ReturnType<typeof createAdminClient>;
 
@@ -60,16 +60,18 @@ export async function createMember(admin: Admin, input: CreateUserInput): Promis
 }
 
 // Generates a one time link per user and sends the invitation. Marks invitations as sent.
-export async function sendInvitations(admin: Admin, userIds: string[]): Promise<{ sent: number; failed: string[] }> {
+export async function sendInvitations(admin: Admin, userIds: string[], reminder = false): Promise<{ sent: number; failed: string[] }> {
   if (!userIds.length) return { sent: 0, failed: [] };
   const { data: profiles } = await admin.from("profiles").select("id,email").in("id", userIds);
+  await admin.from("invitation_tokens").upsert(userIds.map((user_id) => ({ user_id })), { onConflict: "user_id", ignoreDuplicates: true });
+  const { data: tokens } = await admin.from("invitation_tokens").select("user_id,token").in("user_id", userIds);
+  const tokenByUser = new Map<string, string>((tokens ?? []).map((r: { user_id: string; token: string }) => [r.user_id, r.token]));
   const emails: { id: string; mail: ReturnType<typeof inviteEmail> }[] = [];
   const failed: string[] = [];
   for (const p of profiles ?? []) {
-    const { data, error } = await admin.auth.admin.generateLink({ type: "recovery", email: p.email });
-    const hash = data?.properties?.hashed_token;
-    if (error || !hash) failed.push(p.email);
-    else emails.push({ id: p.id, mail: inviteEmail(p.email, confirmLink(hash, "/setare-parola")) });
+    const token = tokenByUser.get(p.id);
+    if (!token) failed.push(p.email);
+    else emails.push({ id: p.id, mail: inviteEmail(p.email, invitationLink(token), reminder) });
   }
   const res = await sendEmails(emails.map((e) => e.mail));
   const failedSet = new Set(res.failed);
