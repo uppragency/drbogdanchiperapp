@@ -200,11 +200,17 @@ export async function sendNextInvitations(formData: FormData) {
   await requireAdmin();
   const mode = formData.get("mode") === "reminder" ? "reminder" : "first";
   const admin = createAdminClient();
-  const limit = 30;
+  // Free Resend plan allows 100 emails per day; keep a margin for password resets (reminders: 82 per 12 hours at most).
+  const DAILY_CAP = 82;
+  let limit = 30;
+  if (mode === "reminder") {
+    const { count } = await admin.from("invitations").select("id", { count: "exact", head: true }).gt("last_reminder_at", new Date(Date.now() - 12 * 3600000).toISOString());
+    limit = Math.min(30, Math.max(0, DAILY_CAP - (count ?? 0)));
+  }
   let query = admin.from("invitations").select("user_id,profiles!inner(is_active,deleted_at)").is("accepted_at", null).eq("profiles.is_active", true).is("profiles.deleted_at", null).limit(limit);
   if (mode === "first") query = query.is("sent_at", null);
-  else query = query.not("sent_at", "is", null).lt("last_reminder_at", new Date(Date.now() - 3 * 86400000).toISOString());
-  const { data } = await query;
+  else query = query.not("sent_at", "is", null).lt("last_reminder_at", new Date(Date.now() - 3 * 86400000).toISOString()).order("sent_at", { ascending: false });
+  const { data } = limit > 0 ? await query : { data: [] };
   const ids = (data ?? []).map((r: { user_id: string }) => r.user_id);
   const res = await sendInvitations(admin, ids, mode === "reminder");
   revalidatePath("/admin/invitatii");
