@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight, CalendarBlank, MapPin } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/lib/supabase/server";
@@ -22,15 +23,20 @@ export async function NextEventCard() {
   if (!data) return null;
   const e = data as EventRow;
   const [tx, locale] = await Promise.all([getTx(), getLocale()]);
-  const img = eventImage(e);
+  const sbc = e.slug.includes("superbootcamp");
+  const img = sbc ? "/brand/superbootcamp-2027.webp" : eventImage(e);
   const multi = e.ends_at && day(e.ends_at) !== day(e.starts_at);
   const when = multi ? `${formatDate(e.starts_at, locale)} – ${formatDate(e.ends_at!, locale)}` : formatDate(e.starts_at, locale);
   return (
     <div className="overflow-hidden rounded-card border border-line bg-surface shadow-card">
       {img && (
-        <Link href={`/eveniment/${e.slug}`} className="block aspect-video bg-surface2" tabIndex={-1} aria-hidden>
-          {/* eslint-disable-next-line @next/next/no-img-element -- external or storage image */}
-          <img src={img} alt="" referrerPolicy="no-referrer" loading="lazy" className="size-full object-cover" />
+        <Link href={`/eveniment/${e.slug}`} className="relative block aspect-video bg-surface2" tabIndex={-1} aria-hidden>
+          {sbc ? (
+            <Image src={img} alt="" fill sizes="300px" className="object-contain" />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element -- external or storage image
+            <img src={img} alt="" referrerPolicy="no-referrer" loading="lazy" className="size-full object-contain" />
+          )}
         </Link>
       )}
       <div className="flex flex-col gap-3 p-6">
@@ -41,7 +47,7 @@ export async function NextEventCard() {
           <span className="flex items-center gap-2 text-muted"><MapPin size={16} aria-hidden />{placeLabel(e, locale === "en")}</span>
         </div>
         <a href={e.register_url} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex h-11 items-center justify-center gap-2 rounded-full bg-violet px-5 text-sm font-semibold text-on-violet transition-colors hover:bg-violet-hover active:scale-[0.98]">
-          {pick(locale, e.button_label, e.button_label_en) || tx("Detalii și înscriere", "Details and registration")} <ArrowUpRight size={16} weight="bold" />
+          {tx("REZERVA ACUM UN LOC", "RESERVE YOUR SPOT NOW")} <ArrowUpRight size={16} weight="bold" />
         </a>
       </div>
     </div>
