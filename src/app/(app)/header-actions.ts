@@ -3,10 +3,10 @@ import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
 import { getLocale, getTx, pick } from "@/lib/i18n";
-import { digestText, followedCategoryIds } from "@/lib/notifications";
+import { digestText, eventRef, eventReminderText, followedCategoryIds, type EventRef } from "@/lib/notifications";
 
 export type SearchHit = { id: string; title: string; category: string; type: "video" | "pdf" | "text" | "link" | "photo" };
-export type NoticeItem = { key: string; kind: "reply" | "new" | "digest"; text: string; sub: string; href: string; unread: boolean };
+export type NoticeItem = { key: string; kind: "reply" | "new" | "digest" | "event"; text: string; sub: string; href: string; unread: boolean };
 
 export async function searchPreview(q: string): Promise<SearchHit[]> {
   await requireUser();
@@ -48,7 +48,7 @@ export async function notificationsPreview(): Promise<NoticeItem[]> {
     .or(`and(publish_at.is.null,created_at.gt.${seen}),and(publish_at.gt.${seen},publish_at.lte.${now})`);
   if (followed.length > 0) freshQuery = freshQuery.in("category_id", followed);
   const [{ data: replies }, { data: fresh }] = await Promise.all([
-    supabase.from("notifications").select("id,kind,item_count,resource_id,message,created_at,read_at").eq("user_id", viewer.id).order("created_at", { ascending: false }).limit(6),
+    supabase.from("notifications").select("id,kind,item_count,resource_id,message,created_at,read_at,events(slug,title,title_en)").eq("user_id", viewer.id).order("created_at", { ascending: false }).limit(6),
     freshQuery.order("created_at", { ascending: false }).limit(5),
   ]);
   const items: NoticeItem[] = [
@@ -63,8 +63,10 @@ export async function notificationsPreview(): Promise<NoticeItem[]> {
         unread: true,
       };
     }),
-    ...((replies ?? []) as { id: string; kind: string; item_count: number | null; resource_id: string; message: string; created_at: string; read_at: string | null }[]).map((r) =>
-      r.kind === "digest"
+    ...((replies ?? []) as unknown as { id: string; kind: string; item_count: number | null; resource_id: string | null; message: string; created_at: string; read_at: string | null; events: EventRef | EventRef[] | null }[]).map((r) =>
+      r.kind === "event"
+        ? { key: r.id, kind: "event" as const, text: eventReminderText(tx, r.item_count ?? 30, pick(locale, eventRef(r.events)?.title ?? "", eventRef(r.events)?.title_en ?? null)), sub: formatDate(r.created_at, locale), href: eventRef(r.events) ? `/eveniment/${eventRef(r.events)!.slug}` : "/evenimente", unread: !r.read_at }
+        : r.kind === "digest"
         ? { key: r.id, kind: "digest" as const, text: digestText(tx, r.item_count ?? 1), sub: formatDate(r.created_at, locale), href: "/feed", unread: !r.read_at }
         : { key: r.id, kind: "reply" as const, text: r.message, sub: formatDate(r.created_at, locale), href: `/resurse/${r.resource_id}#comentarii`, unread: !r.read_at },
     ),

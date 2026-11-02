@@ -60,7 +60,7 @@ export default async function EventPage({ params }: PageProps<"/eveniment/[slug]
           </ul>
           {upcoming ? (
             <div className="flex flex-col gap-3">
-              <a href={e.register_url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-control bg-accent px-6 text-base font-semibold text-accent-ink transition-colors hover:bg-accent-hover active:scale-[0.98]">
+              <a href={`/eveniment/${e.slug}/rezerva?s=page`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-control bg-accent px-6 text-base font-semibold text-accent-ink transition-colors hover:bg-accent-hover active:scale-[0.98]">
                 {label} <ArrowUpRight size={18} aria-hidden />
               </a>
               <a href={`/eveniment/${e.slug}/calendar`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-line bg-surface px-5 text-sm font-semibold transition-colors hover:bg-surface2">

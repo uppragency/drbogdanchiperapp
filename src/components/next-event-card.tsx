@@ -1,9 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, CalendarBlank, MapPin } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight, CalendarBlank, Hourglass, MapPin } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/lib/supabase/server";
 import { getLocale, getTx, pick } from "@/lib/i18n";
-import { EVENT_COLUMNS, eventImage, placeLabel, type EventRow } from "@/lib/events";
+import { EVENT_COLUMNS, countdownLabel, daysUntil, eventImage, placeLabel, type EventRow } from "@/lib/events";
 import { formatDate } from "@/lib/format";
 
 const day = (iso: string) => new Date(iso).toLocaleDateString("sv-SE", { timeZone: "Europe/Bucharest" });
@@ -45,8 +45,9 @@ export async function NextEventCard() {
         <div className="flex flex-col gap-1 text-sm">
           <span className="flex items-center gap-2 font-semibold"><CalendarBlank size={16} aria-hidden />{when}</span>
           <span className="flex items-center gap-2 text-muted"><MapPin size={16} aria-hidden />{placeLabel(e, locale === "en")}</span>
+          <span className="flex items-center gap-2 font-semibold text-violet"><Hourglass size={16} aria-hidden />{countdownLabel(daysUntil(e.starts_at), tx)}</span>
         </div>
-        <a href={e.register_url} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex h-11 items-center justify-center gap-2 rounded-full bg-violet px-5 text-sm font-semibold text-on-violet transition-colors hover:bg-violet-hover active:scale-[0.98]">
+        <a href={`/eveniment/${e.slug}/rezerva?s=card`} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex h-11 items-center justify-center gap-2 rounded-full bg-violet px-5 text-sm font-semibold text-on-violet transition-colors hover:bg-violet-hover active:scale-[0.98]">
           {tx("REZERVA ACUM UN LOC", "RESERVE YOUR SPOT NOW")} <ArrowUpRight size={16} weight="bold" />
         </a>
       </div>

@@ -1,4 +1,5 @@
 import "server-only";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 
 export const FILE_PREFIX = "fisier:";
@@ -6,8 +7,8 @@ export const FILE_PREFIX = "fisier:";
 export type Item = { resource_id: string; url: string };
 
 // Everything worth checking on published resources: video/link urls, link attachments and uploaded files.
-export async function gatherItems(): Promise<Item[]> {
-  const supabase = await createClient();
+export async function gatherItems(db?: SupabaseClient): Promise<Item[]> {
+  const supabase = db ?? (await createClient());
   const { data: res } = await supabase.from("resources").select("id,type,video_url").eq("status", "published").is("deleted_at", null).limit(2000);
   const resources = (res ?? []) as { id: string; type: string; video_url: string | null }[];
   const items: Item[] = [];

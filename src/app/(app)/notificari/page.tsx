@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Bell, ChatsCircle, Sparkle } from "@phosphor-icons/react/dist/ssr";
+import { Bell, CalendarBlank, ChatsCircle, Sparkle } from "@phosphor-icons/react/dist/ssr";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
 import { EmptyState } from "@/components/ui";
 import { getLocale, getTx, pick } from "@/lib/i18n";
-import { digestText, followedCategoryIds } from "@/lib/notifications";
+import { digestText, eventRef, eventReminderText, followedCategoryIds, type EventRef } from "@/lib/notifications";
 import { MarkSeen } from "./mark-seen";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -32,13 +32,13 @@ export default async function NotificationsPage() {
     .or(`and(publish_at.is.null,created_at.gt.${seen}),and(publish_at.gt.${seen},publish_at.lte.${now})`);
   if (followed.length > 0) freshQuery = freshQuery.in("category_id", followed);
   const [{ data: replies }, { data: fresh }] = await Promise.all([
-    supabase.from("notifications").select("id,kind,item_count,resource_id,message,created_at,read_at").eq("user_id", viewer.id).order("created_at", { ascending: false }).limit(30),
+    supabase.from("notifications").select("id,kind,item_count,resource_id,message,created_at,read_at,events(slug,title,title_en)").eq("user_id", viewer.id).order("created_at", { ascending: false }).limit(30),
     freshQuery.order("created_at", { ascending: false }).limit(20),
   ]);
-  type Reply = { id: string; kind: string; item_count: number | null; resource_id: string; message: string; created_at: string; read_at: string | null };
+  type Reply = { id: string; kind: string; item_count: number | null; resource_id: string | null; message: string; created_at: string; read_at: string | null; events: EventRef | EventRef[] | null };
   type Cat = { name: string; name_en: string | null };
   type Fresh = { id: string; title: string; title_en: string | null; publish_at: string | null; created_at: string; categories: Cat | Cat[] | null };
-  const replyRows = (replies ?? []) as Reply[];
+  const replyRows = (replies ?? []) as unknown as Reply[];
   const freshRows = (fresh ?? []) as unknown as Fresh[];
   const unread = replyRows.filter((r) => !r.read_at).length + freshRows.length;
 
@@ -70,7 +70,17 @@ export default async function NotificationsPage() {
               </li>
             );
           })}
-          {replyRows.map((r) => r.kind === "digest" ? (
+          {replyRows.map((r) => r.kind === "event" ? (
+            <li key={r.id}>
+              <Link href={eventRef(r.events) ? `/eveniment/${eventRef(r.events)!.slug}` : "/evenimente"} className={`flex items-center gap-4 p-5 transition-colors hover:bg-surface2 ${r.read_at ? "" : "bg-violet-soft/60"}`}>
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-violet-soft text-violet"><CalendarBlank size={20} /></span>
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="font-semibold">{eventReminderText(tx, r.item_count ?? 30, pick(locale, eventRef(r.events)?.title ?? "", eventRef(r.events)?.title_en ?? null))}</span>
+                  <span className="text-sm text-muted">{formatDate(r.created_at, locale)}</span>
+                </span>
+              </Link>
+            </li>
+          ) : r.kind === "digest" ? (
             <li key={r.id}>
               <Link href="/feed" className={`flex items-center gap-4 p-5 transition-colors hover:bg-surface2 ${r.read_at ? "" : "bg-violet-soft/60"}`}>
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-violet-soft text-violet"><Sparkle size={20} /></span>

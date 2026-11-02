@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, ChatsCircle, FilePdf, Link as LinkIcon, MagnifyingGlass, Sparkle, TextAlignLeft, VideoCamera, Images, X } from "@phosphor-icons/react";
+import { Bell, ChatsCircle, FilePdf, Link as LinkIcon, MagnifyingGlass, Sparkle, TextAlignLeft, VideoCamera, Images, X, CalendarBlank } from "@phosphor-icons/react";
 import { useTx } from "@/components/locale-provider";
 import { Highlight } from "@/components/highlight";
 import { notificationsPreview, popularSearches, searchPreview, type NoticeItem, type SearchHit } from "@/app/(app)/header-actions";
@@ -211,7 +211,7 @@ export function NotificationsPopup({ unread }: { unread: number }) {
                 {items.map((n) => (
                   <li key={n.key}>
                     <Link href={n.href} onClick={() => setOpen(false)} className={`flex items-start gap-3 rounded-control px-3 py-3 hover:bg-surface2 ${n.unread ? "bg-violet-soft/60" : ""}`}>
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-violet-soft text-violet">{n.kind === "reply" ? <ChatsCircle size={18} /> : <Sparkle size={18} />}</span>
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-violet-soft text-violet">{n.kind === "reply" ? <ChatsCircle size={18} /> : n.kind === "event" ? <CalendarBlank size={18} /> : <Sparkle size={18} />}</span>
                       <span className="flex min-w-0 flex-1 flex-col">
                         <span className="line-clamp-2 text-sm font-semibold">{n.text}</span>
                         <span className="text-xs text-muted">{n.sub}</span>

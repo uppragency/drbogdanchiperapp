@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { Card, LinkButton, PageTitle } from "@/components/ui";
+import { Badge, Card, LinkButton, PageTitle } from "@/components/ui";
 import { formatDateTime } from "@/lib/format";
 import { CountUp } from "@/components/count-up";
+import { platformHealth, type HealthItem } from "@/lib/health";
 
 export const metadata: Metadata = { title: "Administrare" };
 
@@ -25,6 +26,8 @@ export default async function AdminHome() {
     count(supabase.from("link_checks").select("resource_id", { count: "exact", head: true }).eq("ok", false)),
   ]);
 
+  const health = await platformHealth(supabase);
+  const problems = health.deadLinks + health.noGroup.length + health.scheduledNoGroup.length + health.draftsWithDate.length;
   const stats = [
     { label: "Useri activi", value: users, href: "/admin/useri" },
     { label: "Resurse publicate", value: published, href: "/admin/resurse?status=published" },
@@ -39,9 +42,19 @@ export default async function AdminHome() {
       <PageTitle title="Administrare">
         <LinkButton href="/admin/resurse/nou">Resursă nouă</LinkButton>
       </PageTitle>
-      {brokenLinks > 0 && (
-        <Link href="/admin/linkuri" className="text-sm font-semibold text-danger hover:underline">{brokenLinks} linkuri cu probleme, vezi detaliile</Link>
-      )}
+      <Card className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-bold">Sănătatea platformei</h2>
+          <Badge tone={problems ? "danger" : "ok"}>{problems ? `${problems} de rezolvat` : "Totul în regulă"}</Badge>
+        </div>
+        <p className="text-sm text-muted">Linkurile se verifică automat în fiecare zi (cele neverificate sau verificate cel mai demult). {health.lastLinkCheck ? `Ultima verificare: ${formatDateTime(health.lastLinkCheck)}.` : "Nicio verificare încă."}</p>
+        <ul className="flex flex-col gap-3 text-sm">
+          {brokenLinks > 0 && <li><Link href="/admin/linkuri" className="font-semibold text-danger hover:underline">{brokenLinks} linkuri cu probleme</Link></li>}
+          <HealthRow items={health.noGroup} label="Resurse publicate fără grup (nu le vede nimeni)" />
+          <HealthRow items={health.scheduledNoGroup} label="Resurse programate fără grup (nu vor apărea la nimeni)" />
+          <HealthRow items={health.draftsWithDate} label="Drafturi cu dată de publicare setată (programare uitată)" />
+        </ul>
+      </Card>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
         {stats.map((s) => (
           <Link key={s.label} href={s.href} className="rounded-card border border-line bg-surface p-5 transition hover:shadow-card">
@@ -65,5 +78,20 @@ export default async function AdminHome() {
         </ul>
       </Card>
     </div>
+  );
+}
+
+function HealthRow({ items, label }: { items: HealthItem[]; label: string }) {
+  if (items.length === 0) return null;
+  return (
+    <li className="flex flex-col gap-1">
+      <span className="font-semibold text-danger">{items.length} {label}</span>
+      <span className="text-muted">
+        {items.slice(0, 5).map((r, i) => (
+          <span key={r.id}>{i > 0 && ", "}<Link href={`/admin/resurse/${r.id}`} className="hover:text-accent hover:underline">{r.title}</Link></span>
+        ))}
+        {items.length > 5 && ` și încă ${items.length - 5}`}
+      </span>
+    </li>
   );
 }

@@ -10,6 +10,8 @@ export default async function EventsAdmin() {
   const supabase = await createClient();
   const { data } = await supabase.from("events").select(EVENT_COLUMNS).order("starts_at", { ascending: false });
   const events = (data ?? []) as EventRow[];
+  const { data: clickRows } = await supabase.rpc("admin_event_clicks");
+  const clicks = new Map(((clickRows ?? []) as { event_id: string; clicks: number; members: number; clicks_7d: number }[]).map((c) => [c.event_id, c]));
   return (
     <div className="flex flex-col gap-6">
       <PageTitle title="Evenimente">
@@ -22,6 +24,7 @@ export default async function EventsAdmin() {
             <div className="flex min-w-0 flex-col gap-1">
               <Link href={`/admin/evenimente/${e.id}`} className="font-semibold hover:underline">{e.title}</Link>
               <p className="text-sm text-muted">{eventType(e.type)?.ro}. {eventWhen(e)}.</p>
+              {clicks.has(e.id) && <p className="text-sm text-muted">Click pe butonul de rezervare: {clicks.get(e.id)!.clicks} în total, {clicks.get(e.id)!.members} membri, {clicks.get(e.id)!.clicks_7d} în ultimele 7 zile.</p>}
             </div>
             <div className="flex items-center gap-2">
               <Badge tone={isUpcoming(e) ? "info" : "neutral"}>{isUpcoming(e) ? "Viitor" : "Anterior"}</Badge>

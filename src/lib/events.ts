@@ -65,3 +65,16 @@ export function eventWhen(e: Pick<EventRow, "starts_at" | "ends_at">, locale?: s
 
 export const placeLabel = (e: Pick<EventRow, "format" | "city">, en: boolean) =>
   e.format === "online" ? "Online" : [en ? "In person" : "Fizic", e.city].filter(Boolean).join(", ");
+
+// Whole calendar days (Bucharest time) from today until the event starts. 0 means today.
+export function daysUntil(iso: string, now = Date.now()) {
+  const a = Date.parse(dayKey(iso));
+  const b = Date.parse(new Date(now).toLocaleDateString("sv-SE", { timeZone: "Europe/Bucharest" }));
+  return Math.max(0, Math.round((a - b) / 86400000));
+}
+
+export function countdownLabel(days: number, tx: (ro: string, en: string) => string) {
+  if (days === 0) return tx("Începe astăzi", "Starts today");
+  if (days === 1) return tx("Începe mâine", "Starts tomorrow");
+  return tx(`Mai sunt ${days} ${days % 100 > 0 && days % 100 < 20 ? "zile" : "de zile"}`, `${days} days to go`);
+}

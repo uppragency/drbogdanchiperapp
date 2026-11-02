@@ -16,6 +16,26 @@ export const changelog: ChangelogEntry[] = [
   {
     date: "2026-11-02",
     category: "notificari",
+    title: { ro: "Reamintiri înainte de eveniment", en: "Reminders before an event" },
+    text: {
+      ro: "Pentru evenimentele MentorMed primești în clopoțel câte o reamintire cu 30, 7 și 1 zi înainte. Pe card vezi și câte zile mai sunt până la început. Fără email.",
+      en: "For MentorMed events you get a reminder in the bell 30, 7 and 1 day before. The card also shows how many days are left. No email.",
+    },
+    href: "/evenimente",
+  },
+  {
+    date: "2026-11-02",
+    category: "navigare",
+    title: { ro: "Instalează platforma ca aplicație", en: "Install the platform as an app" },
+    text: {
+      ro: "După a doua intrare în cont, pe telefon vezi un mesaj scurt cu pașii pentru iPhone și Android, ca să deschizi platforma direct de pe ecranul principal.",
+      en: "After your second sign in, on your phone you see a short message with the steps for iPhone and Android, so you can open the platform straight from your home screen.",
+    },
+    href: "/profil",
+  },
+  {
+    date: "2026-11-02",
+    category: "notificari",
     title: { ro: "Ce ai ratat, în fiecare luni", en: "What you missed, every Monday" },
     text: {
       ro: "În fiecare luni dimineața primești în clopoțel un rezumat cu resursele noi din ultima săptămână pe care nu le-ai deschis încă. Fără email.",

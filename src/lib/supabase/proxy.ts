@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { env } from "@/lib/env";
 
-const PUBLIC_PREFIXES = ["/login", "/parola-uitata", "/nu-am-primit-invitatia", "/auth", "/legal", "/roadmap", "/status", "/sitemap"];
+const PUBLIC_PREFIXES = ["/login", "/parola-uitata", "/nu-am-primit-invitatia", "/auth", "/legal", "/roadmap", "/status", "/sitemap", "/api/cron"];
 
 function isPublic(pathname: string) {
   return PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));

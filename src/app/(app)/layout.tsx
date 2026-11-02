@@ -25,7 +25,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
   const b = (data ?? []).find((x: { starts_at: string | null; ends_at: string | null; tag_id: string | null }) => (!x.starts_at || x.starts_at <= nowIso) && (!x.ends_at || x.ends_at > nowIso) && (!x.tag_id || isStaff(viewer.role) || myTags.has(x.tag_id)));
   const unread = await notificationCount(supabase, viewer.id);
-  const { data: tourRow } = await supabase.from("profiles").select("tour_seen_at").eq("id", viewer.id).maybeSingle();
+  const { data: tourRow } = await supabase.from("profiles").select("tour_seen_at,login_count").eq("id", viewer.id).maybeSingle();
   const showTour = !isStaff(viewer.role) && !tourRow?.tour_seen_at;
   return (
     <>
@@ -33,7 +33,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <AppHeader viewerId={viewer.id} isAdmin={isStaff(viewer.role)} unread={unread} initials={((viewer.firstName?.[0] ?? "") + (viewer.lastName?.[0] ?? "")).toUpperCase() || viewer.email[0]?.toUpperCase() || "?"} name={fullName(viewer) || viewer.email} email={viewer.email} />
       {b && <SiteBanner banner={{ id: b.id, message: pick(locale, b.message, b.message_en), linkUrl: b.link_url, linkLabel: pick(locale, b.link_label, b.link_label_en) }} />}
       <main id="continut" className="flex-1">{children}</main>
-      <InstallHint />
+      <InstallHint ready={(tourRow?.login_count ?? 0) >= 2} />
       {showTour && <GuidedTour />}
       <Toaster />
     </>

@@ -33,3 +33,14 @@ export function digestText(tx: (ro: string, en: string) => string, count: number
     ? tx("Ce ai ratat: 1 resursă nouă pe care nu ai deschis-o", "What you missed: 1 new resource you have not opened")
     : tx(`Ce ai ratat: ${count} resurse noi pe care nu le-ai deschis`, `What you missed: ${count} new resources you have not opened`);
 }
+
+// Bell reminder before a MentorMed event: 30, 7 or 1 day ahead.
+export function eventReminderText(tx: (ro: string, en: string) => string, days: number, title: string) {
+  if (days <= 1) return tx(`Mâine: ${title}`, `Tomorrow: ${title}`);
+  if (days <= 7) return tx(`Peste ${days} zile: ${title}`, `In ${days} days: ${title}`);
+  return tx(`Peste ${days} de zile: ${title}`, `In ${days} days: ${title}`);
+}
+
+export type EventRef = { slug: string; title: string; title_en: string | null };
+// PostgREST returns a to-one embed as an object, sometimes typed as an array.
+export const eventRef = (e: EventRef | EventRef[] | null | undefined): EventRef | null => (Array.isArray(e) ? e[0] ?? null : e ?? null);
