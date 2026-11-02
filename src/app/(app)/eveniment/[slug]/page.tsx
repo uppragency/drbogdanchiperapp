@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getLocale, getTx, pick } from "@/lib/i18n";
-import { EVENT_COLUMNS, eventImage, eventType, eventWhen, isNewEvent, isUpcoming, mentorLines, placeLabel, type EventRow } from "@/lib/events";
+import { EVENT_COLUMNS, eventImage, eventType, eventWhen, isFreeEvent, isNewEvent, isUpcoming, mentorLines, placeLabel, type EventRow } from "@/lib/events";
 import { Badge } from "@/components/ui";
 import { ArrowUpRight, CalendarBlank, CalendarPlus, CaretLeft, MapPin } from "@phosphor-icons/react/dist/ssr";
 
@@ -50,7 +50,7 @@ export default async function EventPage({ params }: PageProps<"/eveniment/[slug]
           <div className="flex flex-wrap gap-2">
             {t && <Badge>{tx(t.ro, t.en)}</Badge>}
             {isNewEvent(e) && <Badge tone="accent">{tx("Nou", "New")}</Badge>}
-            <Badge tone={upcoming ? "ok" : "neutral"}>{upcoming ? tx("Gratuit", "Free") : tx("Încheiat", "Ended")}</Badge>
+            {!upcoming ? <Badge tone="neutral">{tx("Încheiat", "Ended")}</Badge> : isFreeEvent(e) ? <Badge tone="ok">{tx("Gratuit", "Free")}</Badge> : null}
           </div>
           <h1 className="text-3xl font-bold leading-tight tracking-tight md:text-4xl">{title}</h1>
           <p className="max-w-[60ch] leading-relaxed text-muted">{pick(locale, e.short_description, e.short_description_en)}</p>

@@ -50,7 +50,13 @@ export const eventImage = (e: Pick<EventRow, "cover_path" | "cover_url">) => (e.
 export const mentorLines = (s: string) => s.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
 
 const timeFmt = (locale?: string) => new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "ro-RO", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Bucharest" });
+// StudyClub and BookClub are free; MentorMed events (for example the SuperBootcamp) are paid.
+export const isFreeEvent = (e: Pick<EventRow, "type">) => e.type !== "mentormed";
+
+const dayKey = (iso: string) => new Date(iso).toLocaleDateString("sv-SE", { timeZone: "Europe/Bucharest" });
 export function eventWhen(e: Pick<EventRow, "starts_at" | "ends_at">, locale?: string) {
+  // Multi day events show only the date range, without clock times.
+  if (e.ends_at && dayKey(e.ends_at) !== dayKey(e.starts_at)) return `${formatDate(e.starts_at, locale)} – ${formatDate(e.ends_at, locale)}`;
   const f = timeFmt(locale);
   const start = f.format(new Date(e.starts_at));
   const time = e.ends_at ? `${start} ${locale === "en" ? "to" : "până la"} ${f.format(new Date(e.ends_at))}` : start;

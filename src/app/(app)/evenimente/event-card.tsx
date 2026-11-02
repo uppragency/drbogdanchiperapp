@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui";
 import { CalendarBlank, MapPin } from "@phosphor-icons/react/dist/ssr";
-import { eventImage, eventType, eventWhen, isNewEvent, placeLabel, type EventRow } from "@/lib/events";
+import { eventImage, eventType, eventWhen, isFreeEvent, isNewEvent, placeLabel, type EventRow } from "@/lib/events";
 import { pick, type Locale, type Tx } from "@/lib/i18n";
 
 export function EventCard({ e, tx, locale }: { e: EventRow; tx: Tx; locale: Locale }) {
@@ -26,7 +26,7 @@ export function EventCard({ e, tx, locale }: { e: EventRow; tx: Tx; locale: Loca
           <div className="mt-auto flex flex-col gap-1 pt-2 text-sm">
             <span className="flex items-center gap-2 font-semibold"><CalendarBlank size={16} aria-hidden />{eventWhen(e, locale)}</span>
             <span className="flex items-center gap-2 text-muted"><MapPin size={16} aria-hidden />{placeLabel(e, locale === "en")}</span>
-            <span className="font-semibold text-accent">{tx("Gratuit", "Free")}</span>
+            {isFreeEvent(e) && <span className="font-semibold text-accent">{tx("Gratuit", "Free")}</span>}
           </div>
         </div>
       </Link>

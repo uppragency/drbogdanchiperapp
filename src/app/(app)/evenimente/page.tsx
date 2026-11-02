@@ -27,7 +27,7 @@ export default async function EventsPage() {
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-10">
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{tx("Evenimente", "Events")}</h1>
-        <p className="max-w-[60ch] text-muted">{tx("Întâlniri gratuite pentru membrii MentorMed. Înscrierea se face pe site-ul principal.", "Free meetings for MentorMed members. Registration takes place on the main site.")}</p>
+        <p className="max-w-[60ch] text-muted">{tx("Întâlniri pentru membrii MentorMed. StudyClub și BookClub sunt gratuite. Înscrierea se face pe site-ul principal.", "Meetings for MentorMed members. StudyClub and BookClub are free. Registration takes place on the main site.")}</p>
       </header>
       <ul className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {EVENT_TYPES.map((t) => (
