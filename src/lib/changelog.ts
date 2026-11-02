@@ -14,6 +14,36 @@ export type ChangelogEntry = { date: string; category: ChangelogCategory; title:
 // Newest first. Dates are ISO (YYYY-MM-DD).
 export const changelog: ChangelogEntry[] = [
   {
+    date: "2026-11-02",
+    category: "notificari",
+    title: { ro: "Ce ai ratat, în fiecare luni", en: "What you missed, every Monday" },
+    text: {
+      ro: "În fiecare luni dimineața primești în clopoțel un rezumat cu resursele noi din ultima săptămână pe care nu le-ai deschis încă. Fără email.",
+      en: "Every Monday morning you get a summary in the bell with the new resources from the past week that you have not opened yet. No email.",
+    },
+    href: "/notificari",
+  },
+  {
+    date: "2026-11-02",
+    category: "navigare",
+    title: { ro: "Următorul eveniment pe pagina principală", en: "Next event on the home page" },
+    text: {
+      ro: "În coloana din dreapta a paginii principale vezi acum următorul eveniment MentorMed, cu data, locul și butonul de înscriere.",
+      en: "In the right column of the home page you now see the next MentorMed event, with date, place and registration button.",
+    },
+    href: "/feed",
+  },
+  {
+    date: "2026-11-02",
+    category: "profil",
+    title: { ro: "„Nu am primit invitația” pe pagina de intrare", en: "“I did not receive the invitation” on the sign-in page" },
+    text: {
+      ro: "Dacă un coleg nu a primit invitația sau linkul nu merge, își poate cere singur din nou linkul de activare de pe pagina de intrare. Linkul nu expiră.",
+      en: "If a colleague did not receive the invitation or the link does not work, they can request the activation link again from the sign-in page. The link does not expire.",
+    },
+    href: "/nu-am-primit-invitatia",
+  },
+  {
     date: "2026-10-08",
     category: "invatare",
     title: { ro: "Like-uri pe resurse", en: "Likes on resources" },

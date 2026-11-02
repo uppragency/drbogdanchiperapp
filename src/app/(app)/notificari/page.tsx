@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
 import { EmptyState } from "@/components/ui";
 import { getLocale, getTx, pick } from "@/lib/i18n";
-import { followedCategoryIds } from "@/lib/notifications";
+import { digestText, followedCategoryIds } from "@/lib/notifications";
 import { MarkSeen } from "./mark-seen";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -32,10 +32,10 @@ export default async function NotificationsPage() {
     .or(`and(publish_at.is.null,created_at.gt.${seen}),and(publish_at.gt.${seen},publish_at.lte.${now})`);
   if (followed.length > 0) freshQuery = freshQuery.in("category_id", followed);
   const [{ data: replies }, { data: fresh }] = await Promise.all([
-    supabase.from("notifications").select("id,resource_id,message,created_at,read_at").eq("user_id", viewer.id).order("created_at", { ascending: false }).limit(30),
+    supabase.from("notifications").select("id,kind,item_count,resource_id,message,created_at,read_at").eq("user_id", viewer.id).order("created_at", { ascending: false }).limit(30),
     freshQuery.order("created_at", { ascending: false }).limit(20),
   ]);
-  type Reply = { id: string; resource_id: string; message: string; created_at: string; read_at: string | null };
+  type Reply = { id: string; kind: string; item_count: number | null; resource_id: string; message: string; created_at: string; read_at: string | null };
   type Cat = { name: string; name_en: string | null };
   type Fresh = { id: string; title: string; title_en: string | null; publish_at: string | null; created_at: string; categories: Cat | Cat[] | null };
   const replyRows = (replies ?? []) as Reply[];
@@ -70,7 +70,17 @@ export default async function NotificationsPage() {
               </li>
             );
           })}
-          {replyRows.map((r) => (
+          {replyRows.map((r) => r.kind === "digest" ? (
+            <li key={r.id}>
+              <Link href="/feed" className={`flex items-center gap-4 p-5 transition-colors hover:bg-surface2 ${r.read_at ? "" : "bg-violet-soft/60"}`}>
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-violet-soft text-violet"><Sparkle size={20} /></span>
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="font-semibold">{digestText(tx, r.item_count ?? 1)}</span>
+                  <span className="text-sm text-muted">{formatDate(r.created_at, locale)}</span>
+                </span>
+              </Link>
+            </li>
+          ) : (
             <li key={r.id}>
               <Link href={`/resurse/${r.resource_id}#comentarii`} className={`flex items-center gap-4 p-5 transition-colors hover:bg-surface2 ${r.read_at ? "" : "bg-violet-soft/60"}`}>
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-violet-soft text-violet"><ChatsCircle size={20} /></span>

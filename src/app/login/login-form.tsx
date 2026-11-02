@@ -19,6 +19,9 @@ export function LoginForm({ next, notice }: { next: string; notice?: string }) {
       <Link href="/parola-uitata" className="text-center text-sm font-semibold text-accent hover:underline">
         {t.login.forgot}
       </Link>
+      <Link href="/nu-am-primit-invitatia" className="-mt-2 text-center text-sm font-semibold text-accent hover:underline">
+        {t.login.noInvite}
+      </Link>
     </form>
   );
 }

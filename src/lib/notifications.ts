@@ -26,3 +26,10 @@ export async function notificationCount(supabase: SupabaseClient, userId: string
   ]);
   return (replies ?? 0) + (fresh ?? 0);
 }
+
+// Text of the weekly "what you missed" notification, in the member language.
+export function digestText(tx: (ro: string, en: string) => string, count: number) {
+  return count === 1
+    ? tx("Ce ai ratat: 1 resursă nouă pe care nu ai deschis-o", "What you missed: 1 new resource you have not opened")
+    : tx(`Ce ai ratat: ${count} resurse noi pe care nu le-ai deschis`, `What you missed: ${count} new resources you have not opened`);
+}

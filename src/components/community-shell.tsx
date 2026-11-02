@@ -7,6 +7,7 @@ import { categoryColor } from "@/lib/category-color";
 import { getLocale, getT, getTx, pick } from "@/lib/i18n";
 import { PollCard } from "@/app/(app)/feed/poll-card";
 import { createClient } from "@/lib/supabase/server";
+import { NextEventCard } from "@/components/next-event-card";
 
 export const PROGRAM_URL = "https://drbogdanchiper.ro/produs/mentormed/";
 
@@ -59,6 +60,7 @@ export async function CommunityShell({ categories, activeSlug, newByCategory, ne
       </div>
 
       <aside className="shell-side flex flex-col gap-6 md:col-start-2 lg:col-start-3 lg:row-start-1 lg:sticky lg:top-24 lg:self-start">
+        <NextEventCard />
         <LinkList title={t.home.announcements} items={announcements} />
         <LinkList title={tx("Din aceeași categorie", "More in this category")} items={related} />
         <div className="relative overflow-hidden rounded-card border border-line bg-violet-soft p-6 text-ink dark:bg-surface2">
