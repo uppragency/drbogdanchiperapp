@@ -11,7 +11,7 @@ const SOCIAL = [
   { href: "https://api.whatsapp.com/send?phone=0746020724", label: "WhatsApp", Icon: WhatsappLogo },
 ];
 
-const SBC_URL = "https://drbogdanchiper.ro/produs/superbootcamp-mentormed-2026-22-25-ianuarie/";
+const SBC_URL = "https://drbogdanchiper.ro/produs/superbootcamp-mentormed-2027-21-24-ianuarie/";
 const PROGRAM_URL = "https://drbogdanchiper.ro/produs/mentormed/";
 
 export async function SiteFooter() {
