@@ -22,7 +22,7 @@ export async function SiteFooter() {
     <footer className="mt-24 print:hidden bg-[#0d1c5c] text-white dark:bg-[#060a1f]">
       <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-14 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div className="flex flex-col gap-3">
-          <Wordmark className="text-xl" />
+          <Wordmark className="text-xl" onDark />
           <p className="max-w-xs text-sm leading-relaxed text-white/80">{t.footer.tagline}</p>
           <a href={SBC_URL} target="_blank" rel="noopener noreferrer" className="mt-2 block max-w-xs overflow-hidden rounded-[18px] transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2">
             <Image

@@ -24,15 +24,15 @@ export async function NextEventCard() {
   const e = data as EventRow;
   const [tx, locale] = await Promise.all([getTx(), getLocale()]);
   const sbc = e.slug.includes("superbootcamp");
-  const img = sbc ? "/brand/superbootcamp-2027.webp" : eventImage(e);
+  const img = sbc ? "/brand/superbootcamp-2027-vertical.webp" : eventImage(e);
   const multi = e.ends_at && day(e.ends_at) !== day(e.starts_at);
   const when = multi ? `${formatDate(e.starts_at, locale)} – ${formatDate(e.ends_at!, locale)}` : formatDate(e.starts_at, locale);
   return (
     <div className="overflow-hidden rounded-card border border-line bg-surface shadow-card">
       {img && (
-        <Link href={`/eveniment/${e.slug}`} className={`relative block bg-surface2 ${sbc ? "aspect-[1200/628]" : "aspect-video"}`} tabIndex={-1} aria-hidden>
+        <Link href={`/eveniment/${e.slug}`} className={`relative block bg-surface2 ${sbc ? "aspect-[1080/1350]" : "aspect-video"}`} tabIndex={-1} aria-hidden>
           {sbc ? (
-            <Image src={img} alt="" fill sizes="300px" className="object-contain" />
+            <Image src={img} alt="" fill sizes="300px" className="object-cover" />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element -- external or storage image
             <img src={img} alt="" referrerPolicy="no-referrer" loading="lazy" className="size-full object-contain" />
