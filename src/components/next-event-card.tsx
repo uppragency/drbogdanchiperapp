@@ -30,7 +30,7 @@ export async function NextEventCard() {
   return (
     <div className="overflow-hidden rounded-card border border-line bg-surface shadow-card">
       {img && (
-        <Link href={`/eveniment/${e.slug}`} className="relative block aspect-video bg-surface2" tabIndex={-1} aria-hidden>
+        <Link href={`/eveniment/${e.slug}`} className={`relative block bg-surface2 ${sbc ? "aspect-[1200/628]" : "aspect-video"}`} tabIndex={-1} aria-hidden>
           {sbc ? (
             <Image src={img} alt="" fill sizes="300px" className="object-contain" />
           ) : (

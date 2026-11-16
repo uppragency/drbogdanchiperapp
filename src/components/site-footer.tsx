@@ -27,9 +27,9 @@ export async function SiteFooter() {
           <a href={SBC_URL} target="_blank" rel="noopener noreferrer" className="mt-2 block max-w-xs overflow-hidden rounded-[18px] transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2">
             <Image
               src="/brand/superbootcamp-2027.webp"
-              alt={tx("SuperBootCamp MentorMed, ediția a 6-a, 21 până la 24 ianuarie 2027, Hotel Alpin, Poiana Brașov. Rezervă locul.", "SuperBootCamp MentorMed, 6th edition, 21 to 24 January 2027, Hotel Alpin, Poiana Brasov. Reserve your seat.")}
-              width={960}
-              height={540}
+              alt={tx("Înscrie-te la SuperBootCamp MentorMed 6.0, 21 până la 24 ianuarie 2027, Hotel Alpin, Poiana Brașov, și primești gratuit accesul la cursul GBR. Rezervă-ți locul.", "Sign up for SuperBootCamp MentorMed 6.0, 21 to 24 January 2027, Hotel Alpin, Poiana Brasov, and get free access to the GBR course. Reserve your seat.")}
+              width={1200}
+              height={628}
               sizes="320px"
               className="h-auto w-full"
             />
